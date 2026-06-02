@@ -8,14 +8,14 @@ import { logger } from '@shared/infrastructure/logging/logger';
  * Mongoose maintains an internal connection pool, so we connect once at boot
  * and reuse it everywhere via the models.
  */
-export async function connectMongo(): Promise<void> {
+export async function connectMongo(uri: string = env.MONGO_URI): Promise<void> {
   mongoose.set('strictQuery', true);
 
   mongoose.connection.on('connected', () => logger.info('MongoDB connected'));
   mongoose.connection.on('error', (err) => logger.error({ err }, 'MongoDB connection error'));
   mongoose.connection.on('disconnected', () => logger.warn('MongoDB disconnected'));
 
-  await mongoose.connect(env.MONGO_URI);
+  await mongoose.connect(uri);
 }
 
 export async function disconnectMongo(): Promise<void> {
