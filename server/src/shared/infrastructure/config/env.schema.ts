@@ -32,6 +32,13 @@ export const envSchema = z.object({
   // Caching (Phase 2) — default TTL in seconds for cache-aside reads.
   CACHE_DEFAULT_TTL: z.coerce.number().int().positive().default(300),
 
+  // Rate limiting (Phase 3) — window in seconds, max requests per window per IP.
+  RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(60),
+  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
+  // Stricter tier for auth-sensitive routes (login/register).
+  RATE_LIMIT_AUTH_WINDOW: z.coerce.number().int().positive().default(900),
+  RATE_LIMIT_AUTH_MAX: z.coerce.number().int().positive().default(10),
+
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 });
 
