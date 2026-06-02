@@ -21,6 +21,24 @@ creator/
 
 See [`server/`](./server) for setup and scripts.
 
+### Running locally
+
+**With Docker (recommended)** — starts the API, MongoDB, and Redis together:
+
+```bash
+docker compose up --build
+# API on http://localhost:4000  ·  health: /health  ·  readiness: /health/ready
+```
+
+**Without Docker** — run Mongo + Redis yourself, then:
+
+```bash
+cd server
+cp .env.example .env   # adjust secrets
+npm install
+npm run dev
+```
+
 ### Quality & testing
 
 Run from `server/`:
@@ -48,7 +66,7 @@ CI (GitHub Actions) runs format → lint → typecheck → test (coverage) → b
 | 1 | Authentication — register, login, JWT access + rotating refresh tokens | ✅ |
 | 2 | Redis caching (cache-aside, generalized) | ✅ |
 | 3 | Rate limiting (Redis-backed, tiered) | ✅ |
-| 4 | Hardening & DX — logging, tests, Docker | |
+| 4 | Hardening & DX — logging, tests, Docker | ✅ |
 
 Each phase is delivered as a pull request.
 
