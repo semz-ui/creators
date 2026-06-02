@@ -1,3 +1,5 @@
+import type { Redis } from 'ioredis';
+
 import { redis } from '@shared/infrastructure/cache/redis';
 
 /**
@@ -18,22 +20,25 @@ export interface ICacheService {
 
 /** Redis-backed implementation of {@link ICacheService}. Values are JSON-encoded. */
 export class RedisCacheService implements ICacheService {
+  /** Defaults to the shared singleton; injectable so tests can pass a fake/mock. */
+  constructor(private readonly client: Redis = redis) {}
+
   async get<T>(key: string): Promise<T | null> {
-    const raw = await redis.get(key);
+    const raw = await this.client.get(key);
     return raw === null ? null : (JSON.parse(raw) as T);
   }
 
   async set<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
     const payload = JSON.stringify(value);
     if (ttlSeconds && ttlSeconds > 0) {
-      await redis.set(key, payload, 'EX', ttlSeconds);
+      await this.client.set(key, payload, 'EX', ttlSeconds);
     } else {
-      await redis.set(key, payload);
+      await this.client.set(key, payload);
     }
   }
 
   async delete(key: string): Promise<void> {
-    await redis.del(key);
+    await this.client.del(key);
   }
 
   async getOrSet<T>(key: string, ttlSeconds: number, loader: () => Promise<T>): Promise<T> {

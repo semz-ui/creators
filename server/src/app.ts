@@ -3,6 +3,7 @@ import express, { type Express } from 'express';
 import helmet from 'helmet';
 import { pinoHttp } from 'pino-http';
 
+import { buildContainer, type Container } from '@container/index';
 import { env } from '@shared/infrastructure/config/env';
 import { logger } from '@shared/infrastructure/logging/logger';
 import { errorHandler, notFoundHandler } from '@shared/presentation/middleware/error-handler';
@@ -12,9 +13,10 @@ import { healthRouter } from '@shared/presentation/http/health.route';
 /**
  * Assembles the Express application: global middleware, feature routers, and
  * the error pipeline. Kept free of side effects (no DB/Redis connect, no
- * listen) so it can be imported directly by integration tests.
+ * listen) so it can be imported directly by integration tests. Accepts a
+ * pre-built container so tests can inject fakes (e.g. an in-memory Redis).
  */
-export function createApp(): Express {
+export function createApp(container: Container = buildContainer()): Express {
   const app = express();
 
   // Security & parsing
@@ -40,8 +42,7 @@ export function createApp(): Express {
 
   // Routes
   app.use(healthRouter);
-  // Feature modules mount here in later phases, e.g.:
-  // app.use('/api/v1/auth', authRouter);
+  app.use('/api/v1/auth', container.authRouter);
 
   // Error pipeline — must come last.
   app.use(notFoundHandler);
