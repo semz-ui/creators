@@ -46,11 +46,21 @@ CI (GitHub Actions) runs format → lint → typecheck → test (coverage) → b
 | ----- | ----- | ------ |
 | 0 | Foundation — tooling, config, Mongo/Redis infra, app + server bootstrap, health checks | ✅ |
 | 1 | Authentication — register, login, JWT access + rotating refresh tokens | ✅ |
-| 2 | Redis caching (cache-aside, generalized) | |
+| 2 | Redis caching (cache-aside, generalized) | ✅ |
 | 3 | Rate limiting (Redis-backed, tiered) | |
 | 4 | Hardening & DX — logging, tests, Docker | |
 
 Each phase is delivered as a pull request.
+
+## Caching (Phase 2)
+
+Cross-cutting cache-aside caching backed by Redis:
+
+- `ICacheService` (port) + `RedisCacheService` (JSON-encoded, TTL-aware, `getOrSet` helper).
+- `cacheKey(namespace, ...parts)` for consistent, namespaced keys (e.g. `user:<id>`).
+- Applied via a `CachedUserRepository` decorator over the Mongo repository: `findById`
+  (the auth-guard / `/me` hot read) is cache-aside; `save` writes through and invalidates.
+- Default TTL via `CACHE_DEFAULT_TTL` (seconds).
 
 ## Auth API (Phase 1)
 

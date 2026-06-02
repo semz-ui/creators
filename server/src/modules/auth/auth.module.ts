@@ -1,6 +1,7 @@
 import type { RequestHandler, Router } from 'express';
 import type { Redis } from 'ioredis';
 
+import { RedisCacheService } from '@shared/infrastructure/cache/cache-service';
 import { env } from '@shared/infrastructure/config/env';
 import { durationToSeconds } from '@shared/utils/duration';
 
@@ -11,6 +12,7 @@ import { RefreshTokens } from './application/refresh-tokens.usecase';
 import { RegisterUser } from './application/register-user.usecase';
 import { SessionService } from './application/session.service';
 import { BcryptHasher } from './infrastructure/bcrypt-hasher';
+import { CachedUserRepository } from './infrastructure/cached-user.repository';
 import { JwtTokenService } from './infrastructure/jwt-token.service';
 import { MongoUserRepository } from './infrastructure/mongo-user.repository';
 import { RedisRefreshTokenStore } from './infrastructure/redis-refresh-token.store';
@@ -32,7 +34,8 @@ export interface AuthModule {
  * application use cases and returns the HTTP router + a reusable access guard.
  */
 export function buildAuthModule({ redisClient }: AuthModuleDeps): AuthModule {
-  const users = new MongoUserRepository();
+  const cache = new RedisCacheService(redisClient);
+  const users = new CachedUserRepository(new MongoUserRepository(), cache, env.CACHE_DEFAULT_TTL);
   const hasher = new BcryptHasher();
   const tokens = new JwtTokenService({
     accessSecret: env.JWT_ACCESS_SECRET,
