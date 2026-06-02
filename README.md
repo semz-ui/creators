@@ -42,12 +42,29 @@ CI (GitHub Actions) runs format → lint → typecheck → test (coverage) → b
 
 ## Roadmap
 
-| Phase | Scope |
-| ----- | ----- |
-| 0 | Foundation — tooling, config, Mongo/Redis infra, app + server bootstrap, health checks |
-| 1 | Authentication — register, login, refresh-token rotation, password reset |
-| 2 | Redis caching (cache-aside, generalized) |
-| 3 | Rate limiting (Redis-backed, tiered) |
-| 4 | Hardening & DX — logging, tests, Docker |
+| Phase | Scope | Status |
+| ----- | ----- | ------ |
+| 0 | Foundation — tooling, config, Mongo/Redis infra, app + server bootstrap, health checks | ✅ |
+| 1 | Authentication — register, login, JWT access + rotating refresh tokens | ✅ |
+| 2 | Redis caching (cache-aside, generalized) | |
+| 3 | Rate limiting (Redis-backed, tiered) | |
+| 4 | Hardening & DX — logging, tests, Docker | |
 
 Each phase is delivered as a pull request.
+
+## Auth API (Phase 1)
+
+Base path `/api/v1/auth`:
+
+| Method | Path | Auth | Description |
+| ------ | ---- | ---- | ----------- |
+| POST | `/register` | — | Create account, returns `{ user, accessToken, refreshToken }` |
+| POST | `/login` | — | Authenticate, returns a new token pair |
+| POST | `/refresh` | refresh token (body) | Rotate tokens; reused/replayed tokens revoke the session family |
+| POST | `/logout` | refresh token (body) | Revoke the presented refresh token (idempotent) |
+| POST | `/logout-all` | Bearer access token | Revoke every session for the user |
+| GET | `/me` | Bearer access token | Current user profile |
+
+Access tokens are short-lived JWTs; refresh tokens are long-lived, rotated on every use, and tracked in Redis with reuse detection.
+
+> Deferred to a Phase 1 follow-up: email verification and password reset.
