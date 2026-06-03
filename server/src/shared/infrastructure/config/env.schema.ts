@@ -29,6 +29,9 @@ export const envSchema = z.object({
   JWT_ACCESS_TTL: z.string().default('15m'),
   JWT_REFRESH_TTL: z.string().default('7d'),
 
+  // Caching (Phase 2) — default TTL in seconds for cache-aside reads.
+  CACHE_DEFAULT_TTL: z.coerce.number().int().positive().default(300),
+
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 });
 
