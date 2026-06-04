@@ -2,6 +2,7 @@ import type { RequestHandler, Router } from 'express';
 
 import { env } from '@shared/infrastructure/config/env';
 
+import type { ICreditGuard } from './domain/ports/credit-guard';
 import type { IVideoRepository } from './domain/ports/video-repository';
 import { ApplyGenerationResult } from './application/apply-generation-result.usecase';
 import { CreateVideo } from './application/create-video.usecase';
@@ -16,6 +17,8 @@ import { createVideoRouter } from './presentation/video.routes';
 export interface VideoModuleDeps {
   /** Shared access guard from the auth module (protects user routes). */
   authGuard: RequestHandler;
+  /** Charges/refunds generation credits (Billing module via the container). */
+  creditGuard: ICreditGuard;
 }
 
 export interface VideoModule {
@@ -25,15 +28,15 @@ export interface VideoModule {
 }
 
 /** Composition root for the video module. */
-export function buildVideoModule({ authGuard }: VideoModuleDeps): VideoModule {
+export function buildVideoModule({ authGuard, creditGuard }: VideoModuleDeps): VideoModule {
   const videos = new MongoVideoRepository();
   const generator = new StubVideoGenerator();
 
   const controller = new VideoController({
-    create: new CreateVideo(videos, generator),
+    create: new CreateVideo(videos, generator, creditGuard),
     get: new GetVideo(videos),
     list: new ListVideos(videos),
-    applyResult: new ApplyGenerationResult(videos),
+    applyResult: new ApplyGenerationResult(videos, creditGuard),
   });
 
   const generationGuard = createGenerationGuard(env.GENERATION_CALLBACK_SECRET);

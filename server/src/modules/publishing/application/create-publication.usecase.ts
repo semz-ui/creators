@@ -52,11 +52,13 @@ export class CreatePublication {
       targets,
     });
 
+    // Persist before any external side effects so a published post always has a
+    // recoverable record, then persist again to capture the final target states.
+    await this.publications.save(publication);
     if (publication.status !== 'scheduled') {
       await this.distribution.distribute(publication);
+      await this.publications.save(publication);
     }
-
-    await this.publications.save(publication);
     return toPublicPublication(publication);
   }
 }

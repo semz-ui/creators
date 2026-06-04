@@ -29,9 +29,12 @@ export class DistributionService {
     }
 
     for (const target of publication.pendingTargets()) {
-      const connection = await this.connections.getActiveConnection(
+      // Bind to the connection captured when the publication was created, so a
+      // scheduled post still goes to the intended account even if the user has
+      // since switched their active connection for this platform.
+      const connection = await this.connections.getActiveConnectionById(
         publication.userId,
-        target.platform,
+        target.connectionId,
       );
       if (!connection) {
         publication.markTargetFailed(target.platform, 'No active connection');
