@@ -1,14 +1,20 @@
-name: CI
+name: Server CI
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'server/**'
+      - '.github/workflows/server-ci.yml'
   pull_request:
+    paths:
+      - 'server/**'
+      - '.github/workflows/server-ci.yml'
 
-# Cancel superseded runs on the same ref to save CI minutes.
+# Cancel superseded PR runs; let pushes to main run to completion.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: server-ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   verify:
