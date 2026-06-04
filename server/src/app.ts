@@ -61,6 +61,7 @@ export function createApp(container: Container = buildContainer()): Express {
   // Global per-IP rate limit across the API surface (health stays exempt).
   app.use('/api/v1', container.globalRateLimit);
   app.use('/api/v1/auth', container.authRouter);
+  app.use('/api/v1/videos', container.videoRouter);
 
   // Error pipeline — must come last.
   app.use(notFoundHandler);

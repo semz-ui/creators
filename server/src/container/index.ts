@@ -6,6 +6,7 @@ import { env } from '@shared/infrastructure/config/env';
 import { RedisRateLimiter } from '@shared/infrastructure/rate-limit/redis-rate-limiter';
 import { createRateLimit } from '@shared/presentation/middleware/rate-limit';
 import { buildAuthModule } from '@modules/auth/auth.module';
+import { buildVideoModule } from '@modules/video/video.module';
 
 export interface ContainerDeps {
   /** Override the Redis client (e.g. an in-memory mock in tests). */
@@ -14,6 +15,7 @@ export interface ContainerDeps {
 
 export interface Container {
   authRouter: Router;
+  videoRouter: Router;
   /** Global per-IP rate limiter, mounted across the API surface. */
   globalRateLimit: RequestHandler;
 }
@@ -36,6 +38,8 @@ export function buildContainer(deps: ContainerDeps = {}): Container {
   );
 
   const auth = buildAuthModule({ redisClient, authRateLimit });
+  // Reuse the auth access guard to protect other modules' routes.
+  const video = buildVideoModule({ authGuard: auth.authGuard });
 
-  return { authRouter: auth.router, globalRateLimit };
+  return { authRouter: auth.router, videoRouter: video.router, globalRateLimit };
 }
