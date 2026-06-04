@@ -62,6 +62,7 @@ export function createApp(container: Container = buildContainer()): Express {
   app.use('/api/v1', container.globalRateLimit);
   app.use('/api/v1/auth', container.authRouter);
   app.use('/api/v1/videos', container.videoRouter);
+  app.use('/api/v1/connections', container.connectionsRouter);
 
   // Error pipeline — must come last.
   app.use(notFoundHandler);

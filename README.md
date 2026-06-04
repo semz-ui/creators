@@ -81,7 +81,7 @@ Built on the platform above, one PR each. External services (AI generator, socia
 | Module | Scope | Status |
 | ------ | ----- | ------ |
 | Video | Create from a prompt, async generation job, status/preview | ✅ |
-| Connections | Link FB/IG/YouTube/TikTok (OAuth) | |
+| Connections | Link FB/IG/YouTube/TikTok (OAuth) | ✅ |
 | Billing & Credits | Credit balance + ledger; gates generation | |
 | Publishing & Scheduling | Distribute a video to connected platforms | |
 | Analytics | Per-video/platform metrics | |
@@ -98,6 +98,19 @@ Base path `/api/v1/videos` (Bearer access token required, except the callback):
 | POST | `/callbacks/generation` | `x-generation-secret` | Provider callback that marks a job `ready`/`failed` |
 
 A video moves `queued → processing → ready | failed`. The AI provider is a port (`IVideoGenerator`, stubbed) and reports completion via the callback. Credit-gating attaches here once the Billing module lands.
+
+## Connections API (Connections module)
+
+Link social accounts via OAuth (Authorization Code). Base path `/api/v1/connections`:
+
+| Method | Path | Auth | Description |
+| ------ | ---- | ---- | ----------- |
+| POST | `/:platform/start` | Bearer | Begin linking; returns the provider `authorizationUrl` (with a one-time `state`) |
+| GET | `/callback` | `state` token | OAuth redirect target; exchanges the code and links the account |
+| GET | `/` | Bearer | List your connections (never tokens) |
+| DELETE | `/:id` | Bearer | Disconnect |
+
+Platforms: `facebook`, `instagram`, `youtube`, `tiktok`. Each provider is a port (`IOAuthProvider`, stubbed) resolved via a registry. The `state` is stored one-time in Redis (CSRF). OAuth **tokens are encrypted at rest** (AES-256-GCM) and never leave the server. The callback returns JSON, or 302-redirects to `CONNECTIONS_REDIRECT_URL` (with `?status=`) when set.
 
 ## Caching (Phase 2)
 
