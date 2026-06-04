@@ -45,6 +45,19 @@ export const envSchema = z.object({
     .min(16, 'GENERATION_CALLBACK_SECRET must be at least 16 characters')
     .default('dev-generation-callback-secret-change-me'),
 
+  // Connections module
+  // Secret used to derive the AES key that encrypts stored OAuth tokens.
+  CONNECTIONS_ENC_KEY: z
+    .string()
+    .min(16, 'CONNECTIONS_ENC_KEY must be at least 16 characters')
+    .default('dev-connections-encryption-key-change-me'),
+  // TTL (seconds) for one-time OAuth state tokens.
+  OAUTH_STATE_TTL: z.coerce.number().int().positive().default(600),
+  // Public base URL used to build the OAuth redirect_uri.
+  PUBLIC_BASE_URL: z.string().url().default('http://localhost:4000'),
+  // If set, the OAuth callback 302-redirects here (with ?status=); otherwise returns JSON.
+  CONNECTIONS_REDIRECT_URL: z.string().default(''),
+
   // Rate limiting (Phase 3) — window in seconds, max requests per window per IP.
   RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(60),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),

@@ -1,0 +1,36 @@
+import { randomUUID } from 'node:crypto';
+
+import type { IOAuthProvider, OAuthAccount } from '../domain/ports/oauth-provider';
+import type { Platform } from '../domain/platform';
+
+const SCOPES: Record<Platform, string[]> = {
+  facebook: ['pages_manage_posts', 'pages_read_engagement'],
+  instagram: ['instagram_content_publish'],
+  youtube: ['https://www.googleapis.com/auth/youtube.upload'],
+  tiktok: ['video.publish'],
+};
+
+/**
+ * Placeholder OAuth provider used until real per-platform integrations exist.
+ * Produces a deterministic authorization URL and fake account/tokens on
+ * exchange. Swap a real {@link IOAuthProvider} into the registry per platform.
+ */
+export class StubOAuthProvider implements IOAuthProvider {
+  constructor(private readonly platform: Platform) {}
+
+  getAuthorizationUrl({ state, redirectUri }: { state: string; redirectUri: string }): string {
+    const params = new URLSearchParams({ state, redirect_uri: redirectUri, response_type: 'code' });
+    return `https://oauth.stub.local/${this.platform}/authorize?${params.toString()}`;
+  }
+
+  async exchangeCode(_params: { code: string; redirectUri: string }): Promise<OAuthAccount> {
+    return {
+      externalAccountId: `${this.platform}_${randomUUID().slice(0, 8)}`,
+      displayName: `Stub ${this.platform} account`,
+      accessToken: `stub-access-${randomUUID()}`,
+      refreshToken: `stub-refresh-${randomUUID()}`,
+      scopes: SCOPES[this.platform],
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    };
+  }
+}
