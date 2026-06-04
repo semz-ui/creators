@@ -2,6 +2,7 @@ import { ApplyGenerationResult } from '@modules/video/application/apply-generati
 import { CreateVideo } from '@modules/video/application/create-video.usecase';
 import { GetVideo } from '@modules/video/application/get-video.usecase';
 import { ListVideos } from '@modules/video/application/list-videos.usecase';
+import type { ICreditGuard } from '@modules/video/domain/ports/credit-guard';
 import type { IVideoGenerator } from '@modules/video/domain/ports/video-generator';
 import type { IVideoRepository } from '@modules/video/domain/ports/video-repository';
 import { Video } from '@modules/video/domain/video.entity';
@@ -18,6 +19,13 @@ function repoMock() {
   } satisfies Record<keyof IVideoRepository, jest.Mock>;
 }
 
+function creditGuardMock() {
+  return {
+    authorizeGeneration: jest.fn().mockResolvedValue(undefined),
+    refundGeneration: jest.fn().mockResolvedValue(undefined),
+  } satisfies Record<keyof ICreditGuard, jest.Mock>;
+}
+
 function processingVideo(ownerId = 'user-1') {
   const v = Video.create({
     ownerId,
@@ -29,17 +37,22 @@ function processingVideo(ownerId = 'user-1') {
 }
 
 describe('CreateVideo', () => {
-  it('submits to the generator and persists a processing video', async () => {
+  it('charges credits, submits, and persists a processing video', async () => {
     const videos = repoMock();
+    const credits = creditGuardMock();
     const generator: IVideoGenerator = {
       submit: jest.fn().mockResolvedValue({ jobRef: 'job-xyz' }),
     };
 
-    const result = await new CreateVideo(videos, generator).execute('user-1', {
+    const result = await new CreateVideo(videos, generator, credits).execute('user-1', {
       prompt: 'a cat',
       durationSeconds: 10,
     });
 
+    expect(credits.authorizeGeneration).toHaveBeenCalledWith(
+      'user-1',
+      expect.objectContaining({ durationSeconds: 10 }),
+    );
     expect(generator.submit).toHaveBeenCalledWith(
       expect.objectContaining({ prompt: 'a cat', durationSeconds: 10 }),
     );
@@ -47,31 +60,35 @@ describe('CreateVideo', () => {
     expect(result.status).toBe('processing');
   });
 
-  it('does not persist when the generator submission fails', async () => {
+  it('refunds and does not persist when the generator submission fails', async () => {
     const videos = repoMock();
+    const credits = creditGuardMock();
     const generator: IVideoGenerator = {
       submit: jest.fn().mockRejectedValue(new Error('provider down')),
     };
 
     await expect(
-      new CreateVideo(videos, generator).execute('user-1', {
+      new CreateVideo(videos, generator, credits).execute('user-1', {
         prompt: 'a cat',
         durationSeconds: 10,
       }),
     ).rejects.toThrow('provider down');
+    expect(credits.refundGeneration).toHaveBeenCalledTimes(1);
     expect(videos.save).not.toHaveBeenCalled();
   });
 
-  it('rejects an invalid duration before doing any work', async () => {
+  it('rejects an invalid duration before charging or submitting', async () => {
     const videos = repoMock();
+    const credits = creditGuardMock();
     const generator: IVideoGenerator = { submit: jest.fn() };
 
     await expect(
-      new CreateVideo(videos, generator).execute('user-1', {
+      new CreateVideo(videos, generator, credits).execute('user-1', {
         prompt: 'a cat',
         durationSeconds: 999,
       }),
     ).rejects.toThrow();
+    expect(credits.authorizeGeneration).not.toHaveBeenCalled();
     expect(generator.submit).not.toHaveBeenCalled();
   });
 });
@@ -113,12 +130,13 @@ describe('ListVideos', () => {
 });
 
 describe('ApplyGenerationResult', () => {
-  it('marks a processing video ready', async () => {
+  it('marks a processing video ready (no refund)', async () => {
     const videos = repoMock();
+    const credits = creditGuardMock();
     const v = processingVideo();
     videos.findByJobRef.mockResolvedValue(v);
 
-    await new ApplyGenerationResult(videos).execute({
+    await new ApplyGenerationResult(videos, credits).execute({
       jobRef: 'job-1',
       status: 'ready',
       resultUrl: 'https://cdn/v.mp4',
@@ -126,41 +144,50 @@ describe('ApplyGenerationResult', () => {
 
     expect(v.status).toBe('ready');
     expect(videos.save).toHaveBeenCalledWith(v);
+    expect(credits.refundGeneration).not.toHaveBeenCalled();
   });
 
-  it('marks a processing video failed', async () => {
+  it('marks a processing video failed and refunds the credits', async () => {
     const videos = repoMock();
+    const credits = creditGuardMock();
     const v = processingVideo();
     videos.findByJobRef.mockResolvedValue(v);
 
-    await new ApplyGenerationResult(videos).execute({
+    await new ApplyGenerationResult(videos, credits).execute({
       jobRef: 'job-1',
       status: 'failed',
       error: 'nope',
     });
 
     expect(v.status).toBe('failed');
+    expect(credits.refundGeneration).toHaveBeenCalledWith(
+      v.ownerId,
+      expect.objectContaining({ videoId: v.id }),
+    );
   });
 
   it('is a no-op for an unknown jobRef', async () => {
     const videos = repoMock();
+    const credits = creditGuardMock();
     videos.findByJobRef.mockResolvedValue(null);
 
-    await new ApplyGenerationResult(videos).execute({
+    await new ApplyGenerationResult(videos, credits).execute({
       jobRef: 'ghost',
       status: 'ready',
       resultUrl: 'u',
     });
     expect(videos.save).not.toHaveBeenCalled();
+    expect(credits.refundGeneration).not.toHaveBeenCalled();
   });
 
   it('ignores a duplicate callback once terminal (idempotent)', async () => {
     const videos = repoMock();
+    const credits = creditGuardMock();
     const v = processingVideo();
     v.markReady('https://cdn/v.mp4');
     videos.findByJobRef.mockResolvedValue(v);
 
-    await new ApplyGenerationResult(videos).execute({
+    await new ApplyGenerationResult(videos, credits).execute({
       jobRef: 'job-1',
       status: 'failed',
       error: 'late',
@@ -168,5 +195,6 @@ describe('ApplyGenerationResult', () => {
 
     expect(v.status).toBe('ready');
     expect(videos.save).not.toHaveBeenCalled();
+    expect(credits.refundGeneration).not.toHaveBeenCalled();
   });
 });
