@@ -25,6 +25,8 @@ const paymentSchema = new Schema<PaymentDocument>(
   { versionKey: false },
 );
 
-paymentSchema.index({ providerRef: 1 }, { sparse: true });
+// One payment per provider reference — enforces webhook idempotency at the DB
+// level. Sparse so the (transient) pre-attach `null` refs don't collide.
+paymentSchema.index({ providerRef: 1 }, { unique: true, sparse: true });
 
 export const PaymentModel = model<PaymentDocument>('Payment', paymentSchema);
