@@ -8,6 +8,7 @@ const NAV = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/create', label: 'Create' },
   { to: '/library', label: 'Library' },
+  { to: '/connections', label: 'Connections' },
 ];
 
 /** Authenticated app shell: dark sidebar nav + topbar, with the routed page. */
