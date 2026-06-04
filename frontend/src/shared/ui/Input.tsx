@@ -3,8 +3,8 @@ import { forwardRef, useId, type InputHTMLAttributes } from 'react';
 import { cn } from '@/shared/lib/cn';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
+  label?: string | undefined;
+  error?: string | undefined;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
