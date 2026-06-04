@@ -1,6 +1,7 @@
 # Creators
 
-[![CI](https://github.com/semz-ui/creators/actions/workflows/ci.yml/badge.svg)](https://github.com/semz-ui/creators/actions/workflows/ci.yml)
+[![Server CI](https://github.com/semz-ui/creators/actions/workflows/server-ci.yml/badge.svg)](https://github.com/semz-ui/creators/actions/workflows/server-ci.yml)
+[![Frontend CI](https://github.com/semz-ui/creators/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/semz-ui/creators/actions/workflows/frontend-ci.yml)
 
 Monorepo for **Reelo** — an AI video creator platform (prompt → AI-generated video → auto-publish to FB / IG / YouTube / TikTok).
 
