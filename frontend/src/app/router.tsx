@@ -3,6 +3,8 @@ import { createBrowserRouter } from 'react-router-dom';
 import { LoginPage } from '@/modules/auth/presentation/LoginPage';
 import { RegisterPage } from '@/modules/auth/presentation/RegisterPage';
 import { RequireAuth } from '@/modules/auth/presentation/RequireAuth';
+import { ConnectionCallbackPage } from '@/modules/connections/presentation/ConnectionCallbackPage';
+import { ConnectionsPage } from '@/modules/connections/presentation/ConnectionsPage';
 import { CreateVideoPage } from '@/modules/video/presentation/CreateVideoPage';
 import { DashboardPage } from '@/modules/video/presentation/DashboardPage';
 import { LibraryPage } from '@/modules/video/presentation/LibraryPage';
@@ -27,6 +29,8 @@ export const router = createBrowserRouter([
       { path: '/create', element: <CreateVideoPage /> },
       { path: '/library', element: <LibraryPage /> },
       { path: '/videos/:id', element: <VideoDetailPage /> },
+      { path: '/connections', element: <ConnectionsPage /> },
+      { path: '/connections/callback', element: <ConnectionCallbackPage /> },
     ],
   },
   { path: '*', element: <PlaceholderPage title="Not found" /> },
