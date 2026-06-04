@@ -1,0 +1,43 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`VideoCard > matches the snapshot 1`] = `
+<div>
+  <a
+    class="block focus-visible:outline-none"
+    href="/videos/vid-1"
+  >
+    <div
+      class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm h-full p-4 transition-shadow hover:shadow-md"
+    >
+      <div
+        class="mb-3 flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-sunken"
+      >
+        <video
+          class="h-full w-full object-cover"
+          src="https://cdn/v.mp4"
+        />
+      </div>
+      <div
+        class="flex items-start justify-between gap-2"
+      >
+        <p
+          class="line-clamp-2 text-sm text-content"
+        >
+          a neon city skyline
+        </p>
+        <span
+          class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-success-bg text-success"
+        >
+          Ready
+        </span>
+      </div>
+      <p
+        class="mt-2 text-xs text-content-muted"
+      >
+        15
+        s
+      </p>
+    </div>
+  </a>
+</div>
+`;
