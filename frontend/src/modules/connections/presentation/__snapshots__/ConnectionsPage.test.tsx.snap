@@ -1,0 +1,129 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ConnectionsPage > matches the snapshot once loaded 1`] = `
+<div>
+  <div
+    class="mx-auto max-w-2xl"
+  >
+    <h1
+      class="font-display text-3xl font-bold text-content"
+    >
+      Connections
+    </h1>
+    <p
+      class="mt-1 text-content-secondary"
+    >
+      Link the accounts you want to publish your videos to.
+    </p>
+    <ul
+      class="mt-6 flex flex-col gap-3"
+    >
+      <li>
+        <div
+          class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm flex items-center justify-between gap-4 p-4"
+        >
+          <div>
+            <p
+              class="font-medium text-content"
+            >
+              Facebook
+            </p>
+            <p
+              class="text-sm text-content-muted"
+            >
+              My Page
+            </p>
+          </div>
+          <div
+            class="flex items-center gap-3"
+          >
+            <span
+              class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-success-bg text-success"
+            >
+              Connected
+            </span>
+            <button
+              class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-transparent text-content hover:bg-sunken h-8 px-3 text-sm"
+              type="button"
+            >
+              Disconnect
+            </button>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div
+          class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm flex items-center justify-between gap-4 p-4"
+        >
+          <div>
+            <p
+              class="font-medium text-content"
+            >
+              Instagram
+            </p>
+            <p
+              class="text-sm text-content-muted"
+            >
+              Not connected
+            </p>
+          </div>
+          <button
+            class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-brand text-content-inverse hover:bg-brand-hover shadow-sm h-8 px-3 text-sm"
+            type="button"
+          >
+            Connect
+          </button>
+        </div>
+      </li>
+      <li>
+        <div
+          class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm flex items-center justify-between gap-4 p-4"
+        >
+          <div>
+            <p
+              class="font-medium text-content"
+            >
+              YouTube
+            </p>
+            <p
+              class="text-sm text-content-muted"
+            >
+              Not connected
+            </p>
+          </div>
+          <button
+            class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-brand text-content-inverse hover:bg-brand-hover shadow-sm h-8 px-3 text-sm"
+            type="button"
+          >
+            Connect
+          </button>
+        </div>
+      </li>
+      <li>
+        <div
+          class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm flex items-center justify-between gap-4 p-4"
+        >
+          <div>
+            <p
+              class="font-medium text-content"
+            >
+              TikTok
+            </p>
+            <p
+              class="text-sm text-content-muted"
+            >
+              Not connected
+            </p>
+          </div>
+          <button
+            class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-brand text-content-inverse hover:bg-brand-hover shadow-sm h-8 px-3 text-sm"
+            type="button"
+          >
+            Connect
+          </button>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+`;
