@@ -1,5 +1,8 @@
 import { randomUUID } from 'node:crypto';
 
+import { CreditAmount } from './credit-amount';
+import { InvalidPaymentStateError } from './billing.errors';
+
 export type PaymentStatus = 'pending' | 'completed' | 'failed';
 
 export interface PaymentSnapshot {
@@ -35,10 +38,11 @@ export class Payment {
 
   static create(params: { userId: string; credits: number }): Payment {
     const now = new Date();
+    const credits = CreditAmount.create(params.credits).value;
     return new Payment({
       id: randomUUID(),
       userId: params.userId,
-      credits: params.credits,
+      credits,
       status: 'pending',
       providerRef: null,
       createdAt: now,
@@ -57,19 +61,34 @@ export class Payment {
     return this._providerRef;
   }
 
+  /** Attach the provider's checkout reference. Set once — rewrites are rejected. */
   attachProviderRef(ref: string): void {
+    if (this._providerRef !== null) {
+      throw new InvalidPaymentStateError('Provider ref is already set');
+    }
     this._providerRef = ref;
     this.touch();
   }
 
   markCompleted(): void {
+    this.assertPending('complete');
     this._status = 'completed';
     this.touch();
   }
 
   markFailed(): void {
+    this.assertPending('fail');
     this._status = 'failed';
     this.touch();
+  }
+
+  /** A payment may only move out of `pending`; terminal states are final. */
+  private assertPending(action: string): void {
+    if (this._status !== 'pending') {
+      throw new InvalidPaymentStateError(
+        `Cannot ${action} a payment that is already ${this._status}`,
+      );
+    }
   }
 
   isCompleted(): boolean {

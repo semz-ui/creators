@@ -7,8 +7,10 @@ import type { GenerationResultInput } from './dto';
  *
  * Idempotent and safe against unknown jobs: an unrecognized `jobRef` or a video
  * already in a terminal state is a no-op, so provider retries don't error or
- * corrupt state. On failure, the generation credits are refunded (once, since
- * the failed transition only happens once).
+ * corrupt state. On failure the credits are refunded *before* the video is
+ * persisted as failed: the refund is idempotent, so if persisting the terminal
+ * state fails the next retry refunds again (a no-op) and then persists — the
+ * refund can never be silently dropped.
  */
 export class ApplyGenerationResult {
   constructor(
@@ -28,11 +30,11 @@ export class ApplyGenerationResult {
       return;
     }
 
-    video.markFailed(input.error ?? 'Generation failed');
-    await this.videos.save(video);
     await this.credits.refundGeneration(video.ownerId, {
       videoId: video.id,
       durationSeconds: video.durationSeconds,
     });
+    video.markFailed(input.error ?? 'Generation failed');
+    await this.videos.save(video);
   }
 }

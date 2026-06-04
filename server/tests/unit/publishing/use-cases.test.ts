@@ -17,6 +17,7 @@ function repoMock() {
     findById: jest.fn(),
     findByOwner: jest.fn(),
     findDue: jest.fn(),
+    claimForDistribution: jest.fn().mockResolvedValue(true),
   } satisfies Record<keyof IPublicationRepository, jest.Mock>;
 }
 
@@ -182,5 +183,27 @@ describe('RunDuePublications', () => {
     expect(distribution.distribute).toHaveBeenCalledWith(due);
     expect(repo.save).toHaveBeenCalledWith(due);
     expect(result.processed).toBe(1);
+  });
+
+  it('skips a publication it loses the claim on (never double-distributes)', async () => {
+    const repo = repoMock();
+    const due = Publication.create({
+      userId: 'u1',
+      videoId: 'v1',
+      caption: null,
+      scheduledAt: new Date(Date.now() + 1000),
+      targets: [{ platform: 'facebook', connectionId: 'c-fb' }],
+    });
+    repo.findDue.mockResolvedValue([due]);
+    repo.claimForDistribution.mockResolvedValue(false);
+    const distribution = {
+      distribute: jest.fn().mockResolvedValue(undefined),
+    } as unknown as DistributionService;
+
+    const result = await new RunDuePublications(repo, distribution).execute(new Date());
+
+    expect(distribution.distribute).not.toHaveBeenCalled();
+    expect(repo.save).not.toHaveBeenCalled();
+    expect(result.processed).toBe(0);
   });
 });

@@ -52,4 +52,37 @@ describe('envSchema', () => {
     expect(envSchema.parse({ ...validInput, TRUST_PROXY: 'true' }).TRUST_PROXY).toBe(true);
     expect(envSchema.safeParse({ ...validInput, TRUST_PROXY: 'yes' }).success).toBe(false);
   });
+
+  it('allows the dev-default secrets outside production', () => {
+    // Defaults are applied and accepted in development.
+    expect(envSchema.safeParse(validInput).success).toBe(true);
+  });
+
+  it('rejects dev-default secrets in production', () => {
+    const result = envSchema.safeParse({ ...validInput, NODE_ENV: 'production' });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const paths = result.error.issues.map((i) => i.path.join('.'));
+      expect(paths).toEqual(
+        expect.arrayContaining([
+          'PAYMENT_WEBHOOK_SECRET',
+          'PUBLISH_SCHEDULER_SECRET',
+          'GENERATION_CALLBACK_SECRET',
+          'CONNECTIONS_ENC_KEY',
+        ]),
+      );
+    }
+  });
+
+  it('accepts production when the secrets are overridden', () => {
+    const result = envSchema.safeParse({
+      ...validInput,
+      NODE_ENV: 'production',
+      GENERATION_CALLBACK_SECRET: 'x'.repeat(20),
+      CONNECTIONS_ENC_KEY: 'y'.repeat(20),
+      PUBLISH_SCHEDULER_SECRET: 'z'.repeat(20),
+      PAYMENT_WEBHOOK_SECRET: 'w'.repeat(20),
+    });
+    expect(result.success).toBe(true);
+  });
 });

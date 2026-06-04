@@ -1,10 +1,13 @@
+import { asSession, sessionOption } from '@shared/infrastructure/database/mongo-unit-of-work';
+import type { Tx } from '@shared/domain/ports/unit-of-work';
+
 import { Payment } from '../domain/payment.entity';
 import type { IPaymentRepository } from '../domain/ports/payment-repository';
 import { PaymentModel, type PaymentDocument } from './payment.model';
 
 /** MongoDB implementation of {@link IPaymentRepository}. */
 export class MongoPaymentRepository implements IPaymentRepository {
-  async save(payment: Payment): Promise<void> {
+  async save(payment: Payment, tx?: Tx): Promise<void> {
     const s = payment.toSnapshot();
     await PaymentModel.updateOne(
       { _id: s.id },
@@ -18,7 +21,7 @@ export class MongoPaymentRepository implements IPaymentRepository {
         },
         $setOnInsert: { createdAt: s.createdAt },
       },
-      { upsert: true },
+      { upsert: true, ...sessionOption(tx) },
     ).exec();
   }
 
@@ -27,8 +30,11 @@ export class MongoPaymentRepository implements IPaymentRepository {
     return doc ? this.toEntity(doc) : null;
   }
 
-  async findByProviderRef(providerRef: string): Promise<Payment | null> {
-    const doc = await PaymentModel.findOne({ providerRef }).lean<PaymentDocument>().exec();
+  async findByProviderRef(providerRef: string, tx?: Tx): Promise<Payment | null> {
+    const doc = await PaymentModel.findOne({ providerRef })
+      .session(asSession(tx) ?? null)
+      .lean<PaymentDocument>()
+      .exec();
     return doc ? this.toEntity(doc) : null;
   }
 

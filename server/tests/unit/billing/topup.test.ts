@@ -4,6 +4,12 @@ import { StartTopUp } from '@modules/billing/application/start-topup.usecase';
 import { Payment } from '@modules/billing/domain/payment.entity';
 import type { IPaymentProvider } from '@modules/billing/domain/ports/payment-provider';
 import type { IPaymentRepository } from '@modules/billing/domain/ports/payment-repository';
+import type { IUnitOfWork } from '@shared/domain/ports/unit-of-work';
+
+// Runs the work directly (no real transaction), passing an undefined tx through.
+function fakeUow(): IUnitOfWork {
+  return { run: (work) => work(undefined) };
+}
 
 function paymentsMock() {
   return {
@@ -54,13 +60,13 @@ describe('ConfirmPayment', () => {
     payments.findByProviderRef.mockResolvedValue(payment);
     const credits = creditServiceMock();
 
-    await new ConfirmPayment(payments, credits).execute({
+    await new ConfirmPayment(payments, credits, fakeUow()).execute({
       providerRef: 'pay_abc',
       status: 'completed',
     });
 
     expect(payments.save).toHaveBeenCalled();
-    expect(credits.credit).toHaveBeenCalledWith('u1', 50, 'topup', payment.id);
+    expect(credits.credit).toHaveBeenCalledWith('u1', 50, 'topup', payment.id, undefined);
   });
 
   it('is idempotent for an already-completed payment', async () => {
@@ -70,7 +76,7 @@ describe('ConfirmPayment', () => {
     payments.findByProviderRef.mockResolvedValue(payment);
     const credits = creditServiceMock();
 
-    await new ConfirmPayment(payments, credits).execute({
+    await new ConfirmPayment(payments, credits, fakeUow()).execute({
       providerRef: 'pay_abc',
       status: 'completed',
     });
@@ -83,7 +89,7 @@ describe('ConfirmPayment', () => {
     payments.findByProviderRef.mockResolvedValue(null);
     const credits = creditServiceMock();
 
-    await new ConfirmPayment(payments, credits).execute({
+    await new ConfirmPayment(payments, credits, fakeUow()).execute({
       providerRef: 'ghost',
       status: 'completed',
     });
@@ -98,7 +104,7 @@ describe('ConfirmPayment', () => {
     payments.findByProviderRef.mockResolvedValue(payment);
     const credits = creditServiceMock();
 
-    await new ConfirmPayment(payments, credits).execute({
+    await new ConfirmPayment(payments, credits, fakeUow()).execute({
       providerRef: 'pay_abc',
       status: 'failed',
     });

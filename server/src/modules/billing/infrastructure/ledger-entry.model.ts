@@ -29,4 +29,12 @@ const ledgerEntrySchema = new Schema<LedgerEntryDocument>(
 
 ledgerEntrySchema.index({ userId: 1, createdAt: -1 });
 
+// At most one entry per (type, reason, referenceId) movement. Backs the
+// idempotent credit path so a retried webhook/callback can't double-apply.
+// Partial so the many entries without a reference don't collide on null.
+ledgerEntrySchema.index(
+  { type: 1, reason: 1, referenceId: 1 },
+  { unique: true, partialFilterExpression: { referenceId: { $type: 'string' } } },
+);
+
 export const LedgerEntryModel = model<LedgerEntryDocument>('LedgerEntry', ledgerEntrySchema);
