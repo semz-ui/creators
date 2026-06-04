@@ -1,7 +1,7 @@
 import type { Express } from 'express';
 import RedisMock from 'ioredis-mock';
 import type { Redis } from 'ioredis';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import request from 'supertest';
 
 import { buildContainer } from '@container/index';
@@ -17,7 +17,8 @@ const GENERATION_SECRET = 'dev-generation-callback-secret-change-me';
 const SCHEDULER_SECRET = 'dev-publish-scheduler-secret-change-me';
 
 describe('Publishing flow (e2e)', () => {
-  let mongod: MongoMemoryServer;
+  // Creating a video debits credits in a Mongo transaction, which needs a replica set.
+  let mongod: MongoMemoryReplSet;
   let redisClient: InstanceType<typeof RedisMock>;
   let app: Express;
   let token: string;
@@ -52,7 +53,7 @@ describe('Publishing flow (e2e)', () => {
   }
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create();
+    mongod = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
     await connectMongo(mongod.getUri());
     redisClient = new RedisMock();
     app = createApp(buildContainer({ redisClient: redisClient as unknown as Redis }));
@@ -134,11 +135,12 @@ describe('Publishing flow (e2e)', () => {
     // Bad secret rejected.
     expect((await request(app).post('/api/v1/publications/process-due')).status).toBe(401);
 
-    // Good secret runs the scheduler (nothing due yet → processed 0).
+    // Good secret runs the scheduler. The only publication is scheduled for the
+    // future, so nothing is due yet → exactly 0 processed.
     const run = await request(app)
       .post('/api/v1/publications/process-due')
       .set('x-scheduler-secret', SCHEDULER_SECRET);
     expect(run.status).toBe(200);
-    expect(run.body).toMatchObject({ processed: expect.any(Number) });
+    expect(run.body).toMatchObject({ processed: 0 });
   });
 });

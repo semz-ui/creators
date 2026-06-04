@@ -55,6 +55,14 @@ export class MongoPublicationRepository implements IPublicationRepository {
     return docs.map((doc) => this.toEntity(doc));
   }
 
+  async claimForDistribution(id: string): Promise<boolean> {
+    const res = await PublicationModel.updateOne(
+      { _id: id, status: 'scheduled' },
+      { $set: { status: 'publishing', updatedAt: new Date() } },
+    ).exec();
+    return res.modifiedCount === 1;
+  }
+
   private toEntity(doc: PublicationDocument): Publication {
     return Publication.fromSnapshot({
       id: doc._id,

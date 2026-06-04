@@ -21,4 +21,15 @@ export class ConnectionTokenProviderAdapter implements IConnectionTokenProvider 
     }
     return { connectionId: connection.id, accessToken: connection.accessToken };
   }
+
+  async getActiveConnectionById(
+    userId: string,
+    connectionId: string,
+  ): Promise<ActiveConnection | null> {
+    const connection = await this.connections.findById(connectionId);
+    if (!connection || connection.userId !== userId || connection.status !== 'active') {
+      return null;
+    }
+    return { connectionId: connection.id, accessToken: connection.accessToken };
+  }
 }

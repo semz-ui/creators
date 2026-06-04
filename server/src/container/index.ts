@@ -6,6 +6,7 @@ import { env } from '@shared/infrastructure/config/env';
 import { RedisRateLimiter } from '@shared/infrastructure/rate-limit/redis-rate-limiter';
 import { createRateLimit } from '@shared/presentation/middleware/rate-limit';
 import { buildAuthModule } from '@modules/auth/auth.module';
+import { buildBillingModule } from '@modules/billing/billing.module';
 import { buildConnectionsModule } from '@modules/connections/connections.module';
 import { buildPublishingModule } from '@modules/publishing/publishing.module';
 import { buildVideoModule } from '@modules/video/video.module';
@@ -20,6 +21,7 @@ export interface Container {
   videoRouter: Router;
   connectionsRouter: Router;
   publishingRouter: Router;
+  billingRouter: Router;
   /** Global per-IP rate limiter, mounted across the API surface. */
   globalRateLimit: RequestHandler;
 }
@@ -42,8 +44,10 @@ export function buildContainer(deps: ContainerDeps = {}): Container {
   );
 
   const auth = buildAuthModule({ redisClient, authRateLimit });
+  // Billing first — Video uses its credit guard to charge for generation.
+  const billing = buildBillingModule({ authGuard: auth.authGuard });
   // Reuse the auth access guard to protect other modules' routes.
-  const video = buildVideoModule({ authGuard: auth.authGuard });
+  const video = buildVideoModule({ authGuard: auth.authGuard, creditGuard: billing.creditGuard });
   const connections = buildConnectionsModule({ authGuard: auth.authGuard, redisClient });
   // Publishing reads videos + connections through cross-module repo adapters.
   const publishing = buildPublishingModule({
@@ -57,6 +61,7 @@ export function buildContainer(deps: ContainerDeps = {}): Container {
     videoRouter: video.router,
     connectionsRouter: connections.router,
     publishingRouter: publishing.router,
+    billingRouter: billing.router,
     globalRateLimit,
   };
 }

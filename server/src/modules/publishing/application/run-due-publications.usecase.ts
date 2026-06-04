@@ -19,12 +19,22 @@ export class RunDuePublications {
 
     let processed = 0;
     for (const publication of due) {
+      // Claim before doing any external work. Once claimed the publication is no
+      // longer `scheduled`, so a crash mid-distribute (or another scheduler
+      // instance) can't re-pick it and double-post. A lost claim means someone
+      // else owns it.
+      if (!(await this.publications.claimForDistribution(publication.id))) {
+        continue;
+      }
+
       try {
         await this.distribution.distribute(publication);
         await this.publications.save(publication);
         processed += 1;
       } catch {
-        // Skip this one; the next scheduler tick will retry it.
+        // Leave it claimed (status `publishing`); a reaper/operator recovers a
+        // stuck publication. We never re-distribute, since duplicate external
+        // posts are worse than a delayed one.
       }
     }
 

@@ -17,6 +17,7 @@ function repoMock() {
     findById: jest.fn(),
     findByOwner: jest.fn(),
     findDue: jest.fn(),
+    claimForDistribution: jest.fn().mockResolvedValue(true),
   } satisfies Record<keyof IPublicationRepository, jest.Mock>;
 }
 
@@ -24,12 +25,23 @@ function videoLookup(url: string | null): IReadyVideoLookup {
   return { getReadyVideo: jest.fn().mockResolvedValue(url ? { videoUrl: url } : null) };
 }
 
+// `map` is platform -> active connectionId (or null). getActiveConnection
+// resolves by platform (creation time); getActiveConnectionById resolves by the
+// captured connection id (distribution time), active iff it is in the map.
 function connectionTokens(map: Record<string, string | null>): IConnectionTokenProvider {
+  const activeIds = new Set(Object.values(map).filter((id): id is string => id !== null));
   return {
     getActiveConnection: jest.fn().mockImplementation((_userId: string, platform: string) => {
       const id = map[platform];
       return Promise.resolve(id ? { connectionId: id, accessToken: `tok-${platform}` } : null);
     }),
+    getActiveConnectionById: jest
+      .fn()
+      .mockImplementation((_userId: string, connectionId: string) =>
+        Promise.resolve(
+          activeIds.has(connectionId) ? { connectionId, accessToken: `tok-${connectionId}` } : null,
+        ),
+      ),
   };
 }
 
@@ -99,6 +111,31 @@ describe('DistributionService', () => {
     await service.distribute(pub);
     expect(pub.status).toBe('failed');
   });
+
+  it('binds to the captured connectionId, not the current active connection', async () => {
+    const pub = Publication.create({
+      userId: 'u1',
+      videoId: 'v1',
+      caption: null,
+      scheduledAt: null,
+      targets: [{ platform: 'facebook', connectionId: 'c-old' }],
+    });
+    // The user has since switched accounts: only c-new is active now.
+    const connections = connectionTokens({ facebook: 'c-new' });
+    const service = new DistributionService(
+      videoLookup('https://cdn/v.mp4'),
+      connections,
+      publishers(),
+    );
+
+    await service.distribute(pub);
+
+    // Looked up by the captured id (c-old), never re-resolved by platform.
+    expect(connections.getActiveConnectionById).toHaveBeenCalledWith('u1', 'c-old');
+    expect(connections.getActiveConnection).not.toHaveBeenCalled();
+    // c-old is no longer active, so the target fails rather than posting to c-new.
+    expect(pub.status).toBe('failed');
+  });
 });
 
 describe('CreatePublication', () => {
@@ -121,7 +158,8 @@ describe('CreatePublication', () => {
 
     expect(result.status).toBe('completed');
     expect(result.targets[0]).toMatchObject({ platform: 'facebook', status: 'published' });
-    expect(repo.save).toHaveBeenCalledTimes(1);
+    // Persisted before distributing and again with the final target states.
+    expect(repo.save).toHaveBeenCalledTimes(2);
   });
 
   it('stores a future-scheduled publication without distributing', async () => {
@@ -182,5 +220,27 @@ describe('RunDuePublications', () => {
     expect(distribution.distribute).toHaveBeenCalledWith(due);
     expect(repo.save).toHaveBeenCalledWith(due);
     expect(result.processed).toBe(1);
+  });
+
+  it('skips a publication it loses the claim on (never double-distributes)', async () => {
+    const repo = repoMock();
+    const due = Publication.create({
+      userId: 'u1',
+      videoId: 'v1',
+      caption: null,
+      scheduledAt: new Date(Date.now() + 1000),
+      targets: [{ platform: 'facebook', connectionId: 'c-fb' }],
+    });
+    repo.findDue.mockResolvedValue([due]);
+    repo.claimForDistribution.mockResolvedValue(false);
+    const distribution = {
+      distribute: jest.fn().mockResolvedValue(undefined),
+    } as unknown as DistributionService;
+
+    const result = await new RunDuePublications(repo, distribution).execute(new Date());
+
+    expect(distribution.distribute).not.toHaveBeenCalled();
+    expect(repo.save).not.toHaveBeenCalled();
+    expect(result.processed).toBe(0);
   });
 });

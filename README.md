@@ -82,7 +82,7 @@ Built on the platform above, one PR each. External services (AI generator, socia
 | ------ | ----- | ------ |
 | Video | Create from a prompt, async generation job, status/preview | ✅ |
 | Connections | Link FB/IG/YouTube/TikTok (OAuth) | ✅ |
-| Billing & Credits | Credit balance + ledger; gates generation | |
+| Billing & Credits | Credit balance + ledger; gates generation | ✅ |
 | Publishing & Scheduling | Distribute a video to connected platforms | ✅ |
 | Analytics | Per-video/platform metrics | |
 
@@ -97,7 +97,7 @@ Base path `/api/v1/videos` (Bearer access token required, except the callback):
 | GET | `/:id` | Bearer | Get one of your videos (status, `resultUrl` when ready) |
 | POST | `/callbacks/generation` | `x-generation-secret` | Provider callback that marks a job `ready`/`failed` |
 
-A video moves `queued → processing → ready | failed`. The AI provider is a port (`IVideoGenerator`, stubbed) and reports completion via the callback. Credit-gating attaches here once the Billing module lands.
+A video moves `queued → processing → ready | failed`. The AI provider is a port (`IVideoGenerator`, stubbed) and reports completion via the callback. Generation is **credit-gated** (see Billing): credits are charged on create (402 if the user can't afford it) and refunded if generation fails.
 
 ## Connections API (Connections module)
 
@@ -124,6 +124,19 @@ Distribute a ready video to connected platforms, immediately or scheduled. Base 
 | POST | `/process-due` | `x-scheduler-secret` | Run due scheduled publications (for a cron/scheduler) |
 
 A publication holds a **distribution per target platform**; the overall status is derived (`completed` / `partially_failed` / `failed`), and per-platform failures are isolated. It validates the video is `ready` and that each platform has an active connection (cross-module reads via ports). The actual posting is a port (`ISocialPublisher`, stubbed per platform). Scheduled publications are stored and run when a scheduler hits `/process-due`.
+
+## Billing API (Billing module)
+
+Credit balance with an auditable ledger; top up via a payment provider. Base path `/api/v1/billing`:
+
+| Method | Path | Auth | Description |
+| ------ | ---- | ---- | ----------- |
+| GET | `/balance` | Bearer | Current credit balance (new accounts get `INITIAL_FREE_CREDITS`) |
+| GET | `/ledger` | Bearer | Paged transaction history |
+| POST | `/topup` | Bearer | Start a top-up; returns `{ checkoutUrl, paymentId }` |
+| POST | `/webhooks/payment` | `x-payment-secret` | Provider webhook that credits the account (idempotent) |
+
+Balances change through one service that records a ledger entry per movement; debits are **atomic** (`$inc` conditional on `balance >= amount`) so concurrent debits can't overdraw. Generation is gated via an `ICreditGuard` the Video module depends on: **charge on create** (`VIDEO_CREDIT_COST`, 402 if short), **refund on failure**. The payment provider is a port (`IPaymentProvider`, stubbed); top-ups complete via the webhook.
 
 ## Caching (Phase 2)
 
