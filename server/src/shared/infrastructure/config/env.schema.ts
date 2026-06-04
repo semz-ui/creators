@@ -64,6 +64,17 @@ export const envSchema = z.object({
     .min(16, 'PUBLISH_SCHEDULER_SECRET must be at least 16 characters')
     .default('dev-publish-scheduler-secret-change-me'),
 
+  // Billing module
+  // Free credits granted to a new account on first use.
+  INITIAL_FREE_CREDITS: z.coerce.number().int().nonnegative().default(100),
+  // Flat credit cost charged per video generation.
+  VIDEO_CREDIT_COST: z.coerce.number().int().positive().default(10),
+  // Shared secret the payment provider presents on the top-up webhook.
+  PAYMENT_WEBHOOK_SECRET: z
+    .string()
+    .min(16, 'PAYMENT_WEBHOOK_SECRET must be at least 16 characters')
+    .default('dev-payment-webhook-secret-change-me'),
+
   // Rate limiting (Phase 3) — window in seconds, max requests per window per IP.
   RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(60),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
