@@ -9,5 +9,5 @@ test('landing page renders and navigates to sign up', async ({ page }) => {
 
   await page.getByRole('button', { name: /get started/i }).click();
   await expect(page).toHaveURL(/\/signup$/);
-  await expect(page.getByRole('heading', { name: /sign up/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /create your account/i })).toBeVisible();
 });

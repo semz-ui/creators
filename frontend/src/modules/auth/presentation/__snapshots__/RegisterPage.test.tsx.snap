@@ -1,0 +1,91 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`RegisterPage > matches the snapshot 1`] = `
+<div>
+  <main
+    class="mx-auto flex min-h-full max-w-md flex-col justify-center gap-6 px-6 py-16"
+  >
+    <div
+      class="text-center"
+    >
+      <a
+        class="font-mono text-sm uppercase tracking-widest text-brand"
+        href="/"
+      >
+        Reelo
+      </a>
+      <h1
+        class="mt-3 font-display text-3xl font-bold text-content"
+      >
+        Create your account
+      </h1>
+      <p
+        class="mt-1 text-content-secondary"
+      >
+        Start turning prompts into videos.
+      </p>
+    </div>
+    <div
+      class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm"
+    >
+      <form
+        class="flex flex-col gap-4"
+        novalidate=""
+      >
+        <div
+          class="flex flex-col gap-1.5"
+        >
+          <label
+            class="text-sm font-medium text-content-secondary"
+            for=":r2:"
+          >
+            Email
+          </label>
+          <input
+            autocomplete="email"
+            class="h-10 rounded-lg border bg-surface px-3 text-sm text-content placeholder:text-content-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand border-line"
+            id=":r2:"
+            type="email"
+            value=""
+          />
+        </div>
+        <div
+          class="flex flex-col gap-1.5"
+        >
+          <label
+            class="text-sm font-medium text-content-secondary"
+            for=":r3:"
+          >
+            Password
+          </label>
+          <input
+            autocomplete="new-password"
+            class="h-10 rounded-lg border bg-surface px-3 text-sm text-content placeholder:text-content-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand border-line"
+            id=":r3:"
+            type="password"
+            value=""
+          />
+        </div>
+        <button
+          class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-brand text-content-inverse hover:bg-brand-hover shadow-sm h-12 px-6 text-base"
+          type="submit"
+        >
+          Create account
+        </button>
+      </form>
+    </div>
+    <p
+      class="text-center text-sm text-content-muted"
+    >
+      Already have an account?
+       
+      <a
+        class="text-brand hover:underline"
+        href="/login"
+      >
+        Log in
+      </a>
+    </p>
+  </main>
+</div>
+`;
