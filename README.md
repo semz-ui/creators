@@ -23,11 +23,14 @@ See [`server/`](./server) for setup and scripts.
 
 ### Running locally
 
-**With Docker (recommended)** — starts the API, MongoDB, and Redis together:
+**With Docker (recommended)** — starts the nginx load balancer, API, MongoDB, and Redis together:
 
 ```bash
 docker compose up --build
-# API on http://localhost:4000  ·  health: /health  ·  readiness: /health/ready
+# API via the nginx LB on http://localhost:8080  ·  health: /health  ·  readiness: /health/ready
+
+# Scale the API horizontally — the LB balances across replicas:
+docker compose up --build --scale server=3
 ```
 
 **Without Docker** — run Mongo + Redis yourself, then:
@@ -67,6 +70,7 @@ CI (GitHub Actions) runs format → lint → typecheck → test (coverage) → b
 | 2 | Redis caching (cache-aside, generalized) | ✅ |
 | 3 | Rate limiting (Redis-backed, tiered) | ✅ |
 | 4 | Hardening & DX — logging, tests, Docker | ✅ |
+| 5 | Load balancing — nginx reverse proxy, horizontally scalable API | ✅ |
 
 Each phase is delivered as a pull request.
 
@@ -88,6 +92,16 @@ Redis-backed (fixed-window) so limits hold across instances. Tiered:
 - **Strict** per-IP limit on credential routes (`/auth/register`, `/auth/login`) to blunt brute force (`RATE_LIMIT_AUTH_MAX` / `RATE_LIMIT_AUTH_WINDOW`).
 
 Responses carry `RateLimit-Limit`/`-Remaining`/`-Reset`; a breach returns `429` with `Retry-After`. The limiter sits behind an `IRateLimiter` port, so the backend is swappable.
+
+## Load balancing (Phase 5)
+
+An **nginx** reverse proxy is the single public entrypoint (`:8080`); the API runs as N stateless replicas behind it.
+
+- The app publishes no host port — only nginx is exposed — so `--scale server=N` works without port conflicts.
+- nginx resolves the `server` service via Docker DNS on each request, round-robining across all replicas.
+- Horizontal scaling needs no sticky sessions: auth sessions and rate-limit counters live in shared Redis, so any replica serves any request. Verified end-to-end (refresh-token rotation and reuse detection hold across instances).
+- nginx forwards `X-Forwarded-*`; with `TRUST_PROXY=true` the app keys rate limiting on the real client IP.
+- Each response carries an `X-Instance-Id` header (container hostname) for tracing which replica served it.
 
 ## Auth API (Phase 1)
 
