@@ -42,6 +42,8 @@ export function createApp(container: Container = buildContainer()): Express {
 
   // Routes
   app.use(healthRouter);
+  // Global per-IP rate limit across the API surface (health stays exempt).
+  app.use('/api/v1', container.globalRateLimit);
   app.use('/api/v1/auth', container.authRouter);
 
   // Error pipeline — must come last.

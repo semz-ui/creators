@@ -22,6 +22,8 @@ import { createAuthRouter } from './presentation/auth.routes';
 
 export interface AuthModuleDeps {
   redisClient: Redis;
+  /** Strict rate-limit middleware applied to auth-sensitive routes. */
+  authRateLimit: RequestHandler;
 }
 
 export interface AuthModule {
@@ -33,7 +35,7 @@ export interface AuthModule {
  * Composition root for the auth module: wires concrete infrastructure into the
  * application use cases and returns the HTTP router + a reusable access guard.
  */
-export function buildAuthModule({ redisClient }: AuthModuleDeps): AuthModule {
+export function buildAuthModule({ redisClient, authRateLimit }: AuthModuleDeps): AuthModule {
   const cache = new RedisCacheService(redisClient);
   const users = new CachedUserRepository(new MongoUserRepository(), cache, env.CACHE_DEFAULT_TTL);
   const hasher = new BcryptHasher();
@@ -60,5 +62,5 @@ export function buildAuthModule({ redisClient }: AuthModuleDeps): AuthModule {
 
   const authGuard = createAuthGuard(tokens);
 
-  return { router: createAuthRouter(controller, authGuard), authGuard };
+  return { router: createAuthRouter(controller, authGuard, authRateLimit), authGuard };
 }

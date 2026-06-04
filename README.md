@@ -47,7 +47,7 @@ CI (GitHub Actions) runs format → lint → typecheck → test (coverage) → b
 | 0 | Foundation — tooling, config, Mongo/Redis infra, app + server bootstrap, health checks | ✅ |
 | 1 | Authentication — register, login, JWT access + rotating refresh tokens | ✅ |
 | 2 | Redis caching (cache-aside, generalized) | ✅ |
-| 3 | Rate limiting (Redis-backed, tiered) | |
+| 3 | Rate limiting (Redis-backed, tiered) | ✅ |
 | 4 | Hardening & DX — logging, tests, Docker | |
 
 Each phase is delivered as a pull request.
@@ -61,6 +61,15 @@ Cross-cutting cache-aside caching backed by Redis:
 - Applied via a `CachedUserRepository` decorator over the Mongo repository: `findById`
   (the auth-guard / `/me` hot read) is cache-aside; `save` writes through and invalidates.
 - Default TTL via `CACHE_DEFAULT_TTL` (seconds).
+
+## Rate limiting (Phase 3)
+
+Redis-backed (fixed-window) so limits hold across instances. Tiered:
+
+- **Global** per-IP limit across `/api/v1/*` (`RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW`). `/health` is exempt.
+- **Strict** per-IP limit on credential routes (`/auth/register`, `/auth/login`) to blunt brute force (`RATE_LIMIT_AUTH_MAX` / `RATE_LIMIT_AUTH_WINDOW`).
+
+Responses carry `RateLimit-Limit`/`-Remaining`/`-Reset`; a breach returns `429` with `Retry-After`. The limiter sits behind an `IRateLimiter` port, so the backend is swappable.
 
 ## Auth API (Phase 1)
 

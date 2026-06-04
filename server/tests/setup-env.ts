@@ -10,3 +10,7 @@ process.env.MONGO_URI ??= 'mongodb://localhost:27017/reelo-test';
 process.env.REDIS_URL ??= 'redis://localhost:6379';
 process.env.JWT_ACCESS_SECRET ??= 'test-access-secret-0123456789-abcdefghij';
 process.env.JWT_REFRESH_SECRET ??= 'test-refresh-secret-0123456789-abcdefghij';
+// Generous rate limits so functional tests aren't throttled; the rate-limit
+// tests construct their own limiters with small limits to verify throttling.
+process.env.RATE_LIMIT_MAX ??= '100000';
+process.env.RATE_LIMIT_AUTH_MAX ??= '100000';
