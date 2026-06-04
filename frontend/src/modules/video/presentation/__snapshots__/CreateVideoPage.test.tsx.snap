@@ -1,0 +1,98 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CreateVideoPage > matches the snapshot 1`] = `
+<div>
+  <div
+    class="mx-auto max-w-2xl"
+  >
+    <h1
+      class="font-display text-3xl font-bold text-content"
+    >
+      Create a video
+    </h1>
+    <p
+      class="mt-1 text-content-secondary"
+    >
+      Describe what you want, pick a length, and we'll generate it.
+    </p>
+    <div
+      class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm mt-6"
+    >
+      <form
+        class="flex flex-col gap-5"
+        novalidate=""
+      >
+        <div
+          class="flex flex-col gap-1.5"
+        >
+          <label
+            class="text-sm font-medium text-content-secondary"
+            for=":r1:"
+          >
+            Prompt
+          </label>
+          <textarea
+            class="min-h-28 rounded-lg border bg-surface px-3 py-2 text-sm text-content placeholder:text-content-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand border-line"
+            id=":r1:"
+            placeholder="A neon city skyline at night, cinematic drone shot…"
+            rows="5"
+          />
+        </div>
+        <div
+          class="flex flex-col gap-1.5"
+        >
+          <span
+            class="text-sm font-medium text-content-secondary"
+          >
+            Duration
+          </span>
+          <div
+            aria-label="Duration"
+            class="flex gap-2"
+            role="group"
+          >
+            <button
+              aria-pressed="true"
+              class="h-10 flex-1 rounded-lg border text-sm font-medium transition-colors border-brand bg-brand text-content-inverse"
+              type="button"
+            >
+              15
+              s
+            </button>
+            <button
+              aria-pressed="false"
+              class="h-10 flex-1 rounded-lg border text-sm font-medium transition-colors border-line bg-surface text-content hover:bg-sunken"
+              type="button"
+            >
+              30
+              s
+            </button>
+            <button
+              aria-pressed="false"
+              class="h-10 flex-1 rounded-lg border text-sm font-medium transition-colors border-line bg-surface text-content hover:bg-sunken"
+              type="button"
+            >
+              45
+              s
+            </button>
+            <button
+              aria-pressed="false"
+              class="h-10 flex-1 rounded-lg border text-sm font-medium transition-colors border-line bg-surface text-content hover:bg-sunken"
+              type="button"
+            >
+              60
+              s
+            </button>
+          </div>
+        </div>
+        <button
+          class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-brand text-content-inverse hover:bg-brand-hover shadow-sm h-12 px-6 text-base"
+          type="submit"
+        >
+          Generate video
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+`;
