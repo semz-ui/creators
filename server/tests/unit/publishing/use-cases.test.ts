@@ -122,7 +122,8 @@ describe('CreatePublication', () => {
 
     expect(result.status).toBe('completed');
     expect(result.targets[0]).toMatchObject({ platform: 'facebook', status: 'published' });
-    expect(repo.save).toHaveBeenCalledTimes(1);
+    // Persisted before distributing and again with the final target states.
+    expect(repo.save).toHaveBeenCalledTimes(2);
   });
 
   it('stores a future-scheduled publication without distributing', async () => {
