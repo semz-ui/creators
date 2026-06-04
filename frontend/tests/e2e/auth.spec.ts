@@ -14,6 +14,14 @@ async function mockAuth(page: Page, endpoint: 'register' | 'login') {
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) }),
   );
+  // The dashboard loads recent videos on arrival.
+  await page.route(/\/api\/v1\/videos(\?|$)/, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ items: [], page: 1, limit: 6, total: 0 }),
+    }),
+  );
 }
 
 test('registers and lands on the dashboard', async ({ page }) => {
@@ -25,8 +33,8 @@ test('registers and lands on the dashboard', async ({ page }) => {
   await page.getByRole('button', { name: /create account/i }).click();
 
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByText(/you're in/i)).toBeVisible();
-  await expect(page.getByText(user.email)).toBeVisible();
+  await expect(page.getByRole('heading', { name: /welcome/i })).toBeVisible();
+  await expect(page.getByText(user.email).first()).toBeVisible();
 });
 
 test('logs in and lands on the dashboard', async ({ page }) => {
@@ -38,7 +46,7 @@ test('logs in and lands on the dashboard', async ({ page }) => {
   await page.getByRole('button', { name: /^log in$/i }).click();
 
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByText(/you're in/i)).toBeVisible();
+  await expect(page.getByRole('heading', { name: /welcome/i })).toBeVisible();
 });
 
 test('protected route redirects unauthenticated users to login', async ({ page }) => {
