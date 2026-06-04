@@ -1,7 +1,10 @@
-import type { Router } from 'express';
+import type { RequestHandler, Router } from 'express';
 import type { Redis } from 'ioredis';
 
 import { redis } from '@shared/infrastructure/cache/redis';
+import { env } from '@shared/infrastructure/config/env';
+import { RedisRateLimiter } from '@shared/infrastructure/rate-limit/redis-rate-limiter';
+import { createRateLimit } from '@shared/presentation/middleware/rate-limit';
 import { buildAuthModule } from '@modules/auth/auth.module';
 
 export interface ContainerDeps {
@@ -11,6 +14,8 @@ export interface ContainerDeps {
 
 export interface Container {
   authRouter: Router;
+  /** Global per-IP rate limiter, mounted across the API surface. */
+  globalRateLimit: RequestHandler;
 }
 
 /**
@@ -21,7 +26,16 @@ export interface Container {
 export function buildContainer(deps: ContainerDeps = {}): Container {
   const redisClient = deps.redisClient ?? redis;
 
-  const auth = buildAuthModule({ redisClient });
+  const globalRateLimit = createRateLimit(
+    new RedisRateLimiter(redisClient, env.RATE_LIMIT_MAX, env.RATE_LIMIT_WINDOW),
+    { name: 'global' },
+  );
+  const authRateLimit = createRateLimit(
+    new RedisRateLimiter(redisClient, env.RATE_LIMIT_AUTH_MAX, env.RATE_LIMIT_AUTH_WINDOW),
+    { name: 'auth' },
+  );
 
-  return { authRouter: auth.router };
+  const auth = buildAuthModule({ redisClient, authRateLimit });
+
+  return { authRouter: auth.router, globalRateLimit };
 }
