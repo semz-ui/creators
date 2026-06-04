@@ -84,7 +84,7 @@ Built on the platform above, one PR each. External services (AI generator, socia
 | Connections | Link FB/IG/YouTube/TikTok (OAuth) | ✅ |
 | Billing & Credits | Credit balance + ledger; gates generation | ✅ |
 | Publishing & Scheduling | Distribute a video to connected platforms | ✅ |
-| Analytics | Per-video/platform metrics | |
+| Analytics | Per-video/platform metrics | ✅ |
 
 ## Video API (Video module)
 
@@ -124,6 +124,18 @@ Distribute a ready video to connected platforms, immediately or scheduled. Base 
 | POST | `/process-due` | `x-scheduler-secret` | Run due scheduled publications (for a cron/scheduler) |
 
 A publication holds a **distribution per target platform**; the overall status is derived (`completed` / `partially_failed` / `failed`), and per-platform failures are isolated. It validates the video is `ready` and that each platform has an active connection (cross-module reads via ports). The actual posting is a port (`ISocialPublisher`, stubbed per platform). Scheduled publications are stored and run when a scheduler hits `/process-due`.
+
+## Analytics API (Analytics module)
+
+Engagement metrics (views / likes / comments / shares) per video and per platform. Base path `/api/v1/analytics` (Bearer):
+
+| Method | Path | Description |
+| ------ | ---- | ----------- |
+| POST | `/refresh` | Pull current metrics for the caller's published posts and store them |
+| GET | `/overview` | Account totals + per-platform breakdown + video count |
+| GET | `/videos/:videoId` | Per-video, per-platform metrics + totals (empty if none) |
+
+`refresh` reads the user's **published** posts (Publishing) and their **active connection** tokens (Connections), fetches metrics from a port (`IMetricsProvider`, stubbed per platform), and upserts a latest-metrics row per `(video, platform)`. Reads then aggregate those rows — no provider calls on the hot path. (Latest-snapshot only; historical trends are a future enhancement.)
 
 ## Billing API (Billing module)
 
