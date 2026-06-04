@@ -58,6 +58,12 @@ export const envSchema = z.object({
   // If set, the OAuth callback 302-redirects here (with ?status=); otherwise returns JSON.
   CONNECTIONS_REDIRECT_URL: z.string().default(''),
 
+  // Publishing module — shared secret a scheduler presents to run due publications.
+  PUBLISH_SCHEDULER_SECRET: z
+    .string()
+    .min(16, 'PUBLISH_SCHEDULER_SECRET must be at least 16 characters')
+    .default('dev-publish-scheduler-secret-change-me'),
+
   // Rate limiting (Phase 3) — window in seconds, max requests per window per IP.
   RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(60),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),

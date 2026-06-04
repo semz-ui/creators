@@ -3,6 +3,7 @@ import type { Redis } from 'ioredis';
 
 import { env } from '@shared/infrastructure/config/env';
 
+import type { IConnectionRepository } from './domain/ports/connection-repository';
 import { CompleteConnection } from './application/complete-connection.usecase';
 import { DisconnectConnection } from './application/disconnect-connection.usecase';
 import { ListConnections } from './application/list-connections.usecase';
@@ -21,6 +22,8 @@ export interface ConnectionsModuleDeps {
 
 export interface ConnectionsModule {
   router: Router;
+  /** Exposed so other modules (e.g. Publishing) can read connections via an adapter. */
+  connectionRepository: IConnectionRepository;
 }
 
 /** Composition root for the connections module. */
@@ -48,5 +51,8 @@ export function buildConnectionsModule({
     { redirectUrl: env.CONNECTIONS_REDIRECT_URL },
   );
 
-  return { router: createConnectionsRouter(controller, authGuard) };
+  return {
+    router: createConnectionsRouter(controller, authGuard),
+    connectionRepository: connections,
+  };
 }
