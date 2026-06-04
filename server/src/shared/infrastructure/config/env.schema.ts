@@ -39,6 +39,12 @@ export const envSchema = z.object({
   // Caching (Phase 2) — default TTL in seconds for cache-aside reads.
   CACHE_DEFAULT_TTL: z.coerce.number().int().positive().default(300),
 
+  // Video module — shared secret the AI provider presents on the generation callback.
+  GENERATION_CALLBACK_SECRET: z
+    .string()
+    .min(16, 'GENERATION_CALLBACK_SECRET must be at least 16 characters')
+    .default('dev-generation-callback-secret-change-me'),
+
   // Rate limiting (Phase 3) — window in seconds, max requests per window per IP.
   RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(60),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
