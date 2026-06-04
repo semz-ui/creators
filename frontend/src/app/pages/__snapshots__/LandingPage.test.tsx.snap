@@ -1,0 +1,55 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`LandingPage > matches the snapshot 1`] = `
+<div>
+  <main
+    class="mx-auto flex min-h-full max-w-3xl flex-col items-center justify-center gap-8 px-6 py-16 text-center"
+  >
+    <div
+      class="space-y-4"
+    >
+      <p
+        class="font-mono text-sm uppercase tracking-widest text-brand"
+      >
+        Reelo
+      </p>
+      <h1
+        class="font-display text-5xl font-bold tracking-tight text-content"
+      >
+        Prompt in. Video out. Everywhere.
+      </h1>
+      <p
+        class="mx-auto max-w-xl text-lg text-content-secondary"
+      >
+        Generate short-form video from a prompt and auto-publish to Facebook, Instagram, YouTube, and TikTok.
+      </p>
+    </div>
+    <div
+      class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm w-full max-w-md"
+    >
+      <div
+        class="flex flex-col gap-3"
+      >
+        <button
+          class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-brand text-content-inverse hover:bg-brand-hover shadow-sm h-12 px-6 text-base"
+          type="button"
+        >
+          Get started
+        </button>
+        <p
+          class="text-sm text-content-muted"
+        >
+          Already have an account?
+           
+          <a
+            class="text-brand hover:underline"
+            href="/login"
+          >
+            Log in
+          </a>
+        </p>
+      </div>
+    </div>
+  </main>
+</div>
+`;
