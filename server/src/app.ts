@@ -1,3 +1,5 @@
+import { hostname } from 'node:os';
+
 import cors from 'cors';
 import express, { type Express } from 'express';
 import helmet from 'helmet';
@@ -16,6 +18,9 @@ import { healthRouter } from '@shared/presentation/http/health.route';
  * listen) so it can be imported directly by integration tests. Accepts a
  * pre-built container so tests can inject fakes (e.g. an in-memory Redis).
  */
+/** Identifies the serving instance (container hostname) — visible behind a load balancer. */
+const INSTANCE_ID = hostname();
+
 export function createApp(container: Container = buildContainer()): Express {
   const app = express();
 
@@ -27,6 +32,11 @@ export function createApp(container: Container = buildContainer()): Express {
 
   // Security & parsing
   app.disable('x-powered-by');
+  // Stamp every response with the instance that served it (LB observability).
+  app.use((_req, res, next) => {
+    res.setHeader('X-Instance-Id', INSTANCE_ID);
+    next();
+  });
   app.use(helmet());
   app.use(cors({ origin: env.CORS_ORIGINS, credentials: true }));
   app.use(express.json({ limit: '1mb' }));

@@ -41,4 +41,10 @@ describe('HTTP app (e2e)', () => {
     const res = await request(app).get('/health');
     expect(res.headers['x-powered-by']).toBeUndefined();
   });
+
+  it('stamps responses with an X-Instance-Id header', async () => {
+    const res = await request(app).get('/health');
+    expect(res.headers['x-instance-id']).toBeDefined();
+    expect(res.headers['x-instance-id']).not.toBe('');
+  });
 });
