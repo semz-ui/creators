@@ -74,6 +74,31 @@ CI (GitHub Actions) runs format → lint → typecheck → test (coverage) → b
 
 Each phase is delivered as a pull request.
 
+### Product modules
+
+Built on the platform above, one PR each. External services (AI generator, social OAuth, payments) sit behind ports with stub adapters for now.
+
+| Module | Scope | Status |
+| ------ | ----- | ------ |
+| Video | Create from a prompt, async generation job, status/preview | ✅ |
+| Connections | Link FB/IG/YouTube/TikTok (OAuth) | |
+| Billing & Credits | Credit balance + ledger; gates generation | |
+| Publishing & Scheduling | Distribute a video to connected platforms | |
+| Analytics | Per-video/platform metrics | |
+
+## Video API (Video module)
+
+Base path `/api/v1/videos` (Bearer access token required, except the callback):
+
+| Method | Path | Auth | Description |
+| ------ | ---- | ---- | ----------- |
+| POST | `/` | Bearer | Create a video (`prompt`, `durationSeconds` 5–60); submits generation, returns it `processing` |
+| GET | `/` | Bearer | List your videos, newest first (`?page`, `?limit`) |
+| GET | `/:id` | Bearer | Get one of your videos (status, `resultUrl` when ready) |
+| POST | `/callbacks/generation` | `x-generation-secret` | Provider callback that marks a job `ready`/`failed` |
+
+A video moves `queued → processing → ready | failed`. The AI provider is a port (`IVideoGenerator`, stubbed) and reports completion via the callback. Credit-gating attaches here once the Billing module lands.
+
 ## Caching (Phase 2)
 
 Cross-cutting cache-aside caching backed by Redis:
