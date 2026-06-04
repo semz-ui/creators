@@ -19,6 +19,12 @@ import { healthRouter } from '@shared/presentation/http/health.route';
 export function createApp(container: Container = buildContainer()): Express {
   const app = express();
 
+  // Honour X-Forwarded-* (e.g. behind a load balancer) so req.ip is the real
+  // client — the rate limiter keys on it.
+  if (env.TRUST_PROXY) {
+    app.set('trust proxy', true);
+  }
+
   // Security & parsing
   app.disable('x-powered-by');
   app.use(helmet());

@@ -1,0 +1,16 @@
+node_modules
+dist
+coverage
+.env
+.env.*
+*.log
+.git
+.gitignore
+Dockerfile
+.dockerignore
+tests
+jest.config.js
+tsconfig.spec.json
+.eslintrc.json
+.prettierrc.json
+.prettierignore
