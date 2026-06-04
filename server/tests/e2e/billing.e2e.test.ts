@@ -1,7 +1,7 @@
 import type { Express } from 'express';
 import RedisMock from 'ioredis-mock';
 import type { Redis } from 'ioredis';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import request from 'supertest';
 
 import { buildContainer } from '@container/index';
@@ -19,7 +19,8 @@ const INITIAL = 100;
 const COST = 10;
 
 describe('Billing flow (e2e)', () => {
-  let mongod: MongoMemoryServer;
+  // Credit movements run in Mongo transactions, which require a replica set.
+  let mongod: MongoMemoryReplSet;
   let redisClient: InstanceType<typeof RedisMock>;
   let app: Express;
   let token: string;
@@ -29,7 +30,7 @@ describe('Billing flow (e2e)', () => {
     (await request(app).get('/api/v1/billing/balance').set(bearer())).body.balance;
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create();
+    mongod = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
     await connectMongo(mongod.getUri());
     redisClient = new RedisMock();
     app = createApp(buildContainer({ redisClient: redisClient as unknown as Redis }));
@@ -101,11 +102,12 @@ describe('Billing flow (e2e)', () => {
     expect(ok.status).toBe(204);
     expect(await balance()).toBe(before + 50);
 
-    // Duplicate webhook does not double-credit.
-    await request(app)
+    // Duplicate webhook is accepted (204) but does not double-credit.
+    const dup = await request(app)
       .post('/api/v1/billing/webhooks/payment')
       .set('x-payment-secret', PAYMENT_SECRET)
       .send({ providerRef, status: 'completed' });
+    expect(dup.status).toBe(204);
     expect(await balance()).toBe(before + 50);
   });
 

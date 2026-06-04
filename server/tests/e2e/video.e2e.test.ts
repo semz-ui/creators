@@ -1,7 +1,7 @@
 import type { Express } from 'express';
 import RedisMock from 'ioredis-mock';
 import type { Redis } from 'ioredis';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import request from 'supertest';
 
 import { buildContainer } from '@container/index';
@@ -21,14 +21,15 @@ async function registerUser(app: Express, email: string): Promise<string> {
 }
 
 describe('Video flow (e2e)', () => {
-  let mongod: MongoMemoryServer;
+  // Generation debits/refunds run in Mongo transactions, which require a replica set.
+  let mongod: MongoMemoryReplSet;
   let redisClient: InstanceType<typeof RedisMock>;
   let app: Express;
   let tokenA: string;
   let tokenB: string;
 
   beforeAll(async () => {
-    mongod = await MongoMemoryServer.create();
+    mongod = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
     await connectMongo(mongod.getUri());
     redisClient = new RedisMock();
     app = createApp(buildContainer({ redisClient: redisClient as unknown as Redis }));

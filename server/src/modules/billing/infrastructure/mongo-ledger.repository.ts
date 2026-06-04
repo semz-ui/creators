@@ -1,4 +1,7 @@
-import { LedgerEntry } from '../domain/ledger-entry.entity';
+import { asSession } from '@shared/infrastructure/database/mongo-unit-of-work';
+import type { Tx } from '@shared/domain/ports/unit-of-work';
+
+import { LedgerEntry, type LedgerReason, type LedgerType } from '../domain/ledger-entry.entity';
 import type {
   ILedgerRepository,
   ListOptions,
@@ -8,18 +11,36 @@ import { LedgerEntryModel, type LedgerEntryDocument } from './ledger-entry.model
 
 /** MongoDB append-only ledger. */
 export class MongoLedgerRepository implements ILedgerRepository {
-  async append(entry: LedgerEntry): Promise<void> {
+  async append(entry: LedgerEntry, tx?: Tx): Promise<void> {
     const s = entry.toSnapshot();
-    await LedgerEntryModel.create({
-      _id: s.id,
-      userId: s.userId,
-      type: s.type,
-      amount: s.amount,
-      reason: s.reason,
-      referenceId: s.referenceId,
-      balanceAfter: s.balanceAfter,
-      createdAt: s.createdAt,
-    });
+    const session = asSession(tx);
+    await LedgerEntryModel.create(
+      [
+        {
+          _id: s.id,
+          userId: s.userId,
+          type: s.type,
+          amount: s.amount,
+          reason: s.reason,
+          referenceId: s.referenceId,
+          balanceAfter: s.balanceAfter,
+          createdAt: s.createdAt,
+        },
+      ],
+      session ? { session } : {},
+    );
+  }
+
+  async existsByReference(
+    type: LedgerType,
+    reason: LedgerReason,
+    referenceId: string,
+    tx?: Tx,
+  ): Promise<boolean> {
+    const doc = await LedgerEntryModel.exists({ type, reason, referenceId })
+      .session(asSession(tx) ?? null)
+      .exec();
+    return doc !== null;
   }
 
   async listByUser(userId: string, options: ListOptions): Promise<PagedLedger> {

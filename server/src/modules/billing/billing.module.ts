@@ -1,6 +1,7 @@
 import type { RequestHandler, Router } from 'express';
 
 import { env } from '@shared/infrastructure/config/env';
+import { MongoUnitOfWork } from '@shared/infrastructure/database/mongo-unit-of-work';
 import type { ICreditGuard } from '@modules/video/domain/ports/credit-guard';
 
 import { ConfirmPayment } from './application/confirm-payment.usecase';
@@ -33,14 +34,15 @@ export function buildBillingModule({ authGuard }: BillingModuleDeps): BillingMod
   const ledger = new MongoLedgerRepository();
   const payments = new MongoPaymentRepository();
   const provider = new StubPaymentProvider();
+  const uow = new MongoUnitOfWork();
 
-  const creditService = new CreditService(accounts, ledger);
+  const creditService = new CreditService(accounts, ledger, uow);
 
   const controller = new BillingController({
     getBalance: new GetBalance(creditService),
     listLedger: new ListLedger(ledger),
     startTopUp: new StartTopUp(payments, provider),
-    confirmPayment: new ConfirmPayment(payments, creditService),
+    confirmPayment: new ConfirmPayment(payments, creditService, uow),
   });
 
   const paymentWebhookGuard = createPaymentWebhookGuard(env.PAYMENT_WEBHOOK_SECRET);
