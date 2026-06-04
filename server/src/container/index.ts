@@ -7,6 +7,7 @@ import { RedisRateLimiter } from '@shared/infrastructure/rate-limit/redis-rate-l
 import { createRateLimit } from '@shared/presentation/middleware/rate-limit';
 import { buildAuthModule } from '@modules/auth/auth.module';
 import { buildConnectionsModule } from '@modules/connections/connections.module';
+import { buildPublishingModule } from '@modules/publishing/publishing.module';
 import { buildVideoModule } from '@modules/video/video.module';
 
 export interface ContainerDeps {
@@ -18,6 +19,7 @@ export interface Container {
   authRouter: Router;
   videoRouter: Router;
   connectionsRouter: Router;
+  publishingRouter: Router;
   /** Global per-IP rate limiter, mounted across the API surface. */
   globalRateLimit: RequestHandler;
 }
@@ -43,11 +45,18 @@ export function buildContainer(deps: ContainerDeps = {}): Container {
   // Reuse the auth access guard to protect other modules' routes.
   const video = buildVideoModule({ authGuard: auth.authGuard });
   const connections = buildConnectionsModule({ authGuard: auth.authGuard, redisClient });
+  // Publishing reads videos + connections through cross-module repo adapters.
+  const publishing = buildPublishingModule({
+    authGuard: auth.authGuard,
+    videoRepository: video.videoRepository,
+    connectionRepository: connections.connectionRepository,
+  });
 
   return {
     authRouter: auth.router,
     videoRouter: video.router,
     connectionsRouter: connections.router,
+    publishingRouter: publishing.router,
     globalRateLimit,
   };
 }
