@@ -5,6 +5,7 @@ import { redis } from '@shared/infrastructure/cache/redis';
 import { env } from '@shared/infrastructure/config/env';
 import { RedisRateLimiter } from '@shared/infrastructure/rate-limit/redis-rate-limiter';
 import { createRateLimit } from '@shared/presentation/middleware/rate-limit';
+import { buildAnalyticsModule } from '@modules/analytics/analytics.module';
 import { buildAuthModule } from '@modules/auth/auth.module';
 import { buildBillingModule } from '@modules/billing/billing.module';
 import { buildConnectionsModule } from '@modules/connections/connections.module';
@@ -22,6 +23,7 @@ export interface Container {
   connectionsRouter: Router;
   publishingRouter: Router;
   billingRouter: Router;
+  analyticsRouter: Router;
   /** Global per-IP rate limiter, mounted across the API surface. */
   globalRateLimit: RequestHandler;
 }
@@ -55,6 +57,12 @@ export function buildContainer(deps: ContainerDeps = {}): Container {
     videoRepository: video.videoRepository,
     connectionRepository: connections.connectionRepository,
   });
+  // Analytics reads published posts + connections to fetch and aggregate metrics.
+  const analytics = buildAnalyticsModule({
+    authGuard: auth.authGuard,
+    publicationRepository: publishing.publicationRepository,
+    connectionRepository: connections.connectionRepository,
+  });
 
   return {
     authRouter: auth.router,
@@ -62,6 +70,7 @@ export function buildContainer(deps: ContainerDeps = {}): Container {
     connectionsRouter: connections.router,
     publishingRouter: publishing.router,
     billingRouter: billing.router,
+    analyticsRouter: analytics.router,
     globalRateLimit,
   };
 }

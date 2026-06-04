@@ -4,6 +4,8 @@ import { env } from '@shared/infrastructure/config/env';
 import type { IConnectionRepository } from '@modules/connections/domain/ports/connection-repository';
 import type { IVideoRepository } from '@modules/video/domain/ports/video-repository';
 
+import type { IPublicationRepository } from './domain/ports/publication-repository';
+
 import { CreatePublication } from './application/create-publication.usecase';
 import { DistributionService } from './application/distribution.service';
 import { GetPublication } from './application/get-publication.usecase';
@@ -26,6 +28,8 @@ export interface PublishingModuleDeps {
 
 export interface PublishingModule {
   router: Router;
+  /** Exposed so other modules (e.g. Analytics) can read publications via an adapter. */
+  publicationRepository: IPublicationRepository;
 }
 
 /** Composition root for the publishing module. */
@@ -50,5 +54,8 @@ export function buildPublishingModule({
 
   const schedulerGuard = createSchedulerGuard(env.PUBLISH_SCHEDULER_SECRET);
 
-  return { router: createPublishingRouter(controller, authGuard, schedulerGuard) };
+  return {
+    router: createPublishingRouter(controller, authGuard, schedulerGuard),
+    publicationRepository: publications,
+  };
 }
