@@ -20,6 +20,13 @@ export const envSchema = z.object({
         .filter(Boolean),
     ),
 
+  // When true, Express trusts X-Forwarded-* so req.ip reflects the real client
+  // behind a proxy/load balancer (important for correct rate-limit keying).
+  TRUST_PROXY: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
+
   MONGO_URI: z.string().min(1, 'MONGO_URI is required'),
   REDIS_URL: z.string().min(1, 'REDIS_URL is required'),
 

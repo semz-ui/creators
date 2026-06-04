@@ -46,4 +46,10 @@ describe('envSchema', () => {
     const result = envSchema.safeParse({ ...validInput, NODE_ENV: 'staging' });
     expect(result.success).toBe(false);
   });
+
+  it('coerces TRUST_PROXY from string to boolean (default false)', () => {
+    expect(envSchema.parse(validInput).TRUST_PROXY).toBe(false);
+    expect(envSchema.parse({ ...validInput, TRUST_PROXY: 'true' }).TRUST_PROXY).toBe(true);
+    expect(envSchema.safeParse({ ...validInput, TRUST_PROXY: 'yes' }).success).toBe(false);
+  });
 });
