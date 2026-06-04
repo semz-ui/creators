@@ -83,7 +83,7 @@ Built on the platform above, one PR each. External services (AI generator, socia
 | Video | Create from a prompt, async generation job, status/preview | ✅ |
 | Connections | Link FB/IG/YouTube/TikTok (OAuth) | ✅ |
 | Billing & Credits | Credit balance + ledger; gates generation | |
-| Publishing & Scheduling | Distribute a video to connected platforms | |
+| Publishing & Scheduling | Distribute a video to connected platforms | ✅ |
 | Analytics | Per-video/platform metrics | |
 
 ## Video API (Video module)
@@ -111,6 +111,19 @@ Link social accounts via OAuth (Authorization Code). Base path `/api/v1/connecti
 | DELETE | `/:id` | Bearer | Disconnect |
 
 Platforms: `facebook`, `instagram`, `youtube`, `tiktok`. Each provider is a port (`IOAuthProvider`, stubbed) resolved via a registry. The `state` is stored one-time in Redis (CSRF). OAuth **tokens are encrypted at rest** (AES-256-GCM) and never leave the server. The callback returns JSON, or 302-redirects to `CONNECTIONS_REDIRECT_URL` (with `?status=`) when set.
+
+## Publishing API (Publishing module)
+
+Distribute a ready video to connected platforms, immediately or scheduled. Base path `/api/v1/publications`:
+
+| Method | Path | Auth | Description |
+| ------ | ---- | ---- | ----------- |
+| POST | `/` | Bearer | Publish a video (`videoId`, `platforms[]`, `caption?`, `scheduledAt?`); distributes now or schedules |
+| GET | `/` | Bearer | List your publications (`?page`, `?limit`) |
+| GET | `/:id` | Bearer | Get one (per-platform distribution status) |
+| POST | `/process-due` | `x-scheduler-secret` | Run due scheduled publications (for a cron/scheduler) |
+
+A publication holds a **distribution per target platform**; the overall status is derived (`completed` / `partially_failed` / `failed`), and per-platform failures are isolated. It validates the video is `ready` and that each platform has an active connection (cross-module reads via ports). The actual posting is a port (`ISocialPublisher`, stubbed per platform). Scheduled publications are stored and run when a scheduler hits `/process-due`.
 
 ## Caching (Phase 2)
 

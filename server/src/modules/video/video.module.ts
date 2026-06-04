@@ -2,6 +2,7 @@ import type { RequestHandler, Router } from 'express';
 
 import { env } from '@shared/infrastructure/config/env';
 
+import type { IVideoRepository } from './domain/ports/video-repository';
 import { ApplyGenerationResult } from './application/apply-generation-result.usecase';
 import { CreateVideo } from './application/create-video.usecase';
 import { GetVideo } from './application/get-video.usecase';
@@ -19,6 +20,8 @@ export interface VideoModuleDeps {
 
 export interface VideoModule {
   router: Router;
+  /** Exposed so other modules (e.g. Publishing) can read videos via an adapter. */
+  videoRepository: IVideoRepository;
 }
 
 /** Composition root for the video module. */
@@ -35,5 +38,8 @@ export function buildVideoModule({ authGuard }: VideoModuleDeps): VideoModule {
 
   const generationGuard = createGenerationGuard(env.GENERATION_CALLBACK_SECRET);
 
-  return { router: createVideoRouter(controller, authGuard, generationGuard) };
+  return {
+    router: createVideoRouter(controller, authGuard, generationGuard),
+    videoRepository: videos,
+  };
 }
