@@ -1,0 +1,26 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Button > matches the snapshot for each variant 1`] = `
+<div>
+  <div>
+    <button
+      class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-brand text-content-inverse hover:bg-brand-hover shadow-sm h-10 px-4 text-sm"
+      type="button"
+    >
+      Primary
+    </button>
+    <button
+      class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-brand-secondary text-content-inverse hover:bg-brand h-10 px-4 text-sm"
+      type="button"
+    >
+      Secondary
+    </button>
+    <button
+      class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-transparent text-content hover:bg-sunken h-10 px-4 text-sm"
+      type="button"
+    >
+      Ghost
+    </button>
+  </div>
+</div>
+`;

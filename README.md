@@ -1,6 +1,7 @@
 # Creators
 
-[![CI](https://github.com/semz-ui/creators/actions/workflows/ci.yml/badge.svg)](https://github.com/semz-ui/creators/actions/workflows/ci.yml)
+[![Server CI](https://github.com/semz-ui/creators/actions/workflows/server-ci.yml/badge.svg)](https://github.com/semz-ui/creators/actions/workflows/server-ci.yml)
+[![Frontend CI](https://github.com/semz-ui/creators/actions/workflows/frontend-ci.yml/badge.svg)](https://github.com/semz-ui/creators/actions/workflows/frontend-ci.yml)
 
 Monorepo for **Reelo** — an AI video creator platform (prompt → AI-generated video → auto-publish to FB / IG / YouTube / TikTok).
 
@@ -8,7 +9,8 @@ Monorepo for **Reelo** — an AI video creator platform (prompt → AI-generated
 
 ```
 creator/
-└── server/   # Backend API — Express, TypeScript, onion architecture, modular monolith
+├── server/     # Backend API — Express, TypeScript, onion architecture, modular monolith
+└── frontend/   # Web client — React + Vite, MVVM modular monolith, TanStack Query
 ```
 
 ## Backend (`server/`)
@@ -60,6 +62,21 @@ Run from `server/`:
 - **E2E** — the assembled Express app driven with `supertest`.
 
 CI (GitHub Actions) runs format → lint → typecheck → test (coverage) → build on every push to `main` and every PR.
+
+## Frontend (`frontend/`)
+
+- **Stack:** React + Vite + TypeScript (strict), **TanStack Query** (server state) + **Zustand** (client state), **Tailwind** wired to the Reelo design tokens, React Router.
+- **Architecture:** MVVM as a modular monolith with strict layers — **Data** (typed API client + Query fns) → **ViewModel** (feature hooks) → **Presentation** (components). Views never call the API.
+- **Testing:** Vitest + React Testing Library (unit), Vitest snapshots, MSW for viewmodel tests, **Playwright** e2e (mocked API).
+
+```bash
+cd frontend
+cp .env.example .env        # VITE_API_URL → the server
+npm install
+npm run dev                 # http://localhost:3000
+```
+
+Scripts: `lint` · `format:check` · `typecheck` · `test` / `test:cov` · `build` · `test:e2e`. Built in phases F0–F7 (foundation → auth → video → connections → publishing → billing → analytics → polish), one PR each.
 
 ## Roadmap
 
