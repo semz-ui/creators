@@ -5,6 +5,9 @@ import { RegisterPage } from '@/modules/auth/presentation/RegisterPage';
 import { RequireAuth } from '@/modules/auth/presentation/RequireAuth';
 import { ConnectionCallbackPage } from '@/modules/connections/presentation/ConnectionCallbackPage';
 import { ConnectionsPage } from '@/modules/connections/presentation/ConnectionsPage';
+import { PublicationDetailPage } from '@/modules/publishing/presentation/PublicationDetailPage';
+import { PublicationsPage } from '@/modules/publishing/presentation/PublicationsPage';
+import { PublishPage } from '@/modules/publishing/presentation/PublishPage';
 import { CreateVideoPage } from '@/modules/video/presentation/CreateVideoPage';
 import { DashboardPage } from '@/modules/video/presentation/DashboardPage';
 import { LibraryPage } from '@/modules/video/presentation/LibraryPage';
@@ -29,6 +32,9 @@ export const router = createBrowserRouter([
       { path: '/create', element: <CreateVideoPage /> },
       { path: '/library', element: <LibraryPage /> },
       { path: '/videos/:id', element: <VideoDetailPage /> },
+      { path: '/videos/:id/publish', element: <PublishPage /> },
+      { path: '/publications', element: <PublicationsPage /> },
+      { path: '/publications/:id', element: <PublicationDetailPage /> },
       { path: '/connections', element: <ConnectionsPage /> },
       { path: '/connections/callback', element: <ConnectionCallbackPage /> },
     ],
