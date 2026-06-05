@@ -1,0 +1,75 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PublicationDetailPage > matches the snapshot 1`] = `
+<div>
+  <div
+    class="mx-auto max-w-2xl"
+  >
+    <div
+      class="mb-4 flex items-center justify-between gap-3"
+    >
+      <a
+        class="text-sm text-brand hover:underline"
+        href="/publications"
+      >
+        ← Publications
+      </a>
+      <span
+        class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-success-bg text-success"
+      >
+        Completed
+      </span>
+    </div>
+    <div
+      class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm space-y-4"
+    >
+      <p
+        class="text-content"
+      >
+        launch day
+      </p>
+      <ul
+        class="divide-y divide-line-subtle"
+      >
+        <li
+          class="flex items-center justify-between py-3"
+        >
+          <div>
+            <p
+              class="font-medium text-content"
+            >
+              Facebook
+            </p>
+          </div>
+          <span
+            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-success-bg text-success"
+          >
+            Published
+          </span>
+        </li>
+        <li
+          class="flex items-center justify-between py-3"
+        >
+          <div>
+            <p
+              class="font-medium text-content"
+            >
+              YouTube
+            </p>
+            <p
+              class="text-sm text-danger"
+            >
+              quota exceeded
+            </p>
+          </div>
+          <span
+            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-danger-bg text-danger"
+          >
+            Failed
+          </span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;

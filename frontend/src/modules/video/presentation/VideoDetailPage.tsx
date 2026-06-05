@@ -48,7 +48,15 @@ function renderBody(video: Video) {
       <div className="space-y-4">
         <video src={video.resultUrl} controls className="w-full rounded-lg bg-black" />
         <p className="text-content">{video.prompt}</p>
-        <p className="text-sm text-content-muted">{video.durationSeconds}s</p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-content-muted">{video.durationSeconds}s</p>
+          <Link
+            to={`/videos/${video.id}/publish`}
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-content-inverse hover:bg-brand-hover"
+          >
+            Publish
+          </Link>
+        </div>
       </div>
     );
   }
