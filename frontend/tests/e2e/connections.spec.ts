@@ -25,6 +25,13 @@ async function login(page: Page) {
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) }),
   );
+  await page.route('**/api/v1/billing/balance', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ balance: 90 }),
+    }),
+  );
   // A full page reload (e.g. the OAuth return) re-runs session restore via refresh.
   await page.route('**/api/v1/auth/refresh', (route) =>
     route.fulfill({

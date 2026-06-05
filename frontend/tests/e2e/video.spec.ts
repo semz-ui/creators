@@ -14,6 +14,13 @@ async function login(page: Page) {
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) }),
   );
+  await page.route('**/api/v1/billing/balance', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ balance: 90 }),
+    }),
+  );
   await page.goto('/login');
   await page.getByLabel(/^email$/i).fill(user.email);
   await page.getByLabel(/^password$/i).fill('password123');
