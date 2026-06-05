@@ -70,8 +70,11 @@ test('publishes a ready video and sees per-platform status', async ({ page }) =>
       body: JSON.stringify({ items: [facebookConnection] }),
     }),
   );
-  await page.route('**/api/v1/publications', (route) =>
-    route.fulfill({
+  await page.route('**/api/v1/publications', (route) => {
+    if (route.request().method() !== 'POST') {
+      return route.fallback();
+    }
+    return route.fulfill({
       status: 201,
       contentType: 'application/json',
       body: JSON.stringify({
@@ -86,8 +89,8 @@ test('publishes a ready video and sees per-platform status', async ({ page }) =>
         createdAt: '',
         updatedAt: '',
       }),
-    }),
-  );
+    });
+  });
   await page.route(/\/api\/v1\/publications\/[\w-]+$/, (route) =>
     route.fulfill({
       status: 200,
