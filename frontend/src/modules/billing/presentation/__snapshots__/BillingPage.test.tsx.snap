@@ -96,7 +96,7 @@ exports[`BillingPage > matches the snapshot 1`] = `
             <p
               class="text-xs text-content-muted"
             >
-              1/1/2026, 1:00:00 AM
+              Jan 1, 2026, 12:00 AM UTC
             </p>
           </div>
           <div
@@ -128,7 +128,7 @@ exports[`BillingPage > matches the snapshot 1`] = `
             <p
               class="text-xs text-content-muted"
             >
-              1/1/2026, 1:00:00 AM
+              Jan 1, 2026, 12:00 AM UTC
             </p>
           </div>
           <div

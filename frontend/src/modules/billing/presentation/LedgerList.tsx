@@ -1,4 +1,5 @@
 import { cn } from '@/shared/lib/cn';
+import { formatDateTime } from '@/shared/lib/format';
 
 import type { LedgerEntry, LedgerReason } from '../data/billing.types';
 
@@ -21,9 +22,7 @@ export function LedgerList({ entries }: { entries: LedgerEntry[] }) {
           <li key={entry.id} className="flex items-center justify-between py-3">
             <div>
               <p className="text-content">{REASON_LABEL[entry.reason]}</p>
-              <p className="text-xs text-content-muted">
-                {new Date(entry.createdAt).toLocaleString()}
-              </p>
+              <p className="text-xs text-content-muted">{formatDateTime(entry.createdAt)}</p>
             </div>
             <div className="text-right">
               <p className={cn('font-medium', isCredit ? 'text-success' : 'text-content')}>
