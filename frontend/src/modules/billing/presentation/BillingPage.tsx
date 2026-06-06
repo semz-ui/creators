@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import { cn } from '@/shared/lib/cn';
 import { Button, Card, Spinner } from '@/shared/ui';
 
+import { billingKeys } from '../data/query-keys';
 import { useBalance } from '../viewmodels/useBalance';
 import { useLedger } from '../viewmodels/useLedger';
 import { CREDIT_PACKS, useTopUp } from '../viewmodels/useTopUp';
@@ -16,12 +19,49 @@ export function BillingPage() {
   const [page, setPage] = useState(1);
   const { data: ledger, isPending: ledgerPending } = useLedger(page, LIMIT);
 
+  // Stripe redirects back here with ?topup=success|cancelled. On success the
+  // webhook credits asynchronously, so refresh the balance/ledger; then clear
+  // the param so a manual refresh doesn't re-show the banner.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const topupStatus = searchParams.get('topup');
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (!topupStatus) return;
+    if (topupStatus === 'success') {
+      void queryClient.invalidateQueries({ queryKey: billingKeys.all });
+    }
+    setSearchParams(
+      (prev) => {
+        prev.delete('topup');
+        return prev;
+      },
+      { replace: true },
+    );
+  }, [topupStatus, queryClient, setSearchParams]);
+
   const totalPages = ledger ? Math.max(1, Math.ceil(ledger.total / ledger.limit)) : 1;
 
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="font-display text-3xl font-bold text-content">Billing</h1>
       <p className="mt-1 text-content-secondary">Credits power your video generations.</p>
+
+      {topupStatus === 'success' && (
+        <div
+          role="status"
+          className="mt-4 rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-sm text-success"
+        >
+          Payment received — your credits will appear in a moment.
+        </div>
+      )}
+      {topupStatus === 'cancelled' && (
+        <div
+          role="status"
+          className="mt-4 rounded-lg border border-line bg-sunken px-4 py-3 text-sm text-content-secondary"
+        >
+          Checkout cancelled — you haven&apos;t been charged.
+        </div>
+      )}
 
       <Card className="mt-6">
         <p className="text-sm text-content-secondary">Current balance</p>

@@ -39,7 +39,16 @@ export function createApp(container: Container = buildContainer()): Express {
   });
   app.use(helmet());
   app.use(cors({ origin: env.CORS_ORIGINS, credentials: true }));
-  app.use(express.json({ limit: '1mb' }));
+  // Capture the raw body buffer alongside JSON parsing — payment-provider webhook
+  // signatures (e.g. Stripe) are verified against the exact bytes received.
+  app.use(
+    express.json({
+      limit: '1mb',
+      verify: (req, _res, buf) => {
+        (req as express.Request).rawBody = buf;
+      },
+    }),
+  );
   app.use(express.urlencoded({ extended: true }));
 
   // Observability — request id first so it is available to the logger.
