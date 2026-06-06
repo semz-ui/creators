@@ -42,6 +42,7 @@ describe('CreateVideo', () => {
     const credits = creditGuardMock();
     const generator: IVideoGenerator = {
       submit: jest.fn().mockResolvedValue({ jobRef: 'job-xyz' }),
+      poll: jest.fn().mockResolvedValue({ state: 'processing' }),
     };
 
     const result = await new CreateVideo(videos, generator, credits).execute('user-1', {
@@ -65,6 +66,7 @@ describe('CreateVideo', () => {
     const credits = creditGuardMock();
     const generator: IVideoGenerator = {
       submit: jest.fn().mockRejectedValue(new Error('provider down')),
+      poll: jest.fn().mockResolvedValue({ state: 'processing' }),
     };
 
     await expect(
@@ -80,7 +82,7 @@ describe('CreateVideo', () => {
   it('rejects an invalid duration before charging or submitting', async () => {
     const videos = repoMock();
     const credits = creditGuardMock();
-    const generator: IVideoGenerator = { submit: jest.fn() };
+    const generator: IVideoGenerator = { submit: jest.fn(), poll: jest.fn() };
 
     await expect(
       new CreateVideo(videos, generator, credits).execute('user-1', {

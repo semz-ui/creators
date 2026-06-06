@@ -23,6 +23,21 @@ describe('envSchema', () => {
     expect(result.PORT).toBe(8080);
   });
 
+  it('applies Kling defaults and leaves the keys optional', () => {
+    const result = envSchema.parse(validInput);
+    expect(result.KLING_ACCESS_KEY).toBeUndefined();
+    expect(result.KLING_SECRET_KEY).toBeUndefined();
+    expect(result.KLING_BASE_URL).toBe('https://api-singapore.klingai.com');
+    expect(result.KLING_MODEL).toBe('kling-v1');
+    expect(result.KLING_MODE).toBe('std');
+    expect(result.KLING_ASPECT_RATIO).toBe('16:9');
+  });
+
+  it('rejects an invalid Kling mode', () => {
+    const result = envSchema.safeParse({ ...validInput, KLING_MODE: 'turbo' });
+    expect(result.success).toBe(false);
+  });
+
   it('splits CORS_ORIGINS into a trimmed array', () => {
     const result = envSchema.parse({
       ...validInput,
