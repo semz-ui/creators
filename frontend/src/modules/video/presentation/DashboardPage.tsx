@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { useSession } from '@/modules/auth/viewmodels/useSession';
-import { Card, Spinner } from '@/shared/ui';
+import { CardGridSkeleton, EmptyState } from '@/shared/ui';
 
 import { useVideoLibrary } from '../viewmodels/useVideoLibrary';
 import { VideoCard } from './VideoCard';
@@ -29,13 +29,9 @@ export function DashboardPage() {
 
       <h2 className="mb-3 font-display text-lg font-medium text-content">Recent</h2>
       {isPending ? (
-        <div className="flex justify-center py-16">
-          <Spinner />
-        </div>
+        <CardGridSkeleton count={3} />
       ) : !data || data.items.length === 0 ? (
-        <Card className="text-center">
-          <p className="text-content-secondary">No videos yet — create your first one.</p>
-        </Card>
+        <EmptyState title="No videos yet" description="Create your first one to get started." />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {data.items.map((video) => (
