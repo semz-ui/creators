@@ -49,6 +49,25 @@ export default {
         xl: '0 24px 56px -12px #0f172a38',
         glow: '0 8px 32px -4px #3ab1ed73',
       },
+      keyframes: {
+        'fade-up': {
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-16px)' },
+        },
+      },
+      animation: {
+        'fade-up': 'fade-up 0.6s ease-out both',
+        'fade-in': 'fade-in 0.8s ease-out both',
+        float: 'float 7s ease-in-out infinite',
+      },
     },
   },
   plugins: [],
