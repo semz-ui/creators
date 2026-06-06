@@ -23,7 +23,7 @@ export function AppLayout() {
     <div className="flex min-h-full">
       <aside className="hidden w-60 shrink-0 flex-col gap-1 bg-inverse px-4 py-6 sm:flex">
         <span className="px-3 pb-6 font-display text-xl font-bold text-content-inverse">Reelo</span>
-        <nav className="flex flex-col gap-1">
+        <nav aria-label="Primary" className="flex flex-col gap-1">
           {NAV.map((item) => (
             <NavLink
               key={item.to}
@@ -53,6 +53,26 @@ export function AppLayout() {
             </Button>
           </div>
         </header>
+        {/* Mobile nav — the sidebar is hidden below the sm breakpoint. */}
+        <nav
+          aria-label="Primary (mobile)"
+          className="flex gap-1 overflow-x-auto border-b border-line-subtle bg-surface px-4 py-2 sm:hidden"
+        >
+          {NAV.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                cn(
+                  'whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+                  isActive ? 'bg-sunken text-content' : 'text-content-secondary',
+                )
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
         <main className="min-w-0 flex-1 px-6 py-8">
           <Outlet />
         </main>
