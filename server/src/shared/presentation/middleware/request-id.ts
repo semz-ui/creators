@@ -6,6 +6,8 @@ declare global {
   namespace Express {
     interface Request {
       id: string;
+      /** Raw request body bytes, captured by the JSON parser for webhook signature checks. */
+      rawBody?: Buffer;
     }
   }
 }
