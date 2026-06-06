@@ -70,6 +70,9 @@ services:
       # (blank = use the stub; nothing is committed).
       KLING_ACCESS_KEY: ${KLING_ACCESS_KEY:-}
       KLING_SECRET_KEY: ${KLING_SECRET_KEY:-}
+      # Stripe payments — same passthrough (blank = stub provider).
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       LOG_LEVEL: info
     depends_on:
       mongo:
