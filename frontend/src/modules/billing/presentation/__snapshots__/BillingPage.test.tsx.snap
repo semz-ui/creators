@@ -1,0 +1,155 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`BillingPage > matches the snapshot 1`] = `
+<div>
+  <div
+    class="mx-auto max-w-2xl"
+  >
+    <h1
+      class="font-display text-3xl font-bold text-content"
+    >
+      Billing
+    </h1>
+    <p
+      class="mt-1 text-content-secondary"
+    >
+      Credits power your video generations.
+    </p>
+    <div
+      class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm mt-6"
+    >
+      <p
+        class="text-sm text-content-secondary"
+      >
+        Current balance
+      </p>
+      <p
+        class="font-display text-4xl font-bold text-content"
+        data-testid="balance"
+      >
+        90 credits
+      </p>
+      <div
+        class="mt-5 border-t border-line-subtle pt-5"
+      >
+        <p
+          class="text-sm font-medium text-content-secondary"
+        >
+          Buy more credits
+        </p>
+        <div
+          class="mt-2 flex flex-wrap gap-2"
+        >
+          <button
+            aria-pressed="false"
+            class="h-10 rounded-lg border px-4 text-sm font-medium transition-colors border-line bg-surface text-content hover:bg-sunken"
+            type="button"
+          >
+            50
+             credits
+          </button>
+          <button
+            aria-pressed="true"
+            class="h-10 rounded-lg border px-4 text-sm font-medium transition-colors border-brand bg-brand text-content-inverse"
+            type="button"
+          >
+            100
+             credits
+          </button>
+          <button
+            aria-pressed="false"
+            class="h-10 rounded-lg border px-4 text-sm font-medium transition-colors border-line bg-surface text-content hover:bg-sunken"
+            type="button"
+          >
+            250
+             credits
+          </button>
+        </div>
+        <button
+          class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-brand text-content-inverse hover:bg-brand-hover shadow-sm h-10 px-4 text-sm mt-4"
+          type="button"
+        >
+          Buy 100 credits
+        </button>
+      </div>
+    </div>
+    <h2
+      class="mb-3 mt-8 font-display text-lg font-medium text-content"
+    >
+      History
+    </h2>
+    <div
+      class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm"
+    >
+      <ul
+        class="divide-y divide-line-subtle"
+      >
+        <li
+          class="flex items-center justify-between py-3"
+        >
+          <div>
+            <p
+              class="text-content"
+            >
+              Video generation
+            </p>
+            <p
+              class="text-xs text-content-muted"
+            >
+              Jan 1, 2026, 12:00 AM UTC
+            </p>
+          </div>
+          <div
+            class="text-right"
+          >
+            <p
+              class="font-medium text-content"
+            >
+              −
+              10
+            </p>
+            <p
+              class="text-xs text-content-muted"
+            >
+              90
+               left
+            </p>
+          </div>
+        </li>
+        <li
+          class="flex items-center justify-between py-3"
+        >
+          <div>
+            <p
+              class="text-content"
+            >
+              Top-up
+            </p>
+            <p
+              class="text-xs text-content-muted"
+            >
+              Jan 1, 2026, 12:00 AM UTC
+            </p>
+          </div>
+          <div
+            class="text-right"
+          >
+            <p
+              class="font-medium text-success"
+            >
+              +
+              100
+            </p>
+            <p
+              class="text-xs text-content-muted"
+            >
+              100
+               left
+            </p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;

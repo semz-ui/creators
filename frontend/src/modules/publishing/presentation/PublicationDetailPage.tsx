@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 
 import { PLATFORMS, type Platform } from '@/modules/connections/data/connections.types';
+import { formatDateTime } from '@/shared/lib/format';
 import { Card, Spinner } from '@/shared/ui';
 
 import { usePublication } from '../viewmodels/usePublication';
@@ -46,7 +47,7 @@ export function PublicationDetailPage() {
         {publication.caption && <p className="text-content">{publication.caption}</p>}
         {publication.scheduledAt && (
           <p className="text-sm text-content-muted">
-            Scheduled for {new Date(publication.scheduledAt).toLocaleString()}
+            Scheduled for {formatDateTime(publication.scheduledAt)}
           </p>
         )}
 
