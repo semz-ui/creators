@@ -8,7 +8,7 @@ import { VideoCard } from './VideoCard';
 
 export function DashboardPage() {
   const { user } = useSession();
-  const { data, isPending } = useVideoLibrary(1, 6);
+  const { data, isPending, isError } = useVideoLibrary(1, 6);
 
   return (
     <div>
@@ -30,6 +30,8 @@ export function DashboardPage() {
       <h2 className="mb-3 font-display text-lg font-medium text-content">Recent</h2>
       {isPending ? (
         <CardGridSkeleton count={3} />
+      ) : isError ? (
+        <p className="text-content-secondary">Couldn&apos;t load your videos.</p>
       ) : !data || data.items.length === 0 ? (
         <EmptyState title="No videos yet" description="Create your first one to get started." />
       ) : (
