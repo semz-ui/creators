@@ -12,8 +12,10 @@ import { CreateVideo } from './application/create-video.usecase';
 import { GetVideo } from './application/get-video.usecase';
 import { ListVideos } from './application/list-videos.usecase';
 import { ReconcileGeneration } from './application/reconcile-generation.usecase';
+import { CloudinaryVideoStorage } from './infrastructure/cloudinary-video-storage';
 import { KlingVideoGenerator } from './infrastructure/kling-video-generator';
 import { MongoVideoRepository } from './infrastructure/mongo-video.repository';
+import { SoraVideoGenerator } from './infrastructure/sora-video-generator';
 import { StubVideoGenerator } from './infrastructure/stub-video-generator';
 import { VideoController } from './presentation/video.controller';
 import { createGenerationGuard } from './presentation/generation.guard';
@@ -55,21 +57,44 @@ export function buildVideoModule({ authGuard, creditGuard }: VideoModuleDeps): V
 }
 
 /**
- * Use the real Kling generator when both API keys are configured; otherwise
- * fall back to the stub (so the app still boots and works for demos/tests).
+ * Select the video generator. An explicit VIDEO_PROVIDER wins; otherwise it's
+ * auto-detected from configured credentials (Sora → Kling → stub), so the app
+ * always boots and works for demos/tests.
  */
 function buildGenerator(): IVideoGenerator {
-  if (env.KLING_ACCESS_KEY && env.KLING_SECRET_KEY) {
+  const provider =
+    env.VIDEO_PROVIDER ??
+    (env.OPENAI_API_KEY && env.CLOUDINARY_URL
+      ? 'sora'
+      : env.KLING_ACCESS_KEY && env.KLING_SECRET_KEY
+        ? 'kling'
+        : 'stub');
+
+  if (provider === 'sora') {
+    logger.info(`Video generation: Sora (${env.SORA_MODEL}, ${env.SORA_SIZE})`);
+    return new SoraVideoGenerator(
+      {
+        apiKey: env.OPENAI_API_KEY as string,
+        model: env.SORA_MODEL,
+        size: env.SORA_SIZE,
+        baseUrl: env.SORA_BASE_URL,
+      },
+      new CloudinaryVideoStorage(env.CLOUDINARY_URL as string),
+    );
+  }
+
+  if (provider === 'kling') {
     logger.info(`Video generation: Kling AI (${env.KLING_MODEL}, ${env.KLING_MODE})`);
     return new KlingVideoGenerator({
-      accessKey: env.KLING_ACCESS_KEY,
-      secretKey: env.KLING_SECRET_KEY,
+      accessKey: env.KLING_ACCESS_KEY as string,
+      secretKey: env.KLING_SECRET_KEY as string,
       baseUrl: env.KLING_BASE_URL,
       modelName: env.KLING_MODEL,
       mode: env.KLING_MODE,
       aspectRatio: env.KLING_ASPECT_RATIO,
     });
   }
-  logger.info('Video generation: stub (set KLING_ACCESS_KEY + KLING_SECRET_KEY to use Kling AI)');
+
+  logger.info('Video generation: stub (set OPENAI_API_KEY + CLOUDINARY_URL to use Sora)');
   return new StubVideoGenerator();
 }
