@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 
 import { useSession } from '@/modules/auth/viewmodels/useSession';
+import { BalanceChip } from '@/modules/billing/presentation/BalanceChip';
 import { cn } from '@/shared/lib/cn';
 import { Button } from '@/shared/ui';
 
@@ -10,6 +11,7 @@ const NAV = [
   { to: '/library', label: 'Library' },
   { to: '/publications', label: 'Publications' },
   { to: '/connections', label: 'Connections' },
+  { to: '/billing', label: 'Billing' },
 ];
 
 /** Authenticated app shell: dark sidebar nav + topbar, with the routed page. */
@@ -43,9 +45,12 @@ export function AppLayout() {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-line-subtle bg-surface px-6 py-3">
           <span className="text-sm text-content-muted">{user?.email}</span>
-          <Button variant="ghost" size="sm" onClick={() => void logout()}>
-            Log out
-          </Button>
+          <div className="flex items-center gap-3">
+            <BalanceChip />
+            <Button variant="ghost" size="sm" onClick={() => void logout()}>
+              Log out
+            </Button>
+          </div>
         </header>
         <main className="min-w-0 flex-1 px-6 py-8">
           <Outlet />

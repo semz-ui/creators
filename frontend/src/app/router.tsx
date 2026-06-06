@@ -3,6 +3,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { LoginPage } from '@/modules/auth/presentation/LoginPage';
 import { RegisterPage } from '@/modules/auth/presentation/RegisterPage';
 import { RequireAuth } from '@/modules/auth/presentation/RequireAuth';
+import { BillingPage } from '@/modules/billing/presentation/BillingPage';
 import { ConnectionCallbackPage } from '@/modules/connections/presentation/ConnectionCallbackPage';
 import { ConnectionsPage } from '@/modules/connections/presentation/ConnectionsPage';
 import { PublicationDetailPage } from '@/modules/publishing/presentation/PublicationDetailPage';
@@ -37,6 +38,7 @@ export const router = createBrowserRouter([
       { path: '/publications/:id', element: <PublicationDetailPage /> },
       { path: '/connections', element: <ConnectionsPage /> },
       { path: '/connections/callback', element: <ConnectionCallbackPage /> },
+      { path: '/billing', element: <BillingPage /> },
     ],
   },
   { path: '*', element: <PlaceholderPage title="Not found" /> },

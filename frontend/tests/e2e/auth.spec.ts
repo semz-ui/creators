@@ -14,6 +14,13 @@ async function mockAuth(page: Page, endpoint: 'register' | 'login') {
   await page.route('**/api/v1/auth/me', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) }),
   );
+  await page.route('**/api/v1/billing/balance', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ balance: 90 }),
+    }),
+  );
   // The dashboard loads recent videos on arrival.
   await page.route(/\/api\/v1\/videos(\?|$)/, (route) =>
     route.fulfill({
