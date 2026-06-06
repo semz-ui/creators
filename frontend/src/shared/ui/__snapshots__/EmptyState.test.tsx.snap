@@ -1,0 +1,20 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`EmptyState > matches the snapshot 1`] = `
+<div>
+  <div
+    class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm text-center"
+  >
+    <p
+      class="font-medium text-content"
+    >
+      Empty
+    </p>
+    <p
+      class="mt-1 text-sm text-content-secondary"
+    >
+      None yet
+    </p>
+  </div>
+</div>
+`;

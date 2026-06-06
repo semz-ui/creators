@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { Button, Card, Spinner } from '@/shared/ui';
+import { Button, CardGridSkeleton, EmptyState } from '@/shared/ui';
 
 import { useVideoLibrary } from '../viewmodels/useVideoLibrary';
 import { VideoCard } from './VideoCard';
@@ -27,18 +27,22 @@ export function LibraryPage() {
       </div>
 
       {isPending ? (
-        <div className="flex justify-center py-20">
-          <Spinner />
-        </div>
+        <CardGridSkeleton />
       ) : isError ? (
         <p className="text-content-secondary">Couldn&apos;t load your videos.</p>
       ) : data.items.length === 0 ? (
-        <Card className="text-center">
-          <p className="text-content-secondary">No videos yet.</p>
-          <Link to="/create" className="mt-2 inline-block text-sm text-brand hover:underline">
-            Create your first one →
-          </Link>
-        </Card>
+        <EmptyState
+          title="No videos yet"
+          description="Generate your first video from a prompt."
+          action={
+            <Link
+              to="/create"
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-content-inverse hover:bg-brand-hover"
+            >
+              Create a video
+            </Link>
+          }
+        />
       ) : (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
