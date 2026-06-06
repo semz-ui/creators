@@ -57,9 +57,19 @@ services:
       REDIS_URL: redis://redis:6379
       # We sit behind nginx, so trust X-Forwarded-* for correct client IPs.
       TRUST_PROXY: 'true'
-      # Dev-only secrets — override in real environments.
+      # Dev-only secrets — override in real environments. NODE_ENV=production
+      # rejects the schema's publicly-known dev defaults, so every secret must
+      # be set here (these values just need to differ from those defaults).
       JWT_ACCESS_SECRET: dev-access-secret-please-change-me-0123456789
       JWT_REFRESH_SECRET: dev-refresh-secret-please-change-me-0123456789
+      GENERATION_CALLBACK_SECRET: dev-generation-callback-secret-compose
+      CONNECTIONS_ENC_KEY: dev-connections-encryption-key-compose
+      PUBLISH_SCHEDULER_SECRET: dev-publish-scheduler-secret-compose
+      PAYMENT_WEBHOOK_SECRET: dev-payment-webhook-secret-compose
+      # Kling AI generator — passed through from your shell / repo-root .env
+      # (blank = use the stub; nothing is committed).
+      KLING_ACCESS_KEY: ${KLING_ACCESS_KEY:-}
+      KLING_SECRET_KEY: ${KLING_SECRET_KEY:-}
       LOG_LEVEL: info
     depends_on:
       mongo:
