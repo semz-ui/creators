@@ -1,18 +1,32 @@
 # Local development stack: API + MongoDB + Redis.
 # Usage: docker compose up --build
 services:
+  # Single-node replica set — required for multi-document transactions (the
+  # billing credit flow uses them). The healthcheck doubles as a one-time
+  # initiator: on first boot rs.status() throws (no config yet) so we run
+  # rs.initiate(); thereafter it just reports the set is healthy. `server`
+  # waits on `condition: service_healthy`, so it only starts once the set is up.
   mongo:
     image: mongo:7
     restart: unless-stopped
+    command: ['--replSet', 'rs0', '--bind_ip_all']
     ports:
       - '27017:27017'
     volumes:
       - mongo-data:/data/db
     healthcheck:
-      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping')"]
+      test:
+        [
+          'CMD',
+          'mongosh',
+          '--quiet',
+          '--eval',
+          "try { rs.status().ok } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo:27017' }] }).ok }",
+        ]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 20s
 
   redis:
     image: redis:7-alpine
@@ -39,7 +53,7 @@ services:
       NODE_ENV: production
       PORT: '4000'
       CORS_ORIGINS: http://localhost:3000
-      MONGO_URI: mongodb://mongo:27017/reelo
+      MONGO_URI: mongodb://mongo:27017/reelo?replicaSet=rs0
       REDIS_URL: redis://redis:6379
       # We sit behind nginx, so trust X-Forwarded-* for correct client IPs.
       TRUST_PROXY: 'true'
