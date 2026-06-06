@@ -126,6 +126,20 @@ export const envSchema = z
       });
     }
 
+    // In production with Stripe enabled, the post-checkout redirect URLs must be
+    // real public URLs — the localhost defaults would strand real customers.
+    if (env.STRIPE_SECRET_KEY && env.NODE_ENV === 'production') {
+      for (const key of ['STRIPE_SUCCESS_URL', 'STRIPE_CANCEL_URL'] as const) {
+        if (/\blocalhost\b|127\.0\.0\.1/.test(env[key])) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [key],
+            message: `${key} must be a public URL (not localhost) when Stripe is enabled in production`,
+          });
+        }
+      }
+    }
+
     // Outside production the dev defaults are fine. In production a secret left
     // at its publicly-known default is a misconfiguration — fail fast.
     if (env.NODE_ENV !== 'production') return;
