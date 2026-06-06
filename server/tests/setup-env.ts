@@ -14,3 +14,9 @@ process.env.JWT_REFRESH_SECRET ??= 'test-refresh-secret-0123456789-abcdefghij';
 // tests construct their own limiters with small limits to verify throttling.
 process.env.RATE_LIMIT_MAX ??= '100000';
 process.env.RATE_LIMIT_AUTH_MAX ??= '100000';
+// Never let a developer's real Kling keys leak into the test run — the video
+// module would call the live API. Force the stub generator everywhere. Use
+// empty strings (not delete) so a `.env` loaded later by dotenv can't refill
+// them; empty is falsy, so buildGenerator() falls back to the stub.
+process.env.KLING_ACCESS_KEY = '';
+process.env.KLING_SECRET_KEY = '';
