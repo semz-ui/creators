@@ -38,6 +38,58 @@ describe('envSchema', () => {
     expect(result.success).toBe(false);
   });
 
+  it('requires STRIPE_WEBHOOK_SECRET when STRIPE_SECRET_KEY is set', () => {
+    const result = envSchema.safeParse({ ...validInput, STRIPE_SECRET_KEY: 'sk_test_x' });
+    expect(result.success).toBe(false);
+  });
+
+  it('allows the localhost Stripe redirect defaults outside production', () => {
+    const result = envSchema.safeParse({
+      ...validInput,
+      STRIPE_SECRET_KEY: 'sk_test_x',
+      STRIPE_WEBHOOK_SECRET: 'whsec_x',
+    });
+    expect(result.success).toBe(true); // NODE_ENV defaults to development
+  });
+
+  it('rejects localhost Stripe redirect URLs in production', () => {
+    const result = envSchema.safeParse({
+      ...validInput,
+      NODE_ENV: 'production',
+      STRIPE_SECRET_KEY: 'sk_live_x',
+      STRIPE_WEBHOOK_SECRET: 'whsec_x',
+      // STRIPE_SUCCESS_URL/CANCEL_URL left at their localhost defaults
+      // (plus the other prod secrets so only the URL issues surface)
+      JWT_ACCESS_SECRET: 'a'.repeat(32),
+      JWT_REFRESH_SECRET: 'b'.repeat(32),
+      GENERATION_CALLBACK_SECRET: 'x'.repeat(16),
+      CONNECTIONS_ENC_KEY: 'x'.repeat(16),
+      PUBLISH_SCHEDULER_SECRET: 'x'.repeat(16),
+      PAYMENT_WEBHOOK_SECRET: 'x'.repeat(16),
+    });
+    expect(result.success).toBe(false);
+    const paths = result.success ? [] : result.error.issues.map((i) => i.path.join('.'));
+    expect(paths).toEqual(expect.arrayContaining(['STRIPE_SUCCESS_URL', 'STRIPE_CANCEL_URL']));
+  });
+
+  it('accepts public Stripe redirect URLs in production', () => {
+    const result = envSchema.safeParse({
+      ...validInput,
+      NODE_ENV: 'production',
+      STRIPE_SECRET_KEY: 'sk_live_x',
+      STRIPE_WEBHOOK_SECRET: 'whsec_x',
+      STRIPE_SUCCESS_URL: 'https://app.reelo.example/billing?topup=success',
+      STRIPE_CANCEL_URL: 'https://app.reelo.example/billing?topup=cancelled',
+      JWT_ACCESS_SECRET: 'a'.repeat(32),
+      JWT_REFRESH_SECRET: 'b'.repeat(32),
+      GENERATION_CALLBACK_SECRET: 'x'.repeat(16),
+      CONNECTIONS_ENC_KEY: 'x'.repeat(16),
+      PUBLISH_SCHEDULER_SECRET: 'x'.repeat(16),
+      PAYMENT_WEBHOOK_SECRET: 'x'.repeat(16),
+    });
+    expect(result.success).toBe(true);
+  });
+
   it('splits CORS_ORIGINS into a trimmed array', () => {
     const result = envSchema.parse({
       ...validInput,

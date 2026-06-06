@@ -92,11 +92,18 @@ export const envSchema = z
     INITIAL_FREE_CREDITS: z.coerce.number().int().nonnegative().default(100),
     // Flat credit cost charged per video generation.
     VIDEO_CREDIT_COST: z.coerce.number().int().positive().default(10),
-    // Shared secret the payment provider presents on the top-up webhook.
+    // Shared secret the payment provider presents on the top-up webhook (stub provider).
     PAYMENT_WEBHOOK_SECRET: z
       .string()
       .min(16, 'PAYMENT_WEBHOOK_SECRET must be at least 16 characters')
       .default(DEV_DEFAULT_SECRETS.PAYMENT_WEBHOOK_SECRET),
+
+    // Stripe — set STRIPE_SECRET_KEY to take real payments via Stripe Checkout
+    // (else the stub provider is used). STRIPE_WEBHOOK_SECRET is then required.
+    STRIPE_SECRET_KEY: z.string().optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    STRIPE_SUCCESS_URL: z.string().url().default('http://localhost:3000/billing?topup=success'),
+    STRIPE_CANCEL_URL: z.string().url().default('http://localhost:3000/billing?topup=cancelled'),
 
     // Rate limiting (Phase 3) — window in seconds, max requests per window per IP.
     RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(60),
@@ -110,6 +117,29 @@ export const envSchema = z
       .default('info'),
   })
   .superRefine((env, ctx) => {
+    // Enabling Stripe requires its webhook signing secret to verify callbacks.
+    if (env.STRIPE_SECRET_KEY && !env.STRIPE_WEBHOOK_SECRET) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['STRIPE_WEBHOOK_SECRET'],
+        message: 'STRIPE_WEBHOOK_SECRET is required when STRIPE_SECRET_KEY is set',
+      });
+    }
+
+    // In production with Stripe enabled, the post-checkout redirect URLs must be
+    // real public URLs — the localhost defaults would strand real customers.
+    if (env.STRIPE_SECRET_KEY && env.NODE_ENV === 'production') {
+      for (const key of ['STRIPE_SUCCESS_URL', 'STRIPE_CANCEL_URL'] as const) {
+        if (/\blocalhost\b|127\.0\.0\.1/.test(env[key])) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [key],
+            message: `${key} must be a public URL (not localhost) when Stripe is enabled in production`,
+          });
+        }
+      }
+    }
+
     // Outside production the dev defaults are fine. In production a secret left
     // at its publicly-known default is a misconfiguration — fail fast.
     if (env.NODE_ENV !== 'production') return;
