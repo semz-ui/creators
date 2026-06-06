@@ -2,6 +2,8 @@ import { createBrowserRouter } from 'react-router-dom';
 
 import { LoginPage } from '@/modules/auth/presentation/LoginPage';
 import { RegisterPage } from '@/modules/auth/presentation/RegisterPage';
+import { AnalyticsOverviewPage } from '@/modules/analytics/presentation/AnalyticsOverviewPage';
+import { VideoAnalyticsPage } from '@/modules/analytics/presentation/VideoAnalyticsPage';
 import { RequireAuth } from '@/modules/auth/presentation/RequireAuth';
 import { BillingPage } from '@/modules/billing/presentation/BillingPage';
 import { ConnectionCallbackPage } from '@/modules/connections/presentation/ConnectionCallbackPage';
@@ -34,10 +36,12 @@ export const router = createBrowserRouter([
       { path: '/library', element: <LibraryPage /> },
       { path: '/videos/:id', element: <VideoDetailPage /> },
       { path: '/videos/:id/publish', element: <PublishPage /> },
+      { path: '/videos/:id/analytics', element: <VideoAnalyticsPage /> },
       { path: '/publications', element: <PublicationsPage /> },
       { path: '/publications/:id', element: <PublicationDetailPage /> },
       { path: '/connections', element: <ConnectionsPage /> },
       { path: '/connections/callback', element: <ConnectionCallbackPage /> },
+      { path: '/analytics', element: <AnalyticsOverviewPage /> },
       { path: '/billing', element: <BillingPage /> },
     ],
   },
