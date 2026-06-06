@@ -6,6 +6,7 @@ import type { ApplyGenerationResult } from '../application/apply-generation-resu
 import type { CreateVideo } from '../application/create-video.usecase';
 import type { GetVideo } from '../application/get-video.usecase';
 import type { ListVideos } from '../application/list-videos.usecase';
+import type { ReconcileGeneration } from '../application/reconcile-generation.usecase';
 import { listVideosQuerySchema } from './video.validators';
 
 export interface VideoUseCases {
@@ -13,6 +14,7 @@ export interface VideoUseCases {
   get: GetVideo;
   list: ListVideos;
   applyResult: ApplyGenerationResult;
+  reconcile: ReconcileGeneration;
 }
 
 /** HTTP adapter mapping requests to the video use cases. */
@@ -33,7 +35,11 @@ export class VideoController {
   get = async (req: Request, res: Response): Promise<void> => {
     // `id` is guaranteed by the `/:id` route.
     const id = req.params.id as string;
-    const video = await this.useCases.get.execute(this.requireUserId(req), id);
+    const userId = this.requireUserId(req);
+    // Poll-on-read: opportunistically advance a still-processing job to its
+    // terminal state before returning. Best-effort — never blocks the read.
+    await this.useCases.reconcile.execute(userId, id);
+    const video = await this.useCases.get.execute(userId, id);
     res.status(200).json(video);
   };
 
