@@ -2,33 +2,73 @@
 
 exports[`LandingPage > matches the snapshot 1`] = `
 <div>
-  <main
-    class="mx-auto flex min-h-full max-w-3xl flex-col items-center justify-center gap-8 px-6 py-16 text-center"
+  <div
+    class="relative min-h-full overflow-hidden"
   >
     <div
-      class="space-y-4"
+      aria-hidden="true"
+      class="pointer-events-none absolute inset-0 -z-10"
     >
-      <p
-        class="font-mono text-sm uppercase tracking-widest text-brand"
+      <div
+        class="absolute -left-24 -top-24 h-72 w-72 animate-float rounded-full bg-brand/20 blur-3xl"
+      />
+      <div
+        class="absolute -right-24 top-1/3 h-80 w-80 animate-float rounded-full bg-brand-accent/20 blur-3xl"
+        style="animation-delay: 1.5s;"
+      />
+      <div
+        class="absolute bottom-0 left-1/4 h-72 w-72 animate-float rounded-full bg-brand-secondary/15 blur-3xl"
+        style="animation-delay: 3s;"
+      />
+    </div>
+    <header
+      class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5"
+    >
+      <span
+        class="font-display text-xl font-bold text-content"
       >
         Reelo
+      </span>
+      <nav
+        class="flex items-center gap-2"
+      >
+        <a
+          class="rounded-lg px-4 py-2 text-sm font-medium text-content hover:bg-sunken"
+          href="/login"
+        >
+          Log in
+        </a>
+        <a
+          class="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-content-inverse hover:bg-brand-hover"
+          href="/signup"
+        >
+          Sign up
+        </a>
+      </nav>
+    </header>
+    <main
+      class="mx-auto max-w-3xl px-6 pb-20 pt-12 text-center sm:pt-20"
+    >
+      <p
+        class="animate-fade-up font-mono text-sm uppercase tracking-widest text-brand"
+      >
+        AI Video Studio
       </p>
       <h1
-        class="font-display text-5xl font-bold tracking-tight text-content"
+        class="mt-4 animate-fade-up font-display text-5xl font-bold tracking-tight text-content sm:text-6xl"
+        style="animation-delay: 0.1s;"
       >
         Prompt in. Video out. Everywhere.
       </h1>
       <p
-        class="mx-auto max-w-xl text-lg text-content-secondary"
+        class="mx-auto mt-5 max-w-xl animate-fade-up text-lg text-content-secondary"
+        style="animation-delay: 0.2s;"
       >
-        Generate short-form video from a prompt and auto-publish to Facebook, Instagram, YouTube, and TikTok.
+        Generate short-form video from a prompt and auto-publish to Facebook, Instagram, YouTube, and TikTok — all in one flow.
       </p>
-    </div>
-    <div
-      class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm w-full max-w-md"
-    >
       <div
-        class="flex flex-col gap-3"
+        class="mt-8 flex animate-fade-up flex-col items-center justify-center gap-3 sm:flex-row"
+        style="animation-delay: 0.3s;"
       >
         <button
           class="inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 ease-out active:translate-y-0 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none disabled:active:scale-100 bg-brand text-content-inverse shadow-sm hover:bg-brand-hover hover:shadow-md hover:-translate-y-0.5 h-12 px-6 text-base"
@@ -36,20 +76,114 @@ exports[`LandingPage > matches the snapshot 1`] = `
         >
           Get started
         </button>
-        <p
-          class="text-sm text-content-muted"
+        <a
+          class="inline-flex h-12 items-center justify-center rounded-lg px-6 text-base font-medium text-content hover:bg-sunken"
+          href="/login"
         >
-          Already have an account?
-           
-          <a
-            class="text-brand hover:underline"
-            href="/login"
-          >
-            Log in
-          </a>
-        </p>
+          I have an account
+        </a>
       </div>
-    </div>
-  </main>
+      <ul
+        aria-label="Supported platforms"
+        class="mt-10 flex animate-fade-up flex-wrap items-center justify-center gap-2"
+        style="animation-delay: 0.4s;"
+      >
+        <li
+          class="rounded-full border border-line-subtle bg-surface/70 px-3 py-1 text-sm text-content-secondary backdrop-blur"
+        >
+          Facebook
+        </li>
+        <li
+          class="rounded-full border border-line-subtle bg-surface/70 px-3 py-1 text-sm text-content-secondary backdrop-blur"
+        >
+          Instagram
+        </li>
+        <li
+          class="rounded-full border border-line-subtle bg-surface/70 px-3 py-1 text-sm text-content-secondary backdrop-blur"
+        >
+          YouTube
+        </li>
+        <li
+          class="rounded-full border border-line-subtle bg-surface/70 px-3 py-1 text-sm text-content-secondary backdrop-blur"
+        >
+          TikTok
+        </li>
+      </ul>
+    </main>
+    <section
+      aria-label="How it works"
+      class="mx-auto max-w-5xl px-6 pb-24"
+    >
+      <div
+        class="grid gap-4 sm:grid-cols-3"
+      >
+        <div
+          class="animate-fade-up rounded-xl border border-line-subtle bg-surface p-6 shadow-sm transition-transform duration-200 hover:-translate-y-1"
+          style="animation-delay: 0.5s;"
+        >
+          <div
+            class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/10 font-display text-lg font-bold text-brand"
+          >
+            1
+          </div>
+          <h3
+            class="mt-4 font-display text-lg font-medium text-content"
+          >
+            Prompt
+          </h3>
+          <p
+            class="mt-1 text-sm text-content-secondary"
+          >
+            Describe the video you want and pick a length.
+          </p>
+        </div>
+        <div
+          class="animate-fade-up rounded-xl border border-line-subtle bg-surface p-6 shadow-sm transition-transform duration-200 hover:-translate-y-1"
+          style="animation-delay: 0.6s;"
+        >
+          <div
+            class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/10 font-display text-lg font-bold text-brand"
+          >
+            2
+          </div>
+          <h3
+            class="mt-4 font-display text-lg font-medium text-content"
+          >
+            Generate
+          </h3>
+          <p
+            class="mt-1 text-sm text-content-secondary"
+          >
+            AI turns your prompt into a ready-to-share clip.
+          </p>
+        </div>
+        <div
+          class="animate-fade-up rounded-xl border border-line-subtle bg-surface p-6 shadow-sm transition-transform duration-200 hover:-translate-y-1"
+          style="animation-delay: 0.7s;"
+        >
+          <div
+            class="flex h-10 w-10 items-center justify-center rounded-lg bg-brand/10 font-display text-lg font-bold text-brand"
+          >
+            3
+          </div>
+          <h3
+            class="mt-4 font-display text-lg font-medium text-content"
+          >
+            Publish
+          </h3>
+          <p
+            class="mt-1 text-sm text-content-secondary"
+          >
+            Auto-post to every connected platform at once.
+          </p>
+        </div>
+      </div>
+    </section>
+    <footer
+      class="border-t border-line-subtle py-8 text-center text-sm text-content-muted"
+    >
+      Reelo — prompt to published, automatically.
+    </footer>
+  </div>
 </div>
 `;
