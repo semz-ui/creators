@@ -35,6 +35,8 @@ docker compose up --build
 docker compose up --build --scale server=3
 ```
 
+The bundled MongoDB runs as a **single-node replica set** (`rs0`) — initialised automatically on first boot — because the billing credit flow uses multi-document transactions, which MongoDB only allows on a replica set.
+
 **Without Docker** — run Mongo + Redis yourself, then:
 
 ```bash
@@ -43,6 +45,8 @@ cp .env.example .env   # adjust secrets
 npm install
 npm run dev
 ```
+
+> For transactional integrity, run MongoDB as a (single-node) replica set: start `mongod --replSet rs0`, run `rs.initiate()` once, and set `MONGO_URI=mongodb://localhost:27017/reelo?replicaSet=rs0&directConnection=true`. A standalone `mongod` also works — the app falls back to non-transactional writes.
 
 ### Quality & testing
 
