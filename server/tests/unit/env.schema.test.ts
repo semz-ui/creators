@@ -38,6 +38,39 @@ describe('envSchema', () => {
     expect(result.success).toBe(false);
   });
 
+  it('requires CLOUDINARY_URL when an OpenAI (Sora) key is set', () => {
+    const result = envSchema.safeParse({ ...validInput, OPENAI_API_KEY: 'sk-x' });
+    expect(result.success).toBe(false);
+    const paths = result.success ? [] : result.error.issues.map((i) => i.path.join('.'));
+    expect(paths).toContain('CLOUDINARY_URL');
+  });
+
+  it('requires OPENAI_API_KEY when VIDEO_PROVIDER is sora', () => {
+    const result = envSchema.safeParse({
+      ...validInput,
+      VIDEO_PROVIDER: 'sora',
+      CLOUDINARY_URL: 'cloudinary://k:s@c',
+    });
+    expect(result.success).toBe(false);
+    const paths = result.success ? [] : result.error.issues.map((i) => i.path.join('.'));
+    expect(paths).toContain('OPENAI_API_KEY');
+  });
+
+  it('accepts a complete Sora configuration', () => {
+    const result = envSchema.safeParse({
+      ...validInput,
+      OPENAI_API_KEY: 'sk-x',
+      CLOUDINARY_URL: 'cloudinary://k:s@c',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('treats a blank VIDEO_PROVIDER as unset (auto-detect)', () => {
+    const result = envSchema.safeParse({ ...validInput, VIDEO_PROVIDER: '' });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.VIDEO_PROVIDER).toBeUndefined();
+  });
+
   it('requires STRIPE_WEBHOOK_SECRET when STRIPE_SECRET_KEY is set', () => {
     const result = envSchema.safeParse({ ...validInput, STRIPE_SECRET_KEY: 'sk_test_x' });
     expect(result.success).toBe(false);
