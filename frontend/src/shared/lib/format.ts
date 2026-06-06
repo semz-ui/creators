@@ -14,3 +14,10 @@ const DATE_TIME_FORMAT = new Intl.DateTimeFormat('en-US', {
 export function formatDateTime(iso: string): string {
   return DATE_TIME_FORMAT.format(new Date(iso));
 }
+
+const NUMBER_FORMAT = new Intl.NumberFormat('en-US');
+
+/** Format an integer with thousands separators (locale-stable). */
+export function formatNumber(value: number): string {
+  return NUMBER_FORMAT.format(value);
+}

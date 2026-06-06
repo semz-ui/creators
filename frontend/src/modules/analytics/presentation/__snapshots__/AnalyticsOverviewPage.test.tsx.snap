@@ -1,0 +1,263 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`AnalyticsOverviewPage > matches the snapshot 1`] = `
+<div>
+  <div
+    class="mx-auto max-w-3xl"
+  >
+    <div
+      class="mb-6 flex items-center justify-between gap-3"
+    >
+      <div>
+        <h1
+          class="font-display text-3xl font-bold text-content"
+        >
+          Analytics
+        </h1>
+        <p
+          class="mt-1 text-content-secondary"
+        >
+          Engagement across your published videos.
+        </p>
+      </div>
+      <button
+        class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-brand-secondary text-content-inverse hover:bg-brand h-10 px-4 text-sm"
+        type="button"
+      >
+        Refresh
+      </button>
+    </div>
+    <div
+      class="space-y-6"
+    >
+      <div
+        class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm"
+      >
+        <div
+          class="mb-3 flex items-baseline justify-between"
+        >
+          <p
+            class="text-sm font-medium text-content-secondary"
+          >
+            Totals
+          </p>
+          <p
+            class="text-sm text-content-muted"
+          >
+            2
+             video
+            s
+          </p>
+        </div>
+        <dl
+          class="grid grid-cols-2 gap-3 sm:grid-cols-4"
+        >
+          <div
+            class="rounded-lg bg-sunken px-4 py-3"
+          >
+            <dt
+              class="text-xs font-medium uppercase tracking-wide text-content-muted"
+            >
+              Views
+            </dt>
+            <dd
+              class="mt-1 font-display text-2xl font-bold text-content"
+            >
+              1,500
+            </dd>
+          </div>
+          <div
+            class="rounded-lg bg-sunken px-4 py-3"
+          >
+            <dt
+              class="text-xs font-medium uppercase tracking-wide text-content-muted"
+            >
+              Likes
+            </dt>
+            <dd
+              class="mt-1 font-display text-2xl font-bold text-content"
+            >
+              120
+            </dd>
+          </div>
+          <div
+            class="rounded-lg bg-sunken px-4 py-3"
+          >
+            <dt
+              class="text-xs font-medium uppercase tracking-wide text-content-muted"
+            >
+              Comments
+            </dt>
+            <dd
+              class="mt-1 font-display text-2xl font-bold text-content"
+            >
+              30
+            </dd>
+          </div>
+          <div
+            class="rounded-lg bg-sunken px-4 py-3"
+          >
+            <dt
+              class="text-xs font-medium uppercase tracking-wide text-content-muted"
+            >
+              Shares
+            </dt>
+            <dd
+              class="mt-1 font-display text-2xl font-bold text-content"
+            >
+              12
+            </dd>
+          </div>
+        </dl>
+      </div>
+      <div
+        class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm"
+      >
+        <p
+          class="mb-3 text-sm font-medium text-content-secondary"
+        >
+          By platform
+        </p>
+        <div
+          class="space-y-5"
+        >
+          <div>
+            <p
+              class="mb-2 font-medium text-content"
+            >
+              Facebook
+            </p>
+            <dl
+              class="grid grid-cols-2 gap-3 sm:grid-cols-4"
+            >
+              <div
+                class="rounded-lg bg-sunken px-4 py-3"
+              >
+                <dt
+                  class="text-xs font-medium uppercase tracking-wide text-content-muted"
+                >
+                  Views
+                </dt>
+                <dd
+                  class="mt-1 font-display text-2xl font-bold text-content"
+                >
+                  1,000
+                </dd>
+              </div>
+              <div
+                class="rounded-lg bg-sunken px-4 py-3"
+              >
+                <dt
+                  class="text-xs font-medium uppercase tracking-wide text-content-muted"
+                >
+                  Likes
+                </dt>
+                <dd
+                  class="mt-1 font-display text-2xl font-bold text-content"
+                >
+                  80
+                </dd>
+              </div>
+              <div
+                class="rounded-lg bg-sunken px-4 py-3"
+              >
+                <dt
+                  class="text-xs font-medium uppercase tracking-wide text-content-muted"
+                >
+                  Comments
+                </dt>
+                <dd
+                  class="mt-1 font-display text-2xl font-bold text-content"
+                >
+                  20
+                </dd>
+              </div>
+              <div
+                class="rounded-lg bg-sunken px-4 py-3"
+              >
+                <dt
+                  class="text-xs font-medium uppercase tracking-wide text-content-muted"
+                >
+                  Shares
+                </dt>
+                <dd
+                  class="mt-1 font-display text-2xl font-bold text-content"
+                >
+                  8
+                </dd>
+              </div>
+            </dl>
+          </div>
+          <div>
+            <p
+              class="mb-2 font-medium text-content"
+            >
+              YouTube
+            </p>
+            <dl
+              class="grid grid-cols-2 gap-3 sm:grid-cols-4"
+            >
+              <div
+                class="rounded-lg bg-sunken px-4 py-3"
+              >
+                <dt
+                  class="text-xs font-medium uppercase tracking-wide text-content-muted"
+                >
+                  Views
+                </dt>
+                <dd
+                  class="mt-1 font-display text-2xl font-bold text-content"
+                >
+                  500
+                </dd>
+              </div>
+              <div
+                class="rounded-lg bg-sunken px-4 py-3"
+              >
+                <dt
+                  class="text-xs font-medium uppercase tracking-wide text-content-muted"
+                >
+                  Likes
+                </dt>
+                <dd
+                  class="mt-1 font-display text-2xl font-bold text-content"
+                >
+                  40
+                </dd>
+              </div>
+              <div
+                class="rounded-lg bg-sunken px-4 py-3"
+              >
+                <dt
+                  class="text-xs font-medium uppercase tracking-wide text-content-muted"
+                >
+                  Comments
+                </dt>
+                <dd
+                  class="mt-1 font-display text-2xl font-bold text-content"
+                >
+                  10
+                </dd>
+              </div>
+              <div
+                class="rounded-lg bg-sunken px-4 py-3"
+              >
+                <dt
+                  class="text-xs font-medium uppercase tracking-wide text-content-muted"
+                >
+                  Shares
+                </dt>
+                <dd
+                  class="mt-1 font-display text-2xl font-bold text-content"
+                >
+                  4
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

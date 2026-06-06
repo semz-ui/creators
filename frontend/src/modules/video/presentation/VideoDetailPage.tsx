@@ -50,12 +50,20 @@ function renderBody(video: Video) {
         <p className="text-content">{video.prompt}</p>
         <div className="flex items-center justify-between">
           <p className="text-sm text-content-muted">{video.durationSeconds}s</p>
-          <Link
-            to={`/videos/${video.id}/publish`}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-content-inverse hover:bg-brand-hover"
-          >
-            Publish
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to={`/videos/${video.id}/analytics`}
+              className="inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-medium text-content hover:bg-sunken"
+            >
+              Analytics
+            </Link>
+            <Link
+              to={`/videos/${video.id}/publish`}
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-content-inverse hover:bg-brand-hover"
+            >
+              Publish
+            </Link>
+          </div>
         </div>
       </div>
     );
