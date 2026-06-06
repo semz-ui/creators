@@ -19,15 +19,18 @@ export function BillingPage() {
   const [page, setPage] = useState(1);
   const { data: ledger, isPending: ledgerPending } = useLedger(page, LIMIT);
 
-  // Stripe redirects back here with ?topup=success|cancelled. On success the
-  // webhook credits asynchronously, so refresh the balance/ledger; then clear
-  // the param so a manual refresh doesn't re-show the banner.
+  // Stripe redirects back here with ?topup=success|cancelled. Capture it into
+  // state (so the banner survives), refresh the balance/ledger on success (the
+  // webhook credits asynchronously), then strip the param from the URL so a
+  // manual refresh doesn't replay it.
   const [searchParams, setSearchParams] = useSearchParams();
-  const topupStatus = searchParams.get('topup');
   const queryClient = useQueryClient();
+  const [topupStatus, setTopupStatus] = useState<string | null>(null);
   useEffect(() => {
-    if (!topupStatus) return;
-    if (topupStatus === 'success') {
+    const status = searchParams.get('topup');
+    if (!status) return;
+    setTopupStatus(status);
+    if (status === 'success') {
       void queryClient.invalidateQueries({ queryKey: billingKeys.all });
     }
     setSearchParams(
@@ -37,7 +40,7 @@ export function BillingPage() {
       },
       { replace: true },
     );
-  }, [topupStatus, queryClient, setSearchParams]);
+  }, [searchParams, queryClient, setSearchParams]);
 
   const totalPages = ledger ? Math.max(1, Math.ceil(ledger.total / ledger.limit)) : 1;
 
