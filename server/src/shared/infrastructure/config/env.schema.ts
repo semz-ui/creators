@@ -59,6 +59,15 @@ export const envSchema = z
       .min(16, 'GENERATION_CALLBACK_SECRET must be at least 16 characters')
       .default(DEV_DEFAULT_SECRETS.GENERATION_CALLBACK_SECRET),
 
+    // Kling AI video generator (official API). When both keys are set the
+    // KlingVideoGenerator is wired in; otherwise the app uses the stub.
+    KLING_ACCESS_KEY: z.string().optional(),
+    KLING_SECRET_KEY: z.string().optional(),
+    KLING_BASE_URL: z.string().url().default('https://api-singapore.klingai.com'),
+    KLING_MODEL: z.string().default('kling-v1'),
+    KLING_MODE: z.enum(['std', 'pro']).default('std'),
+    KLING_ASPECT_RATIO: z.enum(['16:9', '9:16', '1:1']).default('16:9'),
+
     // Connections module
     // Secret used to derive the AES key that encrypts stored OAuth tokens.
     CONNECTIONS_ENC_KEY: z
