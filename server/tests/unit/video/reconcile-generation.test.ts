@@ -14,6 +14,7 @@ function repoMock() {
     save: jest.fn().mockResolvedValue(undefined),
     findById: jest.fn(),
     findByJobRef: jest.fn(),
+    claimTerminal: jest.fn(),
     findByOwner: jest.fn(),
   } satisfies Record<keyof IVideoRepository, jest.Mock>;
 }
