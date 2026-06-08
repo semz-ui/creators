@@ -98,7 +98,7 @@ describe('SoraVideoGenerator.poll', () => {
 
     const result = await new SoraVideoGenerator(CONFIG, storage).poll('t1');
 
-    expect(result).toEqual({ state: 'ready', resultUrl: 'https://cdn/final.mp4' });
+    expect(result).toEqual({ state: 'ready', resultUrl: 'https://cdn/final.mp4', assetId: 't1' });
     const contentUrl = fetchMock.mock.calls[1]![0] as string;
     expect(contentUrl).toBe('https://api.test/v1/videos/t1/content?variant=video');
     const [buf, key, ct] = storage.upload.mock.calls[0]!;

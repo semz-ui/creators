@@ -27,13 +27,13 @@ exports[`CreateVideoPage > matches the snapshot 1`] = `
         >
           <label
             class="text-sm font-medium text-content-secondary"
-            for=":r1:"
+            for=":r2:"
           >
             Prompt
           </label>
           <textarea
             class="min-h-28 rounded-lg border bg-surface px-3 py-2 text-sm text-content placeholder:text-content-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand border-line"
-            id=":r1:"
+            id=":r2:"
             placeholder="A neon city skyline at night, cinematic drone shot…"
             rows="5"
           />
@@ -83,6 +83,66 @@ exports[`CreateVideoPage > matches the snapshot 1`] = `
               60
               s
             </button>
+          </div>
+        </div>
+        <div
+          class="flex flex-col gap-1.5"
+        >
+          <label
+            class="text-sm font-medium text-content-secondary"
+            for="music"
+          >
+            Background music
+          </label>
+          <select
+            class="h-10 rounded-lg border border-line bg-surface px-3 text-sm text-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            id="music"
+          >
+            <option
+              value=""
+            >
+              None
+            </option>
+            <option
+              value="upbeat"
+            >
+              Upbeat
+            </option>
+            <option
+              value="calm"
+            >
+              Calm
+            </option>
+            <option
+              value="cinematic"
+            >
+              Cinematic
+            </option>
+            <option
+              value="lofi"
+            >
+              Lo-fi
+            </option>
+          </select>
+        </div>
+        <div
+          class="flex flex-col gap-1.5"
+        >
+          <div
+            class="flex flex-col gap-1.5"
+          >
+            <label
+              class="text-sm font-medium text-content-secondary"
+              for=":r3:"
+            >
+              Narration (optional)
+            </label>
+            <textarea
+              class="min-h-28 rounded-lg border bg-surface px-3 py-2 text-sm text-content placeholder:text-content-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand border-line"
+              id=":r3:"
+              placeholder="Words to speak over the video…"
+              rows="3"
+            />
           </div>
         </div>
         <button
