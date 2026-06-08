@@ -13,6 +13,9 @@ const baseVideo: Video = {
   status: 'ready',
   resultUrl: 'https://cdn/v.mp4',
   error: null,
+  musicTrackId: null,
+  narrationText: null,
+  narrationVoice: null,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
 };

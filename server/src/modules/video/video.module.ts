@@ -5,6 +5,7 @@ import { env } from '@shared/infrastructure/config/env';
 import { logger } from '@shared/infrastructure/logging/logger';
 
 import type { ICreditGuard } from './domain/ports/credit-guard';
+import type { IAudioCompositor } from './domain/ports/audio-compositor';
 import type { IVideoGenerator } from './domain/ports/video-generator';
 import type { IVideoRepository } from './domain/ports/video-repository';
 import { ApplyGenerationResult } from './application/apply-generation-result.usecase';
@@ -12,9 +13,11 @@ import { CreateVideo } from './application/create-video.usecase';
 import { GetVideo } from './application/get-video.usecase';
 import { ListVideos } from './application/list-videos.usecase';
 import { ReconcileGeneration } from './application/reconcile-generation.usecase';
+import { CloudinaryAudioCompositor } from './infrastructure/cloudinary-audio-compositor';
 import { CloudinaryVideoStorage } from './infrastructure/cloudinary-video-storage';
 import { KlingVideoGenerator } from './infrastructure/kling-video-generator';
 import { MongoVideoRepository } from './infrastructure/mongo-video.repository';
+import { OpenAiSpeechSynthesizer } from './infrastructure/openai-speech-synthesizer';
 import { SoraVideoGenerator } from './infrastructure/sora-video-generator';
 import { StubVideoGenerator } from './infrastructure/stub-video-generator';
 import { VideoController } from './presentation/video.controller';
@@ -37,7 +40,7 @@ export interface VideoModule {
 /** Composition root for the video module. */
 export function buildVideoModule({ authGuard, creditGuard }: VideoModuleDeps): VideoModule {
   const videos = new MongoVideoRepository();
-  const generator = buildGenerator();
+  const { generator, compositor } = buildGeneration();
   const applyResult = new ApplyGenerationResult(videos, creditGuard);
 
   const controller = new VideoController({
@@ -45,7 +48,7 @@ export function buildVideoModule({ authGuard, creditGuard }: VideoModuleDeps): V
     get: new GetVideo(videos),
     list: new ListVideos(videos),
     applyResult,
-    reconcile: new ReconcileGeneration(videos, generator, applyResult),
+    reconcile: new ReconcileGeneration(videos, generator, applyResult, compositor),
   });
 
   const generationGuard = createGenerationGuard(env.GENERATION_CALLBACK_SECRET);
@@ -57,11 +60,12 @@ export function buildVideoModule({ authGuard, creditGuard }: VideoModuleDeps): V
 }
 
 /**
- * Select the video generator. An explicit VIDEO_PROVIDER wins; otherwise it's
- * auto-detected from configured credentials (Sora → Kling → stub), so the app
- * always boots and works for demos/tests.
+ * Select the video generator and (for Sora) the audio compositor. An explicit
+ * VIDEO_PROVIDER wins; otherwise it's auto-detected from configured credentials
+ * (Sora → Kling → stub), so the app always boots and works for demos/tests.
+ * Only Sora produces Cloudinary-hosted videos, so only it gets a compositor.
  */
-function buildGenerator(): IVideoGenerator {
+function buildGeneration(): { generator: IVideoGenerator; compositor?: IAudioCompositor } {
   const provider =
     env.VIDEO_PROVIDER ??
     (env.OPENAI_API_KEY && env.CLOUDINARY_URL
@@ -71,30 +75,41 @@ function buildGenerator(): IVideoGenerator {
         : 'stub');
 
   if (provider === 'sora') {
-    logger.info(`Video generation: Sora (${env.SORA_MODEL}, ${env.SORA_SIZE})`);
-    return new SoraVideoGenerator(
+    logger.info(`Video generation: Sora (${env.SORA_MODEL}, ${env.SORA_SIZE}) + audio`);
+    // One storage instance configures the global Cloudinary SDK; the compositor
+    // reuses that config to build delivery URLs and upload narration audio.
+    const storage = new CloudinaryVideoStorage(env.CLOUDINARY_URL as string);
+    const generator = new SoraVideoGenerator(
       {
         apiKey: env.OPENAI_API_KEY as string,
         model: env.SORA_MODEL,
         size: env.SORA_SIZE,
         baseUrl: env.SORA_BASE_URL,
       },
-      new CloudinaryVideoStorage(env.CLOUDINARY_URL as string),
+      storage,
     );
+    const speech = new OpenAiSpeechSynthesizer({
+      apiKey: env.OPENAI_API_KEY as string,
+      model: env.TTS_MODEL,
+      baseUrl: env.SORA_BASE_URL,
+    });
+    return { generator, compositor: new CloudinaryAudioCompositor(speech, storage) };
   }
 
   if (provider === 'kling') {
     logger.info(`Video generation: Kling AI (${env.KLING_MODEL}, ${env.KLING_MODE})`);
-    return new KlingVideoGenerator({
-      accessKey: env.KLING_ACCESS_KEY as string,
-      secretKey: env.KLING_SECRET_KEY as string,
-      baseUrl: env.KLING_BASE_URL,
-      modelName: env.KLING_MODEL,
-      mode: env.KLING_MODE,
-      aspectRatio: env.KLING_ASPECT_RATIO,
-    });
+    return {
+      generator: new KlingVideoGenerator({
+        accessKey: env.KLING_ACCESS_KEY as string,
+        secretKey: env.KLING_SECRET_KEY as string,
+        baseUrl: env.KLING_BASE_URL,
+        modelName: env.KLING_MODEL,
+        mode: env.KLING_MODE,
+        aspectRatio: env.KLING_ASPECT_RATIO,
+      }),
+    };
   }
 
   logger.info('Video generation: stub (set OPENAI_API_KEY + CLOUDINARY_URL to use Sora)');
-  return new StubVideoGenerator();
+  return { generator: new StubVideoGenerator() };
 }

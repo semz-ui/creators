@@ -11,6 +11,9 @@ export interface VideoDocument {
   jobRef: string | null;
   resultUrl: string | null;
   error: string | null;
+  musicTrackId: string | null;
+  narrationText: string | null;
+  narrationVoice: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,6 +28,9 @@ const videoSchema = new Schema<VideoDocument>(
     jobRef: { type: String, default: null },
     resultUrl: { type: String, default: null },
     error: { type: String, default: null },
+    musicTrackId: { type: String, default: null },
+    narrationText: { type: String, default: null },
+    narrationVoice: { type: String, default: null },
     createdAt: { type: Date, required: true },
     updatedAt: { type: Date, required: true },
   },

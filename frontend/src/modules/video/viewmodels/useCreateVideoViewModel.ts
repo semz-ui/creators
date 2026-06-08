@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { HttpError } from '@/shared/data/http-error';
 
 import { videoApi } from '../data/video.api';
+import { NARRATION_MAX, type Voice } from '../data/video.types';
 import { videoKeys } from '../data/query-keys';
 
 export const DURATION_PRESETS = [15, 30, 45, 60] as const;
@@ -18,6 +19,12 @@ export function useCreateVideoViewModel() {
   const [prompt, setPrompt] = useState('');
   const [durationSeconds, setDurationSeconds] = useState<number>(15);
   const [promptError, setPromptError] = useState<string | undefined>();
+
+  // Optional audio.
+  const [musicTrackId, setMusicTrackId] = useState<string>(''); // '' = none
+  const [narrationText, setNarrationText] = useState('');
+  const [narrationVoice, setNarrationVoice] = useState<Voice>('alloy');
+  const [narrationError, setNarrationError] = useState<string | undefined>();
 
   const mutation = useMutation({
     mutationFn: videoApi.create,
@@ -39,7 +46,21 @@ export function useCreateVideoViewModel() {
       return;
     }
     setPromptError(undefined);
-    mutation.mutate({ prompt: trimmed, durationSeconds });
+
+    const narration = narrationText.trim();
+    if (narration.length > NARRATION_MAX) {
+      setNarrationError(`Keep narration under ${NARRATION_MAX} characters`);
+      return;
+    }
+    setNarrationError(undefined);
+
+    mutation.mutate({
+      prompt: trimmed,
+      durationSeconds,
+      musicTrackId: musicTrackId || null,
+      narrationText: narration || null,
+      narrationVoice: narration ? narrationVoice : null,
+    });
   };
 
   return {
@@ -48,6 +69,13 @@ export function useCreateVideoViewModel() {
     durationSeconds,
     setDurationSeconds,
     promptError,
+    musicTrackId,
+    setMusicTrackId,
+    narrationText,
+    setNarrationText,
+    narrationVoice,
+    setNarrationVoice,
+    narrationError,
     isSubmitting: mutation.isPending,
     formError: toFormError(mutation.error),
     onSubmit,

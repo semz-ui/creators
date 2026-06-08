@@ -32,7 +32,7 @@ export class CloudinaryVideoStorage implements IVideoStorage {
 }
 
 /** Parse a `cloudinary://<api_key>:<api_secret>@<cloud_name>` DSN. */
-function parseCloudinaryUrl(url: string): {
+export function parseCloudinaryUrl(url: string): {
   cloud_name: string;
   api_key: string;
   api_secret: string;
