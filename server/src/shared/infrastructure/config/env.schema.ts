@@ -68,6 +68,23 @@ export const envSchema = z
     KLING_MODE: z.enum(['std', 'pro']).default('std'),
     KLING_ASPECT_RATIO: z.enum(['16:9', '9:16', '1:1']).default('16:9'),
 
+    // OpenAI Sora video generator. Sora returns authenticated binary, so its
+    // output is uploaded to Cloudinary (CLOUDINARY_URL required when Sora is used).
+    OPENAI_API_KEY: z.string().optional(),
+    SORA_BASE_URL: z.string().url().default('https://api.openai.com/v1'),
+    SORA_MODEL: z.string().default('sora-2'),
+    SORA_SIZE: z.string().default('1280x720'),
+    // OpenAI TTS model used to synthesize optional video narration.
+    TTS_MODEL: z.string().default('gpt-4o-mini-tts'),
+    CLOUDINARY_URL: z.string().optional(),
+    // Explicit generator selection; when unset (or blank, e.g. an empty
+    // docker-compose passthrough) the provider is auto-detected from configured
+    // credentials (sora → kling → stub).
+    VIDEO_PROVIDER: z.preprocess(
+      (v) => (v === '' ? undefined : v),
+      z.enum(['sora', 'kling', 'stub']).optional(),
+    ),
+
     // Connections module
     // Secret used to derive the AES key that encrypts stored OAuth tokens.
     CONNECTIONS_ENC_KEY: z
@@ -117,6 +134,24 @@ export const envSchema = z
       .default('info'),
   })
   .superRefine((env, ctx) => {
+    // Sora needs both an OpenAI key and Cloudinary to store its binary output.
+    // Required when Sora is selected explicitly or implied by an OpenAI key.
+    const wantsSora = env.VIDEO_PROVIDER === 'sora' || Boolean(env.OPENAI_API_KEY);
+    if (wantsSora && !env.OPENAI_API_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['OPENAI_API_KEY'],
+        message: 'OPENAI_API_KEY is required when VIDEO_PROVIDER is "sora"',
+      });
+    }
+    if (wantsSora && !env.CLOUDINARY_URL) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['CLOUDINARY_URL'],
+        message: 'CLOUDINARY_URL is required to store Sora-generated videos',
+      });
+    }
+
     // Enabling Stripe requires its webhook signing secret to verify callbacks.
     if (env.STRIPE_SECRET_KEY && !env.STRIPE_WEBHOOK_SECRET) {
       ctx.addIssue({

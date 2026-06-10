@@ -23,3 +23,8 @@ process.env.KLING_SECRET_KEY = '';
 // Same for Stripe — force the stub payment provider so tests never hit the API.
 process.env.STRIPE_SECRET_KEY = '';
 process.env.STRIPE_WEBHOOK_SECRET = '';
+// Same for Sora/Cloudinary — pin the stub generator (VIDEO_PROVIDER='stub' is a
+// valid enum, so dotenv won't override it) and blank the credentials.
+process.env.VIDEO_PROVIDER = 'stub';
+process.env.OPENAI_API_KEY = '';
+process.env.CLOUDINARY_URL = '';
