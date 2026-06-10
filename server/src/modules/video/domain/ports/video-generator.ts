@@ -15,7 +15,10 @@ export interface GenerationHandle {
  */
 export type GenerationStatus =
   | { state: 'processing' }
-  | { state: 'ready'; resultUrl: string }
+  // `assetId` is set when the result lives in our own storage (Cloudinary
+  // public_id) so the app can composite audio onto it; absent for generators
+  // that return a remote URL we don't control.
+  | { state: 'ready'; resultUrl: string; assetId?: string }
   | { state: 'failed'; error: string };
 
 /**

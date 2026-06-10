@@ -34,14 +34,25 @@ function asApply(mock: ReturnType<typeof applyResultMock>): ApplyGenerationResul
   return mock as unknown as ApplyGenerationResult;
 }
 
-function processingVideo(ownerId = 'user-1', jobRef = 'job-1') {
+function processingVideo(
+  ownerId = 'user-1',
+  jobRef = 'job-1',
+  audio: { musicTrackId?: string; narrationText?: string; narrationVoice?: string } = {},
+) {
   const v = Video.create({
     ownerId,
     prompt: Prompt.create('a cat'),
     duration: Duration.create(10),
+    musicTrackId: audio.musicTrackId ?? null,
+    narrationText: audio.narrationText ?? null,
+    narrationVoice: audio.narrationVoice ?? null,
   });
   v.markProcessing(jobRef);
   return v;
+}
+
+function compositorMock(url = 'https://cdn/composed.mp4') {
+  return { compose: jest.fn().mockResolvedValue(url) };
 }
 
 describe('ReconcileGeneration', () => {
@@ -58,6 +69,82 @@ describe('ReconcileGeneration', () => {
       jobRef: 'job-1',
       status: 'ready',
       resultUrl: 'https://cdn/v.mp4',
+    });
+  });
+
+  it('composites audio and applies the composed url when the video has audio + assetId', async () => {
+    const videos = repoMock();
+    videos.findById.mockResolvedValue(
+      processingVideo('user-1', 'job-1', { musicTrackId: 'upbeat', narrationText: 'hi' }),
+    );
+    const generator = generatorMock({
+      state: 'ready',
+      resultUrl: 'https://cdn/base.mp4',
+      assetId: 'asset-1',
+    });
+    const apply = applyResultMock();
+    const compositor = compositorMock('https://cdn/composed.mp4');
+
+    await new ReconcileGeneration(videos, generator, asApply(apply), compositor).execute(
+      'user-1',
+      'vid-1',
+    );
+
+    expect(compositor.compose).toHaveBeenCalledWith({
+      baseAssetId: 'asset-1',
+      musicTrackId: 'upbeat',
+      narration: { text: 'hi', voice: 'alloy' },
+    });
+    expect(apply.execute).toHaveBeenCalledWith({
+      jobRef: 'job-1',
+      status: 'ready',
+      resultUrl: 'https://cdn/composed.mp4',
+    });
+  });
+
+  it('skips compositing when the video has no audio settings', async () => {
+    const videos = repoMock();
+    videos.findById.mockResolvedValue(processingVideo());
+    const generator = generatorMock({
+      state: 'ready',
+      resultUrl: 'https://cdn/base.mp4',
+      assetId: 'asset-1',
+    });
+    const apply = applyResultMock();
+    const compositor = compositorMock();
+
+    await new ReconcileGeneration(videos, generator, asApply(apply), compositor).execute(
+      'user-1',
+      'vid-1',
+    );
+
+    expect(compositor.compose).not.toHaveBeenCalled();
+    expect(apply.execute).toHaveBeenCalledWith({
+      jobRef: 'job-1',
+      status: 'ready',
+      resultUrl: 'https://cdn/base.mp4',
+    });
+  });
+
+  it('skips compositing when the generator returns no assetId (not our storage)', async () => {
+    const videos = repoMock();
+    videos.findById.mockResolvedValue(
+      processingVideo('user-1', 'job-1', { musicTrackId: 'upbeat' }),
+    );
+    const generator = generatorMock({ state: 'ready', resultUrl: 'https://remote/v.mp4' });
+    const apply = applyResultMock();
+    const compositor = compositorMock();
+
+    await new ReconcileGeneration(videos, generator, asApply(apply), compositor).execute(
+      'user-1',
+      'vid-1',
+    );
+
+    expect(compositor.compose).not.toHaveBeenCalled();
+    expect(apply.execute).toHaveBeenCalledWith({
+      jobRef: 'job-1',
+      status: 'ready',
+      resultUrl: 'https://remote/v.mp4',
     });
   });
 

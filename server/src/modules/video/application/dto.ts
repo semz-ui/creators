@@ -8,6 +8,9 @@ export interface PublicVideo {
   status: VideoStatus;
   resultUrl: string | null;
   error: string | null;
+  musicTrackId: string | null;
+  narrationText: string | null;
+  narrationVoice: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,6 +18,9 @@ export interface PublicVideo {
 export interface CreateVideoInput {
   prompt: string;
   durationSeconds: number;
+  musicTrackId?: string | null;
+  narrationText?: string | null;
+  narrationVoice?: string | null;
 }
 
 export interface ListVideosInput {
@@ -44,6 +50,9 @@ export function toPublicVideo(video: Video): PublicVideo {
     status: video.status,
     resultUrl: video.resultUrl,
     error: video.error,
+    musicTrackId: video.musicTrackId,
+    narrationText: video.narrationText,
+    narrationVoice: video.narrationVoice,
     createdAt: video.createdAt,
     updatedAt: video.updatedAt,
   };

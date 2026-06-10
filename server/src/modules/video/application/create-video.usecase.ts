@@ -24,7 +24,14 @@ export class CreateVideo {
     const prompt = Prompt.create(input.prompt);
     const duration = Duration.create(input.durationSeconds);
 
-    const video = Video.create({ ownerId, prompt, duration });
+    const video = Video.create({
+      ownerId,
+      prompt,
+      duration,
+      musicTrackId: input.musicTrackId ?? null,
+      narrationText: input.narrationText ?? null,
+      narrationVoice: input.narrationVoice ?? null,
+    });
     const creditContext = { videoId: video.id, durationSeconds: duration.seconds };
 
     // Charge first; throws a 402 if the balance is insufficient.
