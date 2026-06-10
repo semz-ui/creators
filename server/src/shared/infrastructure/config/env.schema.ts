@@ -74,6 +74,8 @@ export const envSchema = z
     SORA_BASE_URL: z.string().url().default('https://api.openai.com/v1'),
     SORA_MODEL: z.string().default('sora-2'),
     SORA_SIZE: z.string().default('1280x720'),
+    // OpenAI TTS model used to synthesize optional video narration.
+    TTS_MODEL: z.string().default('gpt-4o-mini-tts'),
     CLOUDINARY_URL: z.string().optional(),
     // Explicit generator selection; when unset (or blank, e.g. an empty
     // docker-compose passthrough) the provider is auto-detected from configured

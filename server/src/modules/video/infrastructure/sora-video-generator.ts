@@ -58,7 +58,9 @@ export class SoraVideoGenerator implements IVideoGenerator {
       case 'completed': {
         const mp4 = await this.download(jobRef);
         const resultUrl = await this.storage.upload(mp4, jobRef, 'video/mp4');
-        return { state: 'ready', resultUrl };
+        // jobRef is the Cloudinary public_id (see CloudinaryVideoStorage), so the
+        // app can composite audio onto it.
+        return { state: 'ready', resultUrl, assetId: jobRef };
       }
       case 'failed':
         return { state: 'failed', error: readError(data) ?? 'Generation failed' };

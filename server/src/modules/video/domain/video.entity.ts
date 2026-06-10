@@ -18,6 +18,10 @@ export interface VideoSnapshot {
   jobRef: string | null;
   resultUrl: string | null;
   error: string | null;
+  /** Optional audio settings, chosen at creation and applied on completion. */
+  musicTrackId: string | null;
+  narrationText: string | null;
+  narrationVoice: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,6 +36,9 @@ export class Video {
   readonly ownerId: string;
   readonly prompt: string;
   readonly durationSeconds: number;
+  readonly musicTrackId: string | null;
+  readonly narrationText: string | null;
+  readonly narrationVoice: string | null;
   readonly createdAt: Date;
 
   private _status: VideoStatus;
@@ -45,6 +52,9 @@ export class Video {
     this.ownerId = snapshot.ownerId;
     this.prompt = snapshot.prompt;
     this.durationSeconds = snapshot.durationSeconds;
+    this.musicTrackId = snapshot.musicTrackId;
+    this.narrationText = snapshot.narrationText;
+    this.narrationVoice = snapshot.narrationVoice;
     this.createdAt = snapshot.createdAt;
     this._status = snapshot.status;
     this._jobRef = snapshot.jobRef;
@@ -69,7 +79,14 @@ export class Video {
     return this._updatedAt;
   }
 
-  static create(params: { ownerId: string; prompt: Prompt; duration: Duration }): Video {
+  static create(params: {
+    ownerId: string;
+    prompt: Prompt;
+    duration: Duration;
+    musicTrackId?: string | null;
+    narrationText?: string | null;
+    narrationVoice?: string | null;
+  }): Video {
     const now = new Date();
     return new Video({
       id: randomUUID(),
@@ -80,6 +97,9 @@ export class Video {
       jobRef: null,
       resultUrl: null,
       error: null,
+      musicTrackId: params.musicTrackId ?? null,
+      narrationText: params.narrationText ?? null,
+      narrationVoice: params.narrationVoice ?? null,
       createdAt: now,
       updatedAt: now,
     });
@@ -134,6 +154,9 @@ export class Video {
       jobRef: this._jobRef,
       resultUrl: this._resultUrl,
       error: this._error,
+      musicTrackId: this.musicTrackId,
+      narrationText: this.narrationText,
+      narrationVoice: this.narrationVoice,
       createdAt: this.createdAt,
       updatedAt: this._updatedAt,
     };
