@@ -12,6 +12,11 @@ export default function MoreTab() {
           label: 'Connections',
           onPress: () => router.push('/(app)/connections'),
         },
+        {
+          icon: 'card-outline',
+          label: 'Billing',
+          onPress: () => router.push('/(app)/billing'),
+        },
       ]}
     />
   );
