@@ -1,9 +1,3 @@
-import { EmptyState, Screen } from '@/shared/ui';
+import { CreateVideoScreen } from '@/modules/video/presentation/CreateVideoScreen';
 
-export default function CreateTab() {
-  return (
-    <Screen title="Create">
-      <EmptyState title="Coming soon" message="Generate a video from a prompt." />
-    </Screen>
-  );
-}
+export default CreateVideoScreen;
