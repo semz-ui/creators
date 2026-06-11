@@ -1,3 +1,5 @@
+import { logger } from '@shared/infrastructure/logging/logger';
+
 import type { IConnectionTokenProvider } from '../domain/ports/connection-token-provider';
 import type { IReadyVideoLookup } from '../domain/ports/ready-video-lookup';
 import type { ISocialPublisherRegistry } from '../domain/ports/social-publisher';
@@ -49,8 +51,14 @@ export class DistributionService {
           caption: publication.caption,
         });
         publication.markTargetPublished(target.platform, externalPostId);
-      } catch {
-        publication.markTargetFailed(target.platform, 'Publish failed');
+      } catch (err) {
+        logger.warn(
+          { err, publicationId: publication.id, platform: target.platform },
+          'Publishing target failed',
+        );
+        const message =
+          err instanceof Error && err.message !== '' ? err.message.slice(0, 300) : 'Publish failed';
+        publication.markTargetFailed(target.platform, message);
       }
     }
 

@@ -23,6 +23,12 @@ process.env.KLING_SECRET_KEY = '';
 // Same for Stripe — force the stub payment provider so tests never hit the API.
 process.env.STRIPE_SECRET_KEY = '';
 process.env.STRIPE_WEBHOOK_SECRET = '';
+// Same for Google — force the stub OAuth provider so tests never hit Google.
+process.env.GOOGLE_CLIENT_ID = '';
+process.env.GOOGLE_CLIENT_SECRET = '';
+// Blank so the OAuth callback returns JSON (a developer's .env may set a
+// frontend redirect URL, which would flip the callback into 302 mode).
+process.env.CONNECTIONS_REDIRECT_URL = '';
 // Same for Sora/Cloudinary — pin the stub generator (VIDEO_PROVIDER='stub' is a
 // valid enum, so dotenv won't override it) and blank the credentials.
 process.env.VIDEO_PROVIDER = 'stub';

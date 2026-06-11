@@ -29,6 +29,11 @@ function providerMock(): jest.Mocked<IOAuthProvider> {
   return {
     getAuthorizationUrl: jest.fn().mockReturnValue('https://auth.example/url'),
     exchangeCode: jest.fn().mockResolvedValue(account),
+    refreshAccessToken: jest.fn().mockResolvedValue({
+      accessToken: 'refreshed-tok',
+      refreshToken: null,
+      expiresAt: new Date('2030-01-01T01:00:00Z'),
+    }),
   };
 }
 
