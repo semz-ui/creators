@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
 import { cn } from '@/shared/lib/cn';
@@ -40,6 +41,7 @@ function SectionLabel({ children }: { children: string }) {
 }
 
 export function CreateVideoScreen() {
+  const router = useRouter();
   const vm = useCreateVideoViewModel();
 
   return (
@@ -117,6 +119,14 @@ export function CreateVideoScreen() {
 
         {vm.formError ? (
           <Text className="font-sans text-sm text-danger">{vm.formError}</Text>
+        ) : null}
+        {vm.outOfCredits ? (
+          <Button
+            title="Top up credits"
+            variant="secondary"
+            size="sm"
+            onPress={() => router.push('/(app)/billing')}
+          />
         ) : null}
 
         <Button title="Generate video" onPress={vm.onSubmit} loading={vm.isSubmitting} block />
