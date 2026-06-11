@@ -104,6 +104,12 @@ export const envSchema = z
     // Privacy of videos published to YouTube. Unverified Google apps are
     // forced to 'private' by YouTube regardless; keep the safe default.
     YOUTUBE_PRIVACY_STATUS: z.enum(['private', 'unlisted', 'public']).default('private'),
+    // Instagram API with Instagram Login ("Business Login") for the
+    // 'instagram' platform. When both are set the real provider + Reels
+    // publisher are wired in. These are the Instagram-product app id/secret,
+    // NOT the parent Meta app id.
+    INSTAGRAM_APP_ID: z.string().optional(),
+    INSTAGRAM_APP_SECRET: z.string().optional(),
 
     // Publishing module — shared secret a scheduler presents to run due publications.
     PUBLISH_SCHEDULER_SECRET: z
@@ -165,6 +171,15 @@ export const envSchema = z
         code: z.ZodIssueCode.custom,
         path: ['GOOGLE_CLIENT_SECRET'],
         message: 'GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set together',
+      });
+    }
+
+    // Instagram credentials only work as a pair — catch half-configured deploys.
+    if (Boolean(env.INSTAGRAM_APP_ID) !== Boolean(env.INSTAGRAM_APP_SECRET)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['INSTAGRAM_APP_SECRET'],
+        message: 'INSTAGRAM_APP_ID and INSTAGRAM_APP_SECRET must be set together',
       });
     }
 

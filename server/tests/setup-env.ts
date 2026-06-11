@@ -26,6 +26,9 @@ process.env.STRIPE_WEBHOOK_SECRET = '';
 // Same for Google — force the stub OAuth provider so tests never hit Google.
 process.env.GOOGLE_CLIENT_ID = '';
 process.env.GOOGLE_CLIENT_SECRET = '';
+// Same for Instagram — force the stub provider/publisher so tests never hit Meta.
+process.env.INSTAGRAM_APP_ID = '';
+process.env.INSTAGRAM_APP_SECRET = '';
 // Blank so the OAuth callback returns JSON (a developer's .env may set a
 // frontend redirect URL, which would flip the callback into 302 mode).
 process.env.CONNECTIONS_REDIRECT_URL = '';

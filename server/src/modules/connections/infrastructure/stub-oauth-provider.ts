@@ -5,7 +5,7 @@ import type { Platform } from '../domain/platform';
 
 const SCOPES: Record<Platform, string[]> = {
   facebook: ['pages_manage_posts', 'pages_read_engagement'],
-  instagram: ['instagram_content_publish'],
+  instagram: ['instagram_business_basic', 'instagram_business_content_publish'],
   youtube: ['https://www.googleapis.com/auth/youtube.upload'],
   tiktok: ['video.publish'],
 };
