@@ -71,6 +71,20 @@ describe('envSchema', () => {
     if (result.success) expect(result.data.VIDEO_PROVIDER).toBeUndefined();
   });
 
+  it('requires Google OAuth credentials to be set as a pair', () => {
+    expect(envSchema.safeParse({ ...validInput, GOOGLE_CLIENT_ID: 'id-x' }).success).toBe(false);
+    expect(envSchema.safeParse({ ...validInput, GOOGLE_CLIENT_SECRET: 'sec-x' }).success).toBe(
+      false,
+    );
+    expect(
+      envSchema.safeParse({
+        ...validInput,
+        GOOGLE_CLIENT_ID: 'id-x',
+        GOOGLE_CLIENT_SECRET: 'sec-x',
+      }).success,
+    ).toBe(true);
+  });
+
   it('requires STRIPE_WEBHOOK_SECRET when STRIPE_SECRET_KEY is set', () => {
     const result = envSchema.safeParse({ ...validInput, STRIPE_SECRET_KEY: 'sk_test_x' });
     expect(result.success).toBe(false);

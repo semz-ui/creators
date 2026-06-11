@@ -51,11 +51,12 @@ export function buildContainer(deps: ContainerDeps = {}): Container {
   // Reuse the auth access guard to protect other modules' routes.
   const video = buildVideoModule({ authGuard: auth.authGuard, creditGuard: billing.creditGuard });
   const connections = buildConnectionsModule({ authGuard: auth.authGuard, redisClient });
-  // Publishing reads videos + connections through cross-module repo adapters.
+  // Publishing reads videos + connections through cross-module adapters; tokens
+  // come via the access service so expiring ones are refreshed before use.
   const publishing = buildPublishingModule({
     authGuard: auth.authGuard,
     videoRepository: video.videoRepository,
-    connectionRepository: connections.connectionRepository,
+    connectionAccess: connections.connectionAccess,
   });
   // Analytics reads published posts + connections to fetch and aggregate metrics.
   const analytics = buildAnalyticsModule({

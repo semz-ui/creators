@@ -1,3 +1,5 @@
+import { logger } from '@shared/infrastructure/logging/logger';
+
 import { Connection } from '../domain/connection.entity';
 import { InvalidOAuthStateError, OAuthExchangeFailedError } from '../domain/connection.errors';
 import type { IConnectionRepository } from '../domain/ports/connection-repository';
@@ -33,7 +35,10 @@ export class CompleteConnection {
         code: input.code,
         redirectUri: callbackUri(this.config.publicBaseUrl),
       });
-    } catch {
+    } catch (err) {
+      // The client gets the generic error; keep the provider's reason
+      // (e.g. Google's error_description) in the server log.
+      logger.warn({ err, platform: stateData.platform }, 'OAuth code exchange failed');
       throw new OAuthExchangeFailedError();
     }
 
