@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import type { OAuthAccount } from './ports/oauth-provider';
+import type { OAuthAccount, RefreshedTokens } from './ports/oauth-provider';
 import type { Platform } from './platform';
 
 export type ConnectionStatus = 'active' | 'revoked' | 'expired';
@@ -116,6 +116,30 @@ export class Connection {
 
   markRevoked(): void {
     this._status = 'revoked';
+    this.touch();
+  }
+
+  /** Refresh failed or impossible — the user must reconnect. */
+  markExpired(): void {
+    this._status = 'expired';
+    this.touch();
+  }
+
+  /** True when the access token expires within the buffer. Null expiry = never expires. */
+  needsRefresh(bufferSeconds: number, now: Date = new Date()): boolean {
+    if (this._status !== 'active' || this._expiresAt === null) {
+      return false;
+    }
+    return this._expiresAt.getTime() - now.getTime() <= bufferSeconds * 1000;
+  }
+
+  /** Apply a refreshed token set, keeping the stored refresh token when not rotated. */
+  applyRefreshedTokens(tokens: RefreshedTokens): void {
+    this._accessToken = tokens.accessToken;
+    if (tokens.refreshToken !== null) {
+      this._refreshToken = tokens.refreshToken;
+    }
+    this._expiresAt = tokens.expiresAt;
     this.touch();
   }
 

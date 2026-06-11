@@ -97,6 +97,13 @@ export const envSchema = z
     PUBLIC_BASE_URL: z.string().url().default('http://localhost:4000'),
     // If set, the OAuth callback 302-redirects here (with ?status=); otherwise returns JSON.
     CONNECTIONS_REDIRECT_URL: z.string().default(''),
+    // Google OAuth for the 'youtube' platform. When both are set the real
+    // Google provider is wired in; otherwise the stub is used.
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
+    // Privacy of videos published to YouTube. Unverified Google apps are
+    // forced to 'private' by YouTube regardless; keep the safe default.
+    YOUTUBE_PRIVACY_STATUS: z.enum(['private', 'unlisted', 'public']).default('private'),
 
     // Publishing module — shared secret a scheduler presents to run due publications.
     PUBLISH_SCHEDULER_SECRET: z
@@ -149,6 +156,15 @@ export const envSchema = z
         code: z.ZodIssueCode.custom,
         path: ['CLOUDINARY_URL'],
         message: 'CLOUDINARY_URL is required to store Sora-generated videos',
+      });
+    }
+
+    // Google OAuth credentials only work as a pair — catch half-configured deploys.
+    if (Boolean(env.GOOGLE_CLIENT_ID) !== Boolean(env.GOOGLE_CLIENT_SECRET)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['GOOGLE_CLIENT_SECRET'],
+        message: 'GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set together',
       });
     }
 
