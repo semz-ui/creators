@@ -1,5 +1,18 @@
+import { useRouter } from 'expo-router';
+
 import { MoreScreen } from '@/modules/auth/presentation/MoreScreen';
 
 export default function MoreTab() {
-  return <MoreScreen />;
+  const router = useRouter();
+  return (
+    <MoreScreen
+      items={[
+        {
+          icon: 'link-outline',
+          label: 'Connections',
+          onPress: () => router.push('/(app)/connections'),
+        },
+      ]}
+    />
+  );
 }
