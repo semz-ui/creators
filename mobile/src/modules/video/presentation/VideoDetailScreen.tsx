@@ -40,6 +40,12 @@ function ReadyVideo({ video }: { video: Video }) {
           onPress={() => router.push(`/(app)/videos/${video.id}/publish`)}
           block
         />
+        <Button
+          title="Analytics"
+          variant="secondary"
+          onPress={() => router.push(`/(app)/videos/${video.id}/analytics`)}
+          block
+        />
       </Card>
     </View>
   );

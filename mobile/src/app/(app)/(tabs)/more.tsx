@@ -17,6 +17,11 @@ export default function MoreTab() {
           label: 'Billing',
           onPress: () => router.push('/(app)/billing'),
         },
+        {
+          icon: 'stats-chart-outline',
+          label: 'Analytics',
+          onPress: () => router.push('/(app)/analytics'),
+        },
       ]}
     />
   );
