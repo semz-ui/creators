@@ -81,6 +81,7 @@ export function ConnectionsScreen() {
     <Screen
       title="Connections"
       subtitle="Link the accounts you want to publish your videos to"
+      showBack
       refreshing={connections.isRefetching}
       onRefresh={() => void connections.refetch()}
     >
