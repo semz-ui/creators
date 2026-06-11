@@ -1,9 +1,3 @@
-import { EmptyState, Screen } from '@/shared/ui';
+import { LibraryScreen } from '@/modules/video/presentation/LibraryScreen';
 
-export default function LibraryTab() {
-  return (
-    <Screen title="Library">
-      <EmptyState title="Coming soon" message="All your generated videos will live here." />
-    </Screen>
-  );
-}
+export default LibraryScreen;

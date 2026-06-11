@@ -1,9 +1,3 @@
-import { EmptyState, Screen } from '@/shared/ui';
+import { HomeScreen } from '@/modules/video/presentation/HomeScreen';
 
-export default function HomeTab() {
-  return (
-    <Screen title="Home">
-      <EmptyState title="Coming soon" message="Your recent videos will appear here." />
-    </Screen>
-  );
-}
+export default HomeScreen;
