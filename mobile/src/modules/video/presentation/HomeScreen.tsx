@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 
 import { useSession } from '@/modules/auth/viewmodels/useSession';
+import { BalanceChip } from '@/modules/billing/presentation/BalanceChip';
 import { Button, Card, EmptyState, Screen, Spinner } from '@/shared/ui';
 
 import { useVideoLibrary } from '../viewmodels/useVideoLibrary';
@@ -13,7 +14,12 @@ export function HomeScreen() {
   const videos = useVideoLibrary(1, 6);
 
   return (
-    <Screen title="Home" refreshing={videos.isRefetching} onRefresh={() => void videos.refetch()}>
+    <Screen
+      title="Home"
+      headerRight={<BalanceChip />}
+      refreshing={videos.isRefetching}
+      onRefresh={() => void videos.refetch()}
+    >
       <Card className="mb-6 gap-3 bg-inverse">
         <Text className="font-sans text-xs uppercase text-content-muted">Welcome</Text>
         <Text className="font-display text-xl text-content-inverse">{user?.email}</Text>
