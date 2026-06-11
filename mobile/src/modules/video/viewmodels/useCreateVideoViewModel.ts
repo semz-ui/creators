@@ -89,6 +89,7 @@ export function useCreateVideoViewModel() {
     narrationError,
     isSubmitting: mutation.isPending,
     formError: toFormError(mutation.error),
+    outOfCredits: mutation.error instanceof HttpError && mutation.error.status === 402,
     onSubmit,
   };
 }
