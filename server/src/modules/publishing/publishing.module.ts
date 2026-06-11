@@ -16,7 +16,10 @@ import { RunDuePublications } from './application/run-due-publications.usecase';
 import { ConnectionTokenProviderAdapter } from './infrastructure/connection-token-provider.adapter';
 import { MongoPublicationRepository } from './infrastructure/mongo-publication.repository';
 import { ReadyVideoLookupAdapter } from './infrastructure/ready-video-lookup.adapter';
-import { buildPublisherRegistry } from './infrastructure/social-publisher-registry';
+import {
+  buildPublisherRegistry,
+  type PublisherRegistryConfig,
+} from './infrastructure/social-publisher-registry';
 import { PublishingController } from './presentation/publishing.controller';
 import { createPublishingRouter } from './presentation/publishing.routes';
 import { createSchedulerGuard } from './presentation/scheduler.guard';
@@ -63,17 +66,26 @@ export function buildPublishingModule({
 }
 
 /**
- * Real YouTube publisher when Google OAuth is configured (same flag as the
- * connections module, so real tokens and real uploads switch on together);
- * every other platform — and YouTube without credentials — uses the stub.
+ * Real publishers for the platforms whose OAuth credentials are configured
+ * (same flags as the connections module, so real tokens and real publishing
+ * switch on together); every other platform uses the stub.
  */
 function buildPublishers(): ISocialPublisherRegistry {
+  const config: PublisherRegistryConfig = {};
   if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
-    logger.info('Publishing: real YouTube uploads (other platforms stubbed)');
-    return buildPublisherRegistry({ youtube: { privacyStatus: env.YOUTUBE_PRIVACY_STATUS } });
+    config.youtube = { privacyStatus: env.YOUTUBE_PRIVACY_STATUS };
   }
-  logger.info(
-    'Publishing: stub publishers (set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET for YouTube)',
-  );
-  return buildPublisherRegistry();
+  if (env.INSTAGRAM_APP_ID && env.INSTAGRAM_APP_SECRET) {
+    config.instagram = {};
+  }
+
+  const real = [...(config.youtube ? ['youtube'] : []), ...(config.instagram ? ['instagram'] : [])];
+  if (real.length > 0) {
+    logger.info(`Publishing: real publishing for ${real.join(', ')} (other platforms stubbed)`);
+  } else {
+    logger.info(
+      'Publishing: stub publishers (set GOOGLE_CLIENT_ID/SECRET for YouTube, INSTAGRAM_APP_ID/SECRET for Instagram)',
+    );
+  }
+  return buildPublisherRegistry(config);
 }

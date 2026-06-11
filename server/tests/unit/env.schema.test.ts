@@ -85,6 +85,20 @@ describe('envSchema', () => {
     ).toBe(true);
   });
 
+  it('requires Instagram credentials to be set as a pair', () => {
+    expect(envSchema.safeParse({ ...validInput, INSTAGRAM_APP_ID: 'id-x' }).success).toBe(false);
+    expect(envSchema.safeParse({ ...validInput, INSTAGRAM_APP_SECRET: 'sec-x' }).success).toBe(
+      false,
+    );
+    expect(
+      envSchema.safeParse({
+        ...validInput,
+        INSTAGRAM_APP_ID: 'id-x',
+        INSTAGRAM_APP_SECRET: 'sec-x',
+      }).success,
+    ).toBe(true);
+  });
+
   it('requires STRIPE_WEBHOOK_SECRET when STRIPE_SECRET_KEY is set', () => {
     const result = envSchema.safeParse({ ...validInput, STRIPE_SECRET_KEY: 'sk_test_x' });
     expect(result.success).toBe(false);

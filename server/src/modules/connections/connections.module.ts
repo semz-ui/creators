@@ -13,7 +13,10 @@ import { ListConnections } from './application/list-connections.usecase';
 import { StartConnection } from './application/start-connection.usecase';
 import { AesGcmTokenCipher } from './infrastructure/aes-gcm-token-cipher';
 import { MongoConnectionRepository } from './infrastructure/mongo-connection.repository';
-import { buildProviderRegistry } from './infrastructure/oauth-provider-registry';
+import {
+  buildProviderRegistry,
+  type ProviderRegistryConfig,
+} from './infrastructure/oauth-provider-registry';
 import { RedisOAuthStateStore } from './infrastructure/redis-oauth-state-store';
 import { ConnectionsController } from './presentation/connections.controller';
 import { createConnectionsRouter } from './presentation/connections.routes';
@@ -64,20 +67,29 @@ export function buildConnectionsModule({
 }
 
 /**
- * Use the real Google provider for 'youtube' when its credentials are
- * configured (the schema guarantees they come as a pair); every other
- * platform — and YouTube without credentials — falls back to the stub so the
- * app still boots and works for local dev / tests.
+ * Real OAuth providers for the platforms whose credentials are configured
+ * (each schema-validated as a pair); every other platform falls back to the
+ * stub so the app still boots and works for local dev / tests.
  */
 function buildProviders(): IOAuthProviderRegistry {
+  const config: ProviderRegistryConfig = {};
   if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
-    logger.info('Connections: Google OAuth for youtube (other platforms stubbed)');
-    return buildProviderRegistry({
-      google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET },
-    });
+    config.google = { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET };
   }
-  logger.info(
-    'Connections: stub OAuth providers (set GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET for YouTube)',
-  );
-  return buildProviderRegistry();
+  if (env.INSTAGRAM_APP_ID && env.INSTAGRAM_APP_SECRET) {
+    config.instagram = { appId: env.INSTAGRAM_APP_ID, appSecret: env.INSTAGRAM_APP_SECRET };
+  }
+
+  const real = [
+    ...(config.google ? ['youtube (Google)'] : []),
+    ...(config.instagram ? ['instagram'] : []),
+  ];
+  if (real.length > 0) {
+    logger.info(`Connections: real OAuth for ${real.join(', ')} (other platforms stubbed)`);
+  } else {
+    logger.info(
+      'Connections: stub OAuth providers (set GOOGLE_CLIENT_ID/SECRET for YouTube, INSTAGRAM_APP_ID/SECRET for Instagram)',
+    );
+  }
+  return buildProviderRegistry(config);
 }

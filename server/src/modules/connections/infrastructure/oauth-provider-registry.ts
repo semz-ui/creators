@@ -2,6 +2,7 @@ import { UnsupportedPlatformError } from '../domain/connection.errors';
 import type { IOAuthProvider, IOAuthProviderRegistry } from '../domain/ports/oauth-provider';
 import { PLATFORMS, type Platform } from '../domain/platform';
 import { GoogleOAuthProvider, type GoogleOAuthConfig } from './google-oauth-provider';
+import { InstagramOAuthProvider, type InstagramOAuthConfig } from './instagram-oauth-provider';
 import { StubOAuthProvider } from './stub-oauth-provider';
 
 /** Looks up the OAuth provider for a platform from a fixed map. */
@@ -20,6 +21,8 @@ export class StaticOAuthProviderRegistry implements IOAuthProviderRegistry {
 export interface ProviderRegistryConfig {
   /** When set, the real Google provider handles 'youtube'. */
   google?: GoogleOAuthConfig;
+  /** When set, the real Instagram provider handles 'instagram'. */
+  instagram?: InstagramOAuthConfig;
 }
 
 /**
@@ -34,6 +37,9 @@ export function buildProviderRegistry(
   );
   if (config.google) {
     providers.set('youtube', new GoogleOAuthProvider(config.google));
+  }
+  if (config.instagram) {
+    providers.set('instagram', new InstagramOAuthProvider(config.instagram));
   }
   return new StaticOAuthProviderRegistry(providers);
 }
