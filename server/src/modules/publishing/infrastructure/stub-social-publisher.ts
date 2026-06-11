@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import { UnsupportedPlatformError } from '@modules/connections/domain/connection.errors';
-import { PLATFORMS, type Platform } from '@modules/connections/domain/platform';
+import type { Platform } from '@modules/connections/domain/platform';
 
 import type {
   ISocialPublisher,
@@ -33,12 +33,4 @@ export class StaticSocialPublisherRegistry implements ISocialPublisherRegistry {
     }
     return publisher;
   }
-}
-
-/** Registry wired with the stub publisher for every supported platform. */
-export function buildStubPublisherRegistry(): StaticSocialPublisherRegistry {
-  const publishers = new Map<Platform, ISocialPublisher>(
-    PLATFORMS.map((platform) => [platform, new StubSocialPublisher(platform)]),
-  );
-  return new StaticSocialPublisherRegistry(publishers);
 }

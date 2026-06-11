@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import type { IOAuthProvider, OAuthAccount } from '../domain/ports/oauth-provider';
+import type { IOAuthProvider, OAuthAccount, RefreshedTokens } from '../domain/ports/oauth-provider';
 import type { Platform } from '../domain/platform';
 
 const SCOPES: Record<Platform, string[]> = {
@@ -30,6 +30,14 @@ export class StubOAuthProvider implements IOAuthProvider {
       accessToken: `stub-access-${randomUUID()}`,
       refreshToken: `stub-refresh-${randomUUID()}`,
       scopes: SCOPES[this.platform],
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    };
+  }
+
+  async refreshAccessToken(_refreshToken: string): Promise<RefreshedTokens> {
+    return {
+      accessToken: `stub-access-${randomUUID()}`,
+      refreshToken: null,
       expiresAt: new Date(Date.now() + 60 * 60 * 1000),
     };
   }
