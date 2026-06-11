@@ -47,7 +47,7 @@ export function PublishScreen({ videoId }: { videoId: string }) {
 
   if (video.isPending || connections.isPending) {
     return (
-      <Screen title="Publish">
+      <Screen title="Publish" showBack>
         <Spinner />
       </Screen>
     );
@@ -55,7 +55,7 @@ export function PublishScreen({ videoId }: { videoId: string }) {
 
   if (video.isError || !video.data || video.data.status !== 'ready') {
     return (
-      <Screen title="Publish">
+      <Screen title="Publish" showBack>
         <EmptyState
           title="This video isn't ready to publish"
           message="Wait for generation to finish, then try again."
@@ -74,7 +74,7 @@ export function PublishScreen({ videoId }: { videoId: string }) {
 
   if (activePlatforms.size === 0) {
     return (
-      <Screen title="Publish" subtitle="Share this video to your connected accounts">
+      <Screen title="Publish" subtitle="Share this video to your connected accounts" showBack>
         <EmptyState
           title="No connected accounts"
           message="Connect a platform first, then come back to publish."
@@ -91,7 +91,7 @@ export function PublishScreen({ videoId }: { videoId: string }) {
   ];
 
   return (
-    <Screen title="Publish" subtitle="Share this video to your connected accounts">
+    <Screen title="Publish" subtitle="Share this video to your connected accounts" showBack>
       <Card className="gap-5">
         <View>
           <Text className="mb-2 font-sans-medium text-sm text-content-secondary">Platforms</Text>

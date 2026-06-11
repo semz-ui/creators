@@ -67,6 +67,7 @@ export function BillingScreen() {
     <Screen
       title="Billing"
       subtitle="Credits power your video generations"
+      showBack
       refreshing={balance.isRefetching || ledger.isRefetching}
       onRefresh={refreshAll}
     >

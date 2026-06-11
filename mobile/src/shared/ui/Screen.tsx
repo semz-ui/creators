@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BackButton } from './BackButton';
+
 export interface ScreenProps {
   children: ReactNode;
   /** Wrap content in a ScrollView (default true). */
@@ -11,6 +13,8 @@ export interface ScreenProps {
   subtitle?: string;
   /** Right-aligned element next to the title (e.g. an action button). */
   headerRight?: ReactNode;
+  /** Show a back control above the title (for pushed, non-tab screens). */
+  showBack?: boolean;
   refreshing?: boolean;
   onRefresh?: () => void;
 }
@@ -22,21 +26,26 @@ export function Screen({
   title,
   subtitle,
   headerRight,
+  showBack = false,
   refreshing,
   onRefresh,
 }: ScreenProps) {
-  const header =
-    title !== undefined ? (
-      <View className="mb-5 flex-row items-start justify-between gap-3">
-        <View className="flex-1 gap-1">
-          <Text className="font-display-bold text-3xl text-content">{title}</Text>
-          {subtitle ? (
-            <Text className="font-sans text-sm text-content-secondary">{subtitle}</Text>
-          ) : null}
+  const header = (
+    <>
+      {showBack ? <BackButton /> : null}
+      {title !== undefined ? (
+        <View className="mb-5 flex-row items-start justify-between gap-3">
+          <View className="flex-1 gap-1">
+            <Text className="font-display-bold text-3xl text-content">{title}</Text>
+            {subtitle ? (
+              <Text className="font-sans text-sm text-content-secondary">{subtitle}</Text>
+            ) : null}
+          </View>
+          {headerRight}
         </View>
-        {headerRight}
-      </View>
-    ) : null;
+      ) : null}
+    </>
+  );
 
   if (!scroll) {
     return (
