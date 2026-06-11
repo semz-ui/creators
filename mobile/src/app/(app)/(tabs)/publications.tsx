@@ -1,9 +1,3 @@
-import { EmptyState, Screen } from '@/shared/ui';
+import { PublicationsScreen } from '@/modules/publishing/presentation/PublicationsScreen';
 
-export default function PublicationsTab() {
-  return (
-    <Screen title="Publications">
-      <EmptyState title="Coming soon" message="Where your videos have been shared." />
-    </Screen>
-  );
-}
+export default PublicationsScreen;

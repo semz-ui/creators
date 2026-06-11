@@ -26,6 +26,7 @@ function VideoPlayer({ url }: { url: string }) {
 }
 
 function ReadyVideo({ video }: { video: Video }) {
+  const router = useRouter();
   return (
     <View className="gap-4">
       {video.resultUrl ? <VideoPlayer url={video.resultUrl} /> : null}
@@ -34,6 +35,11 @@ function ReadyVideo({ video }: { video: Video }) {
         <Text className="font-sans text-xs text-content-muted">
           {video.durationSeconds}s • created {new Date(video.createdAt).toLocaleDateString()}
         </Text>
+        <Button
+          title="Publish"
+          onPress={() => router.push(`/(app)/videos/${video.id}/publish`)}
+          block
+        />
       </Card>
     </View>
   );
