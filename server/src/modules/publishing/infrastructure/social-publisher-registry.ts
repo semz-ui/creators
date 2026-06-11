@@ -1,12 +1,18 @@
 import { PLATFORMS, type Platform } from '@modules/connections/domain/platform';
 
 import type { ISocialPublisher } from '../domain/ports/social-publisher';
+import {
+  InstagramSocialPublisher,
+  type InstagramPublisherConfig,
+} from './instagram-social-publisher';
 import { StaticSocialPublisherRegistry, StubSocialPublisher } from './stub-social-publisher';
 import { YouTubeSocialPublisher, type YouTubePublisherConfig } from './youtube-social-publisher';
 
 export interface PublisherRegistryConfig {
   /** When set, the real YouTube publisher handles 'youtube'. */
   youtube?: YouTubePublisherConfig;
+  /** When set, the real Instagram publisher handles 'instagram'. */
+  instagram?: InstagramPublisherConfig;
 }
 
 /**
@@ -21,6 +27,9 @@ export function buildPublisherRegistry(
   );
   if (config.youtube) {
     publishers.set('youtube', new YouTubeSocialPublisher(config.youtube));
+  }
+  if (config.instagram) {
+    publishers.set('instagram', new InstagramSocialPublisher(config.instagram));
   }
   return new StaticSocialPublisherRegistry(publishers);
 }
