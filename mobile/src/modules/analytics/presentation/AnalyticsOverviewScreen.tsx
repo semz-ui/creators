@@ -17,6 +17,7 @@ export function AnalyticsOverviewScreen() {
     <Screen
       title="Analytics"
       subtitle="Engagement across your published videos"
+      showBack
       headerRight={
         <Button
           title={isRefreshing ? 'Refreshing…' : 'Refresh'}

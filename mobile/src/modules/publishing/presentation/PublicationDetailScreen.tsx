@@ -1,6 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { PLATFORMS } from '@/modules/connections/data/connections.types';
 import { formatDateTime } from '@/shared/lib/format';
@@ -12,19 +10,10 @@ import { PublicationStatusBadge, TargetStatusBadge } from './PublicationBadges';
 const platformLabel = (id: string) => PLATFORMS.find((p) => p.id === id)?.label ?? id;
 
 export function PublicationDetailScreen({ id }: { id: string }) {
-  const router = useRouter();
   const publication = usePublication(id);
 
   return (
-    <Screen title="Publication">
-      <Pressable
-        onPress={() => router.back()}
-        className="-mt-2 mb-4 flex-row items-center gap-1 self-start"
-      >
-        <Ionicons name="chevron-back" size={16} color="#0284c7" />
-        <Text className="font-sans-medium text-sm text-content-brand">Back</Text>
-      </Pressable>
-
+    <Screen title="Publication" showBack>
       {publication.isPending ? (
         <Spinner />
       ) : publication.isError ? (
