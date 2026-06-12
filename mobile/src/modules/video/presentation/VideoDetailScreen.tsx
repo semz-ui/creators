@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { Button, Card, EmptyState, Screen, Spinner } from '@/shared/ui';
 
@@ -56,15 +56,7 @@ export function VideoDetailScreen({ id }: { id: string }) {
   const video = useVideo(id);
 
   return (
-    <Screen scroll title="Video">
-      <Pressable
-        onPress={() => router.back()}
-        className="mb-4 -mt-2 flex-row items-center gap-1 self-start"
-      >
-        <Ionicons name="chevron-back" size={16} color="#0284c7" />
-        <Text className="font-sans-medium text-sm text-content-brand">Back</Text>
-      </Pressable>
-
+    <Screen scroll title="Video" showBack>
       {video.isPending ? (
         <Spinner />
       ) : video.isError ? (
