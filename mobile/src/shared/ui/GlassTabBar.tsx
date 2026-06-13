@@ -54,7 +54,7 @@ export function GlassTabBar({ state, descriptors, navigation }: TabBarProps) {
         tint="light"
         experimentalBlurMethod="dimezisBlurView"
         style={{
-          borderRadius: 28,
+          borderRadius: 999, // full pill
           overflow: 'hidden',
           borderWidth: StyleSheet.hairlineWidth,
           borderColor: 'rgba(255,255,255,0.6)',
@@ -77,7 +77,7 @@ export function GlassTabBar({ state, descriptors, navigation }: TabBarProps) {
                   top: 6,
                   bottom: 6,
                   left: 0,
-                  borderRadius: 18,
+                  borderRadius: 999,
                   backgroundColor: 'rgba(2,132,199,0.12)',
                 },
                 indicatorStyle,
