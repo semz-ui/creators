@@ -12,16 +12,31 @@ function tabIcon(focused: IconName, unfocused: IconName) {
   return TabIcon;
 }
 
-/** Frosted-glass tab bar background so content scrolls translucently beneath it. */
+/**
+ * Frosted-glass tab bar background so content scrolls translucently beneath it.
+ * A heavy blur plus a light, low-opacity wash keeps the glass visibly frosted
+ * (not a solid white panel) while keeping labels legible. A top highlight line
+ * gives the pane an edge.
+ */
 function GlassTabBarBackground() {
   return (
     <BlurView
-      intensity={60}
+      intensity={90}
       tint="light"
       experimentalBlurMethod="dimezisBlurView"
       style={StyleSheet.absoluteFill}
     >
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(255,255,255,0.55)' }]} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(255,255,255,0.3)' }]} />
+      <View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: StyleSheet.hairlineWidth,
+          backgroundColor: 'rgba(255,255,255,0.7)',
+        }}
+      />
     </BlurView>
   );
 }
