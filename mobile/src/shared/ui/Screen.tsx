@@ -22,7 +22,7 @@ export interface ScreenProps {
 
 // Clears the floating glass tab bar so scroll content isn't hidden beneath it.
 // (Harmless extra space on pushed screens, which aren't under the tab bar.)
-const CONTENT_PADDING = 'px-5 pt-4 pb-28';
+const CONTENT_PADDING = 'px-5 pt-4 pb-32';
 
 /** Standard page wrapper: safe area, canvas background, padded + glass-aware content. */
 export function Screen({
@@ -58,7 +58,7 @@ export function Screen({
   if (!scroll) {
     return (
       <SafeAreaView edges={['top']} className="flex-1 bg-canvas">
-        <View className="flex-1 px-5 pb-28 pt-4">
+        <View className="flex-1 px-5 pb-32 pt-4">
           {header}
           {children}
         </View>
