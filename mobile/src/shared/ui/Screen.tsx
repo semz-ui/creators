@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BackButton } from './BackButton';
@@ -19,7 +20,11 @@ export interface ScreenProps {
   onRefresh?: () => void;
 }
 
-/** Standard page wrapper: safe area, canvas background, padded content. */
+// Clears the floating glass tab bar so scroll content isn't hidden beneath it.
+// (Harmless extra space on pushed screens, which aren't under the tab bar.)
+const CONTENT_PADDING = 'px-5 pt-4 pb-28';
+
+/** Standard page wrapper: safe area, canvas background, padded + glass-aware content. */
 export function Screen({
   children,
   scroll = true,
@@ -34,7 +39,10 @@ export function Screen({
     <>
       {showBack ? <BackButton /> : null}
       {title !== undefined ? (
-        <View className="mb-5 flex-row items-start justify-between gap-3">
+        <Animated.View
+          entering={FadeIn.duration(300)}
+          className="mb-5 flex-row items-start justify-between gap-3"
+        >
           <View className="flex-1 gap-1">
             <Text className="font-display-bold text-3xl text-content">{title}</Text>
             {subtitle ? (
@@ -42,7 +50,7 @@ export function Screen({
             ) : null}
           </View>
           {headerRight}
-        </View>
+        </Animated.View>
       ) : null}
     </>
   );
@@ -50,7 +58,7 @@ export function Screen({
   if (!scroll) {
     return (
       <SafeAreaView edges={['top']} className="flex-1 bg-canvas">
-        <View className="flex-1 px-5 pt-4">
+        <View className="flex-1 px-5 pb-28 pt-4">
           {header}
           {children}
         </View>
@@ -62,7 +70,7 @@ export function Screen({
     <SafeAreaView edges={['top']} className="flex-1 bg-canvas">
       <ScrollView
         className="flex-1"
-        contentContainerClassName="px-5 pb-10 pt-4"
+        contentContainerClassName={CONTENT_PADDING}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           onRefresh ? (

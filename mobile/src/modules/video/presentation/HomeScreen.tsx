@@ -46,8 +46,8 @@ export function HomeScreen() {
         />
       ) : (
         <View>
-          {videos.data.items.map((video) => (
-            <VideoCard key={video.id} video={video} />
+          {videos.data.items.map((video, index) => (
+            <VideoCard key={video.id} video={video} index={index} />
           ))}
         </View>
       )}

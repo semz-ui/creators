@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
-import type { ColorValue } from 'react-native';
+import { Platform, StyleSheet, View, type ColorValue } from 'react-native';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -11,6 +12,20 @@ function tabIcon(focused: IconName, unfocused: IconName) {
   return TabIcon;
 }
 
+/** Frosted-glass tab bar background so content scrolls translucently beneath it. */
+function GlassTabBarBackground() {
+  return (
+    <BlurView
+      intensity={60}
+      tint="light"
+      experimentalBlurMethod="dimezisBlurView"
+      style={StyleSheet.absoluteFill}
+    >
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(255,255,255,0.55)' }]} />
+    </BlurView>
+  );
+}
+
 export default function TabsLayout() {
   return (
     <Tabs
@@ -18,8 +33,17 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: '#0284c7',
         tabBarInactiveTintColor: '#94a3b8',
-        tabBarStyle: { backgroundColor: '#ffffff', borderTopColor: '#e2e8f0' },
         tabBarLabelStyle: { fontFamily: 'Inter_500Medium', fontSize: 11 },
+        // Float the bar over the content and let the blur show through.
+        tabBarStyle: {
+          position: 'absolute',
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: 'rgba(203,213,225,0.6)',
+          backgroundColor: 'transparent',
+          elevation: 0,
+        },
+        tabBarBackground: () => <GlassTabBarBackground />,
+        ...(Platform.OS === 'android' ? { tabBarHideOnKeyboard: true } : {}),
       }}
     >
       <Tabs.Screen
