@@ -18,7 +18,7 @@ export function VideoCard({ video }: { video: Video }) {
       </View>
       <View className="flex-1 gap-1.5">
         <Text numberOfLines={2} className="font-sans-medium text-sm text-content">
-          {video.prompt}
+          {video.title ?? video.prompt}
         </Text>
         <View className="flex-row items-center gap-2">
           <StatusBadge status={video.status} />

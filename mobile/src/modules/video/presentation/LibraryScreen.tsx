@@ -32,8 +32,8 @@ export function LibraryScreen() {
       ) : videos.data.items.length === 0 ? (
         <EmptyState
           title="No videos yet"
-          message="Describe what you want and we'll generate it."
-          actionLabel="Create a video"
+          message="Create your first video — generate with AI or upload your own."
+          actionLabel="Add a video"
           onAction={() => router.push('/(app)/(tabs)/create')}
         />
       ) : (
