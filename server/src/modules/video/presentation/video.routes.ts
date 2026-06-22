@@ -4,6 +4,7 @@ import { asyncHandler } from '@shared/presentation/http/async-handler';
 import { validateBody } from '@shared/presentation/middleware/validate';
 
 import type { VideoController } from './video.controller';
+import { uploadMiddleware } from './upload.middleware';
 import { createVideoSchema, generationCallbackSchema } from './video.validators';
 
 /**
@@ -28,6 +29,7 @@ export function createVideoRouter(
   // Everything below requires an authenticated user.
   router.use(authGuard);
   router.post('/', validateBody(createVideoSchema), asyncHandler(controller.create));
+  router.post('/upload', uploadMiddleware, asyncHandler(controller.upload));
   router.get('/', asyncHandler(controller.list));
   router.get('/:id', asyncHandler(controller.get));
 

@@ -1,3 +1,8 @@
+export interface UploadResult {
+  url: string;
+  durationSeconds: number;
+}
+
 /**
  * Port for persisting a generated video and exposing it at a public,
  * browser-playable URL. Needed by generators whose output is authenticated
@@ -10,4 +15,7 @@ export interface IVideoStorage {
    * the same job are idempotent.
    */
   upload(data: Buffer, key: string, contentType: string): Promise<string>;
+
+  /** Upload and return both the URL and extracted video metadata. */
+  uploadWithMetadata(data: Buffer, key: string, contentType: string): Promise<UploadResult>;
 }

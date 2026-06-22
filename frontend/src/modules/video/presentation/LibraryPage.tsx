@@ -33,13 +33,13 @@ export function LibraryPage() {
       ) : data.items.length === 0 ? (
         <EmptyState
           title="No videos yet"
-          description="Generate your first video from a prompt."
+          description="Create your first video — generate with AI or upload your own."
           action={
             <Link
               to="/create"
               className="inline-flex h-10 items-center justify-center rounded-lg bg-brand px-4 text-sm font-medium text-content-inverse hover:bg-brand-hover"
             >
-              Create a video
+              Add a video
             </Link>
           }
         />

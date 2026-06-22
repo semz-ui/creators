@@ -17,7 +17,7 @@ export function VideoCard({ video }: { video: Video }) {
           )}
         </div>
         <div className="flex items-start justify-between gap-2">
-          <p className="line-clamp-2 text-sm text-content">{video.prompt}</p>
+          <p className="line-clamp-2 text-sm text-content">{video.title ?? video.prompt}</p>
           <StatusBadge status={video.status} />
         </div>
         <p className="mt-2 text-xs text-content-muted">{video.durationSeconds}s</p>

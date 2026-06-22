@@ -22,10 +22,12 @@ function synthMock() {
   >;
 }
 function storageMock() {
-  return { upload: jest.fn().mockResolvedValue('https://cdn/narration.mp3') } satisfies Record<
-    keyof IVideoStorage,
-    jest.Mock
-  >;
+  return {
+    upload: jest.fn().mockResolvedValue('https://cdn/narration.mp3'),
+    uploadWithMetadata: jest
+      .fn()
+      .mockResolvedValue({ url: 'https://cdn/narration.mp3', durationSeconds: 10 }),
+  } satisfies Record<keyof IVideoStorage, jest.Mock>;
 }
 
 /** The raw_transformation passed to cloudinary.url on the last call. */

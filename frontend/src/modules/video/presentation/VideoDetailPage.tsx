@@ -47,7 +47,7 @@ function renderBody(video: Video) {
     return (
       <div className="space-y-4">
         <video src={video.resultUrl} controls className="w-full rounded-lg bg-black" />
-        <p className="text-content">{video.prompt}</p>
+        <p className="text-content">{video.title ?? video.prompt}</p>
         <div className="flex items-center justify-between">
           <p className="text-sm text-content-muted">{video.durationSeconds}s</p>
           <div className="flex items-center gap-2">

@@ -1,10 +1,12 @@
 import { Schema, model } from 'mongoose';
 
-import type { VideoStatus } from '../domain/video.entity';
+import type { VideoSource, VideoStatus } from '../domain/video.entity';
 
 export interface VideoDocument {
   _id: string;
   ownerId: string;
+  source: VideoSource;
+  title: string | null;
   prompt: string;
   durationSeconds: number;
   status: VideoStatus;
@@ -22,6 +24,8 @@ const videoSchema = new Schema<VideoDocument>(
   {
     _id: { type: String, required: true },
     ownerId: { type: String, required: true },
+    source: { type: String, default: 'generated' },
+    title: { type: String, default: null },
     prompt: { type: String, required: true },
     durationSeconds: { type: Number, required: true },
     status: { type: String, required: true },

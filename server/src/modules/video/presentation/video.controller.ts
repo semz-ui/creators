@@ -2,15 +2,19 @@ import type { Request, Response } from 'express';
 
 import { UnauthorizedError } from '@shared/domain/errors';
 
+import { ValidationError } from '@shared/domain/errors';
+
 import type { ApplyGenerationResult } from '../application/apply-generation-result.usecase';
 import type { CreateVideo } from '../application/create-video.usecase';
 import type { GetVideo } from '../application/get-video.usecase';
 import type { ListVideos } from '../application/list-videos.usecase';
 import type { ReconcileGeneration } from '../application/reconcile-generation.usecase';
-import { listVideosQuerySchema } from './video.validators';
+import type { UploadVideo } from '../application/upload-video.usecase';
+import { listVideosQuerySchema, uploadVideoSchema } from './video.validators';
 
 export interface VideoUseCases {
   create: CreateVideo;
+  upload?: UploadVideo | undefined;
   get: GetVideo;
   list: ListVideos;
   applyResult: ApplyGenerationResult;
@@ -23,6 +27,20 @@ export class VideoController {
 
   create = async (req: Request, res: Response): Promise<void> => {
     const video = await this.useCases.create.execute(this.requireUserId(req), req.body);
+    res.status(201).json(video);
+  };
+
+  upload = async (req: Request, res: Response): Promise<void> => {
+    if (!this.useCases.upload) {
+      throw new ValidationError('Video uploads require Cloudinary configuration');
+    }
+    const userId = this.requireUserId(req);
+    const file = res.locals.uploadedFile as { data: Buffer; contentType: string } | undefined;
+    if (!file) {
+      throw new ValidationError('No video file provided');
+    }
+    const input = uploadVideoSchema.parse({ title: (res.locals.uploadTitle as string) ?? '' });
+    const video = await this.useCases.upload.execute(userId, input, file);
     res.status(201).json(video);
   };
 
