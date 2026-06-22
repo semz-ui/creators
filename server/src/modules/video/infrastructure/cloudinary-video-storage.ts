@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 
-import type { IVideoStorage } from '../domain/ports/video-storage';
+import type { IVideoStorage, UploadResult } from '../domain/ports/video-storage';
 
 /**
  * Cloudinary-backed {@link IVideoStorage}. Uploads the MP4 bytes and returns the
@@ -24,6 +24,25 @@ export class CloudinaryVideoStorage implements IVideoStorage {
             return;
           }
           resolve(result.secure_url);
+        },
+      );
+      stream.end(data);
+    });
+  }
+
+  uploadWithMetadata(data: Buffer, key: string, _contentType: string): Promise<UploadResult> {
+    return new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { resource_type: 'video', public_id: key, folder: 'reelo', overwrite: true },
+        (error, result) => {
+          if (error || !result) {
+            reject(error ?? new Error('Cloudinary: empty upload result'));
+            return;
+          }
+          resolve({
+            url: result.secure_url,
+            durationSeconds: Math.round(result.duration ?? 0),
+          });
         },
       );
       stream.end(data);

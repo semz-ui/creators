@@ -1,8 +1,10 @@
-import type { Video, VideoStatus } from '../domain/video.entity';
+import type { Video, VideoSource, VideoStatus } from '../domain/video.entity';
 
 /** Video fields safe to return to the owning client. */
 export interface PublicVideo {
   id: string;
+  source: VideoSource;
+  title: string | null;
   prompt: string;
   durationSeconds: number;
   status: VideoStatus;
@@ -21,6 +23,10 @@ export interface CreateVideoInput {
   musicTrackId?: string | null;
   narrationText?: string | null;
   narrationVoice?: string | null;
+}
+
+export interface UploadVideoInput {
+  title: string;
 }
 
 export interface ListVideosInput {
@@ -45,6 +51,8 @@ export interface PagedResult<T> {
 export function toPublicVideo(video: Video): PublicVideo {
   return {
     id: video.id,
+    source: video.source,
+    title: video.title,
     prompt: video.prompt,
     durationSeconds: video.durationSeconds,
     status: video.status,

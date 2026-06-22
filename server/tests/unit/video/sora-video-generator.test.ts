@@ -13,10 +13,10 @@ const CONFIG: SoraConfig = {
 };
 
 function storageMock(url = 'https://cdn.cloudinary/out.mp4') {
-  return { upload: jest.fn().mockResolvedValue(url) } satisfies Record<
-    keyof IVideoStorage,
-    jest.Mock
-  >;
+  return {
+    upload: jest.fn().mockResolvedValue(url),
+    uploadWithMetadata: jest.fn().mockResolvedValue({ url, durationSeconds: 10 }),
+  } satisfies Record<keyof IVideoStorage, jest.Mock>;
 }
 
 /** Queue a JSON response for the next fetch call. */
