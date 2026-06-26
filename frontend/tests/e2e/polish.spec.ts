@@ -41,7 +41,7 @@ test('mobile nav lets you navigate when the sidebar is hidden', async ({ page })
   // On mobile the sidebar is display:none; the mobile nav drives navigation.
   await page.getByRole('link', { name: 'Create', exact: true }).click();
   await expect(page).toHaveURL(/\/create$/);
-  await expect(page.getByRole('heading', { name: /create a video/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /add a video/i })).toBeVisible();
 });
 
 test('unknown routes render a not-found page', async ({ page }) => {
