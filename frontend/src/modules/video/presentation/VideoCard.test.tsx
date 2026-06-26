@@ -8,6 +8,8 @@ import { VideoCard } from './VideoCard';
 
 const baseVideo: Video = {
   id: 'vid-1',
+  source: 'generated',
+  title: null,
   prompt: 'a neon city skyline',
   durationSeconds: 15,
   status: 'ready',

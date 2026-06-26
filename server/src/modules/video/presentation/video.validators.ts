@@ -32,5 +32,9 @@ export const generationCallbackSchema = z.discriminatedUnion('status', [
   }),
 ]);
 
+export const uploadVideoSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+});
+
 export type CreateVideoBody = z.infer<typeof createVideoSchema>;
 export type GenerationCallbackBody = z.infer<typeof generationCallbackSchema>;

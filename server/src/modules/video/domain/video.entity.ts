@@ -5,6 +5,7 @@ import type { Duration } from './value-objects/duration';
 import type { Prompt } from './value-objects/prompt';
 
 export type VideoStatus = 'queued' | 'processing' | 'ready' | 'failed';
+export type VideoSource = 'generated' | 'uploaded';
 
 const TERMINAL: ReadonlySet<VideoStatus> = new Set(['ready', 'failed']);
 
@@ -12,6 +13,8 @@ const TERMINAL: ReadonlySet<VideoStatus> = new Set(['ready', 'failed']);
 export interface VideoSnapshot {
   id: string;
   ownerId: string;
+  source: VideoSource;
+  title: string | null;
   prompt: string;
   durationSeconds: number;
   status: VideoStatus;
@@ -34,6 +37,8 @@ export interface VideoSnapshot {
 export class Video {
   readonly id: string;
   readonly ownerId: string;
+  readonly source: VideoSource;
+  readonly title: string | null;
   readonly prompt: string;
   readonly durationSeconds: number;
   readonly musicTrackId: string | null;
@@ -50,6 +55,8 @@ export class Video {
   private constructor(snapshot: VideoSnapshot) {
     this.id = snapshot.id;
     this.ownerId = snapshot.ownerId;
+    this.source = snapshot.source;
+    this.title = snapshot.title;
     this.prompt = snapshot.prompt;
     this.durationSeconds = snapshot.durationSeconds;
     this.musicTrackId = snapshot.musicTrackId;
@@ -91,6 +98,8 @@ export class Video {
     return new Video({
       id: randomUUID(),
       ownerId: params.ownerId,
+      source: 'generated',
+      title: null,
       prompt: params.prompt.value,
       durationSeconds: params.duration.seconds,
       status: 'queued',
@@ -100,6 +109,32 @@ export class Video {
       musicTrackId: params.musicTrackId ?? null,
       narrationText: params.narrationText ?? null,
       narrationVoice: params.narrationVoice ?? null,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  static createUploaded(params: {
+    ownerId: string;
+    title: string;
+    resultUrl: string;
+    durationSeconds: number;
+  }): Video {
+    const now = new Date();
+    return new Video({
+      id: randomUUID(),
+      ownerId: params.ownerId,
+      source: 'uploaded',
+      title: params.title,
+      prompt: '',
+      durationSeconds: params.durationSeconds,
+      status: 'ready',
+      jobRef: null,
+      resultUrl: params.resultUrl,
+      error: null,
+      musicTrackId: null,
+      narrationText: null,
+      narrationVoice: null,
       createdAt: now,
       updatedAt: now,
     });
@@ -148,6 +183,8 @@ export class Video {
     return {
       id: this.id,
       ownerId: this.ownerId,
+      source: this.source,
+      title: this.title,
       prompt: this.prompt,
       durationSeconds: this.durationSeconds,
       status: this._status,

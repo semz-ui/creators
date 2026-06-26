@@ -31,7 +31,9 @@ function ReadyVideo({ video }: { video: Video }) {
     <View className="gap-4">
       {video.resultUrl ? <VideoPlayer url={video.resultUrl} /> : null}
       <Card className="gap-3">
-        <Text className="font-sans text-sm text-content-secondary">{video.prompt}</Text>
+        <Text className="font-sans text-sm text-content-secondary">
+          {video.title ?? video.prompt}
+        </Text>
         <Text className="font-sans text-xs text-content-muted">
           {video.durationSeconds}s • created {new Date(video.createdAt).toLocaleDateString()}
         </Text>
