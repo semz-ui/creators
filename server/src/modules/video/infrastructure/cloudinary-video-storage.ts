@@ -39,9 +39,13 @@ export class CloudinaryVideoStorage implements IVideoStorage {
             reject(error ?? new Error('Cloudinary: empty upload result'));
             return;
           }
+          if (result.duration == null || result.duration < 0) {
+            reject(new Error('Cloudinary: missing or invalid duration in upload result'));
+            return;
+          }
           resolve({
             url: result.secure_url,
-            durationSeconds: Math.round(result.duration ?? 0),
+            durationSeconds: Math.round(result.duration),
           });
         },
       );
