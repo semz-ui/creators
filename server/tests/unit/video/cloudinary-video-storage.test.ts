@@ -67,7 +67,10 @@ describe('CloudinaryVideoStorage', () => {
 
       const result = await storage.uploadWithMetadata(Buffer.from([1, 2, 3]), 'v1', 'video/mp4');
 
-      expect(result).toEqual({ url: 'https://res.cloudinary.com/reelo/v.mp4', durationSeconds: 13 });
+      expect(result).toEqual({
+        url: 'https://res.cloudinary.com/reelo/v.mp4',
+        durationSeconds: 13,
+      });
     });
 
     it('rejects when Cloudinary omits duration', async () => {
@@ -77,9 +80,9 @@ describe('CloudinaryVideoStorage', () => {
       }));
       const storage = new CloudinaryVideoStorage('cloudinary://k:s@cloud');
 
-      await expect(
-        storage.uploadWithMetadata(Buffer.from([1]), 'v1', 'video/mp4'),
-      ).rejects.toThrow(/missing or invalid duration/);
+      await expect(storage.uploadWithMetadata(Buffer.from([1]), 'v1', 'video/mp4')).rejects.toThrow(
+        /missing or invalid duration/,
+      );
     });
 
     it('rejects when Cloudinary returns a negative duration', async () => {
@@ -89,9 +92,9 @@ describe('CloudinaryVideoStorage', () => {
       }));
       const storage = new CloudinaryVideoStorage('cloudinary://k:s@cloud');
 
-      await expect(
-        storage.uploadWithMetadata(Buffer.from([1]), 'v1', 'video/mp4'),
-      ).rejects.toThrow(/missing or invalid duration/);
+      await expect(storage.uploadWithMetadata(Buffer.from([1]), 'v1', 'video/mp4')).rejects.toThrow(
+        /missing or invalid duration/,
+      );
     });
   });
 });
