@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Reelo** — backend API for an AI video creator platform (prompt → AI-generated video → auto-publish to FB/IG/YouTube/TikTok). The repo is a monorepo; today it contains only `server/` (Express + TypeScript). Work is delivered phase-by-phase, one PR per phase (see README roadmap).
+**Reelo** — AI video studio: prompt → AI-generated video → auto-publish to FB/IG/YouTube/TikTok. The repo is a monorepo with three apps (`server/`, `frontend/`, `mobile/`). Work is delivered phase-by-phase, one PR per phase/module.
 
 ## Commands
 
-All commands run from `server/`:
+### Server (`server/`)
 
 ```bash
 npm run dev            # tsx watch — hot-reload dev server
@@ -28,13 +28,47 @@ npx jest path/to/file.test.ts          # single file
 npx jest -t "partial test name"        # single test by name
 ```
 
-CI (`.github/workflows/ci.yml`) runs format → lint → typecheck → test (coverage) → build on every push to `main` and every PR. Run these locally before pushing.
+### Frontend (`frontend/`)
+
+```bash
+npm run dev            # Vite dev server → http://localhost:3000
+npm run build          # tsc --noEmit + vite build
+npm run typecheck      # tsc --noEmit
+npm run lint           # eslint src + tests
+npm run format:check   # prettier --check
+npm test               # vitest run
+npm run test:cov       # vitest run --coverage
+npm run test:e2e       # playwright test
+```
+
+### Mobile (`mobile/`)
+
+```bash
+npm start              # expo start (press i = iOS simulator, a = Android emulator)
+npm run ios / android  # expo start --ios / --android
+npm run typecheck      # tsc --noEmit
+npm run lint           # expo lint
+npm run format:check   # prettier --check
+npm test               # jest
+npm run test:cov       # jest --coverage
+```
+
+### Full stack
+
+```bash
+# From repo root — starts nginx LB (:8080), API, MongoDB (replica set), Redis:
+docker compose up --build
+# Scale horizontally:
+docker compose up --build --scale server=3
+```
+
+CI (GitHub Actions, path-filtered per app) runs: format → lint → typecheck → test (coverage) → build.
 
 **First `test:integration`/`test:e2e` run downloads a MongoDB binary** (mongodb-memory-server); the 60s Jest `testTimeout` accommodates this.
 
-**Run the full stack (API + Mongo + Redis):** `docker compose up --build` from the repo root (API on `:4000`). Without Docker, run Mongo + Redis yourself, `cp .env.example .env`, `npm install`, `npm run dev`.
-
 ## Architecture
+
+### Server
 
 Onion architecture as a **modular monolith**. Each feature is a self-contained module under `src/modules/<feature>/` with four layers; dependencies point inward only (`domain` knows nothing of `infrastructure`/`presentation`).
 
@@ -43,52 +77,106 @@ src/
   modules/<feature>/
     domain/          # entities, value-objects, ports (interfaces), domain errors — no framework imports
     application/     # use cases (one class per use case) + DTOs; orchestrate domain via ports
-    infrastructure/  # concrete adapters implementing domain ports (Mongo, Redis, bcrypt, JWT)
-    presentation/    # Express controllers, routers, validators, guards
-    <feature>.module.ts   # module composition root: wires concrete adapters into use cases, returns a Router
-  shared/            # cross-cutting: config, logging, cache, rate-limit, db, presentation middleware, domain errors
+    infrastructure/  # concrete adapters implementing domain ports (Mongo, Redis, bcrypt, JWT, Cloudinary, …)
+    presentation/    # Express controllers, routers, validators, guards, upload middleware
+    <feature>.module.ts   # composition root: wires adapters → use cases, returns a Router
+  shared/            # cross-cutting: config, logging, cache, rate-limit, db, middleware, domain errors
   container/index.ts # app composition root: builds modules, exposes routers + global middleware
-  app.ts             # assembles Express (middleware → routers → error pipeline); NO side effects (no connect/listen)
+  app.ts             # assembles Express (middleware → routers → error pipeline); NO side effects
   server.ts          # bootstrap: connects Mongo+Redis, listens, graceful shutdown
 ```
 
-### Dependency injection / composition
+Modules: `auth`, `video`, `connections`, `publishing`, `analytics`, `billing`.
 
-There is no DI framework. Wiring is manual and explicit, top-down:
+#### Dependency injection / composition
 
-- `buildContainer(deps)` (`container/index.ts`) is the app composition root. It builds each module via `build<Feature>Module(...)` and returns their routers + shared middleware.
-- `createApp(container = buildContainer())` accepts a pre-built container so **tests inject fakes** (e.g. an `ioredis-mock` client) without touching production singletons. `createApp` does no I/O.
-- Adapters are passed by interface (port), never imported concretely by use cases. To swap an implementation, change the wiring in the module file — not the use cases.
+No DI framework — wiring is manual and explicit:
 
-### Ports & adapters convention
+- `buildContainer(deps)` (`container/index.ts`) builds each module via `build<Feature>Module(...)` and returns routers + shared middleware.
+- `createApp(container = buildContainer())` accepts a pre-built container so **tests inject fakes** without touching production singletons. `createApp` does no I/O.
+- Adapters are passed by interface (port), never imported concretely by use cases.
 
-Domain ports are `I`-prefixed interfaces in `domain/ports/` (e.g. `IUserRepository`, `ITokenService`). Infrastructure provides the concrete class (e.g. `MongoUserRepository`, `JwtTokenService`). Use cases depend only on the port. This is what makes Mongo/Redis/JWT swappable and tests trivial to fake.
+#### Ports & adapters convention
 
-### Cross-cutting decorators
+Domain ports are `I`-prefixed interfaces in `domain/ports/` (e.g. `IUserRepository`, `IVideoStorage`, `ISocialPublisher`). Infrastructure provides the concrete class. Use cases depend only on the port.
 
-Caching is applied as a **decorator over a port**, not baked into the repository. `CachedUserRepository` wraps `MongoUserRepository` + `ICacheService`: `findById` is cache-aside (the hot auth-guard/`/me` read), `save` writes through and invalidates, `findByEmail`/`existsByEmail` delegate uncached. Follow this pattern for new caching rather than embedding cache calls in adapters.
+**Stub vs. real providers:** Every external integration (AI generators, social OAuth, publishers, payments, metrics, video storage) is behind a port. The real adapter activates when its credentials are in `.env`; otherwise a stub runs so the full product works locally for free. To add a new integration, implement the port, add a credential check in the module wiring, fall back to the stub.
 
-### Config
+#### Cross-cutting decorators
 
-**Never read `process.env` directly.** Import `env` from `@shared/infrastructure/config/env` — it's a Zod-validated, frozen object. Invalid config fails fast (`process.exit(1)`) at startup. Add new vars to `env.schema.ts`, `.env.example`, and `tests/setup-env.ts`. Helpers: `isProduction`, `isTest`.
+Caching is a **decorator over a port**, not baked into repositories. `CachedUserRepository` wraps `MongoUserRepository` + `ICacheService`: `findById` is cache-aside, `save` writes-through and invalidates. Follow this pattern rather than embedding cache calls in adapters.
 
-### Errors
+#### Video user upload
 
-Throw subclasses of `AppError` (`@shared/domain/errors`: `NotFoundError`, `ValidationError`, `UnauthorizedError`, `ConflictError`, `TooManyRequestsError`, …) plus module-specific errors. The global `errorHandler` (last middleware in `app.ts`) maps `AppError` → its `statusCode`/`code`, `ZodError` → 422, and anything else → 500 (internals hidden in production). Every error response carries a `requestId`. Don't `res.status(500)` by hand — throw and let the pipeline handle it.
+`upload.middleware.ts` (presentation layer) handles `multipart/form-data` with **busboy**: streams the file into memory, enforces `MAX_UPLOAD_BYTES` (500 MB), validates MIME type (`video/mp4`, `video/quicktime`, `video/webm`), and caps in-process concurrency at 5 (`MAX_CONCURRENT_UPLOADS`). The result lands in `res.locals.uploadedFile`. `CloudinaryVideoStorage` (`IVideoStorage`) uploads the buffer; `public_id = key` makes re-uploads idempotent.
 
-### Path aliases
+#### Config
 
-`@modules/*`, `@shared/*`, `@container/*` (defined in `tsconfig.json`, mirrored in `jest.config.js`). The build step runs `tsc-alias` to rewrite them in `dist/`.
+**Never read `process.env` directly.** Import `env` from `@shared/infrastructure/config/env` — Zod-validated, frozen. Add new vars to `env.schema.ts`, `.env.example`, and `tests/setup-env.ts`. Helpers: `isProduction`, `isTest`.
+
+#### Errors
+
+Throw subclasses of `AppError` (`@shared/domain/errors`: `NotFoundError`, `ValidationError`, `UnauthorizedError`, `ConflictError`, `TooManyRequestsError`, …). The global `errorHandler` maps `AppError` → its `statusCode`/`code`, `ZodError` → 422, else → 500. Every error response carries a `requestId`. Don't `res.status(500)` by hand.
+
+#### Path aliases
+
+`@modules/*`, `@shared/*`, `@container/*` (defined in `tsconfig.json`, mirrored in `jest.config.js`). `tsc-alias` rewrites them in `dist/`.
+
+### Frontend (`frontend/`)
+
+MVVM as a **modular monolith** with strict layers — **Data** (typed API client + TanStack Query fns) → **ViewModel** (feature hooks, no JSX) → **Presentation** (React components, no direct API calls).
+
+```
+src/
+  modules/<feature>/
+    data/            # typed API client calls + query-key factories
+    viewmodels/      # custom hooks; bridge data → presentation
+    presentation/    # React components and pages
+  shared/
+    data/            # global api-client, http-error, query-client
+    config/          # env vars
+    lib/             # utilities
+    ui/              # shared components
+  app/               # React Router layout + routes
+```
+
+- State: **TanStack Query** for server state, **Zustand** for client-only state.
+- Styling: **Tailwind CSS** wired to Reelo design tokens.
+- Testing: **Vitest** + React Testing Library (unit/viewmodel), **MSW** for mocking HTTP in viewmodel tests, **Playwright** for e2e (mocked API).
+
+### Mobile (`mobile/`)
+
+Mirrors the frontend 1:1 — same modules, same three layers (`data/`, `viewmodels/`, `presentation/`), same validation and error mapping. Data/viewmodel layers are direct ports from the web app.
+
+```
+src/
+  modules/<feature>/
+    data/
+    viewmodels/
+    presentation/
+  shared/
+```
+
+- Navigation: **expo-router** (file-based).
+- Styling: **NativeWind** (same design tokens as web).
+- State: TanStack Query + Zustand.
+- Mobile-specific: session refresh token in device keychain (`expo-secure-store`); OAuth and Stripe Checkout open in system/in-app browser with refetch-on-return; native video playback (`expo-video`).
+- Testing: **Jest** + React Native Testing Library.
+- Physical devices need `EXPO_PUBLIC_API_URL` set to the machine's LAN IP.
 
 ## Notable behaviors
 
-- **Refresh-token rotation with reuse detection** (`refresh-tokens.usecase.ts`): refresh tokens are single-use and rotated within a "family". A token that verifies but is absent from the Redis store is a replay → the **entire family is revoked**. Preserve this security property when touching auth.
-- **Health:** `/health` is liveness (always exempt from rate limiting); `/health/ready` checks Mongo + Redis and returns 503 if degraded.
-- **Rate limiting** is Redis-backed (fixed-window) so limits hold across instances, behind an `IRateLimiter` port. Global per-IP limit on `/api/v1/*`; a stricter tier on `/auth/register` + `/auth/login`. When `TRUST_PROXY=true`, `req.ip` (the rate-limit key) comes from `X-Forwarded-*`.
+- **Refresh-token rotation with reuse detection** (`refresh-tokens.usecase.ts`): refresh tokens are single-use, rotated within a "family". A token that verifies but is absent from Redis is a replay → the **entire family is revoked**. Preserve this when touching auth.
+- **MongoDB replica set for billing:** the credit debit flow uses multi-document transactions, which require a replica set. The Docker Compose setup initialises one automatically (`rs0`). Without Docker, run `mongod --replSet rs0`, run `rs.initiate()` once, and set `MONGO_URI` with `?replicaSet=rs0`. A standalone `mongod` also works — the app falls back to non-transactional writes.
+- **Credit atomicity:** balance debits use `$inc` conditional on `balance >= amount` — concurrent debits can't overdraw. Charges happen on video create (402 if insufficient); refunded if generation fails.
+- **Health:** `/health` is liveness (always exempt from rate limiting); `/health/ready` checks Mongo + Redis → 503 if degraded.
+- **Rate limiting** is Redis-backed (fixed-window) so limits hold across replicas, behind an `IRateLimiter` port. Global per-IP on `/api/v1/*`; stricter tier on `/auth/register` + `/auth/login`. When `TRUST_PROXY=true`, `req.ip` comes from `X-Forwarded-*`.
+- **Load balancing:** nginx is the single public entrypoint (`:8080`); API replicas are stateless (Redis-backed sessions and rate limits). Each response carries `X-Instance-Id` for tracing.
+- **OAuth tokens** for social connections are encrypted at rest (AES-256-GCM), auto-refreshed before use, and never returned to clients. Unrefreshable connections flip to `expired`.
 
 ## Conventions
 
 - TypeScript is **strict** with `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noUnusedLocals/Parameters`. Prefix intentionally-unused vars/args with `_`.
-- `no-console` and `no-explicit-any` are warnings (errors off in tests). Use the pino `logger` from `@shared/infrastructure/logging`, not `console`.
-- One use case per class with an `execute(...)` method (auth uses `register`/`login`/`refresh`/etc. on the controller, each delegating to a use case class).
+- `no-console` / `no-explicit-any` are warnings. Use the pino `logger` from `@shared/infrastructure/logging`.
+- One use case per class with an `execute(...)` method.
 - Async route handlers wrap with `asyncHandler` so rejections reach the error pipeline.
