@@ -16,7 +16,7 @@ exports[`BillingPage > matches the snapshot 1`] = `
       Credits power your video generations.
     </p>
     <div
-      class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm mt-6"
+      class="rounded-xl border border-line-subtle bg-surface p-6 mt-6"
     >
       <p
         class="text-sm text-content-secondary"
@@ -66,7 +66,8 @@ exports[`BillingPage > matches the snapshot 1`] = `
           </button>
         </div>
         <button
-          class="inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 ease-out active:translate-y-0 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none disabled:active:scale-100 bg-brand text-content-inverse shadow-sm hover:bg-brand-hover hover:shadow-md hover:-translate-y-0.5 h-10 px-4 text-sm mt-4"
+          class="inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 ease-out motion-reduce:transform-none motion-reduce:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-40 bg-gradient-brand text-white shadow-glow-sm hover:shadow-glow-brand disabled:shadow-none h-10 px-4 text-sm gap-2 mt-4"
+          tabindex="0"
           type="button"
         >
           Buy 100 credits
@@ -79,7 +80,7 @@ exports[`BillingPage > matches the snapshot 1`] = `
       History
     </h2>
     <div
-      class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm"
+      class="rounded-xl border border-line-subtle bg-surface p-6"
     >
       <ul
         class="divide-y divide-line-subtle"

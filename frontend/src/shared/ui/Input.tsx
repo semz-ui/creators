@@ -26,9 +26,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         id={inputId}
         aria-invalid={error ? true : undefined}
         className={cn(
-          'h-10 rounded-lg border bg-surface px-3 text-sm text-content placeholder:text-content-muted',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
-          error ? 'border-danger' : 'border-line',
+          'h-10 rounded-lg border bg-surface-raised px-3 text-sm text-content placeholder:text-content-muted',
+          'transition-all duration-150',
+          'focus-visible:outline-none focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/50 focus-visible:shadow-glow-sm',
+          error ? 'border-danger/60' : 'border-line',
           className,
         )}
         {...props}

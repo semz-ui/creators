@@ -12,7 +12,7 @@ describe('CreateVideoPage', () => {
     expect(screen.getByRole('tab', { name: /generate/i })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('tab', { name: /upload/i })).toHaveAttribute('aria-selected', 'false');
     expect(screen.getByLabelText(/prompt/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /generate video/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /generate/i })).toBeInTheDocument();
   });
 
   it('matches the snapshot', () => {

@@ -2,12 +2,18 @@ import type { HTMLAttributes } from 'react';
 
 import { cn } from '@/shared/lib/cn';
 
-export type CardProps = HTMLAttributes<HTMLDivElement>;
+export interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  glow?: boolean;
+}
 
-export function Card({ className, ...props }: CardProps) {
+export function Card({ className, glow, ...props }: CardProps) {
   return (
     <div
-      className={cn('rounded-xl border border-line-subtle bg-surface p-6 shadow-sm', className)}
+      className={cn(
+        'rounded-xl border border-line-subtle bg-surface p-6',
+        glow && 'border-brand/30 shadow-glow-sm',
+        className,
+      )}
       {...props}
     />
   );
