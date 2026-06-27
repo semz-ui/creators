@@ -25,3 +25,13 @@
     }
   }
 }
+
+@layer utilities {
+  .text-gradient-brand {
+    @apply bg-gradient-brand bg-clip-text text-transparent;
+  }
+
+  .border-gradient-brand {
+    border-image: linear-gradient(135deg, #22d3ee, #0284c7) 1;
+  }
+}

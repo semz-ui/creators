@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion';
+import { UploadCloud } from 'lucide-react';
 import { useCallback, useRef, useState, type DragEvent } from 'react';
 
 import { cn } from '@/shared/lib/cn';
@@ -50,19 +52,23 @@ export function UploadVideoPanel() {
 
         <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-content-secondary">Video file</span>
-          <button
+          <motion.button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
-            className={cn(
-              'flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 text-sm transition-colors',
+            animate={
               dragOver
-                ? 'border-brand bg-brand-bg'
-                : vm.file
-                  ? 'border-success bg-success-bg'
-                  : 'border-line bg-sunken hover:border-content-muted',
+                ? { borderColor: '#22d3ee', boxShadow: '0 0 20px 0 rgba(34,211,238,0.2)' }
+                : { borderColor: 'rgba(255,255,255,0.10)', boxShadow: '0 0 0px 0 transparent' }
+            }
+            transition={{ duration: 0.15 }}
+            className={cn(
+              'flex min-h-[120px] flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-sm transition-colors',
+              vm.file
+                ? 'border-success/40 bg-success-bg'
+                : 'border-line bg-sunken hover:border-line-strong',
             )}
           >
             {vm.file ? (
@@ -72,13 +78,14 @@ export function UploadVideoPanel() {
               </>
             ) : (
               <>
+                <UploadCloud className="h-6 w-6 text-content-muted" />
                 <span className="text-content-secondary">
-                  Drag and drop a video here, or click to browse
+                  Drag and drop a video, or click to browse
                 </span>
                 <span className="text-content-muted">MP4, MOV, or WebM up to 500 MB</span>
               </>
             )}
-          </button>
+          </motion.button>
           <input
             ref={fileInputRef}
             type="file"
@@ -95,10 +102,11 @@ export function UploadVideoPanel() {
               <span className="text-content-secondary">Uploading…</span>
               <span className="text-content-muted">{vm.progress}%</span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-sunken">
-              <div
-                className="h-full rounded-full bg-brand transition-[width] duration-300"
-                style={{ width: `${vm.progress}%` }}
+            <div className="h-1.5 overflow-hidden rounded-full bg-sunken">
+              <motion.div
+                className="h-full rounded-full bg-gradient-brand"
+                animate={{ width: `${vm.progress}%` }}
+                transition={{ ease: 'easeOut', duration: 0.3 }}
               />
             </div>
           </div>

@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion';
+
 import { cn } from '@/shared/lib/cn';
 import { Button, Card, Textarea } from '@/shared/ui';
 
@@ -5,7 +7,7 @@ import { MUSIC_TRACKS, VOICES, type Voice } from '../data/video.types';
 import { DURATION_PRESETS, useCreateVideoViewModel } from '../viewmodels/useCreateVideoViewModel';
 
 const SELECT_CLASS =
-  'h-10 rounded-lg border border-line bg-surface px-3 text-sm text-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand';
+  'h-10 rounded-lg border border-line bg-surface-raised px-3 text-sm text-content transition-all focus-visible:outline-none focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/50';
 
 export function GenerateVideoPanel() {
   const vm = useCreateVideoViewModel();
@@ -26,20 +28,22 @@ export function GenerateVideoPanel() {
           <span className="text-sm font-medium text-content-secondary">Duration</span>
           <div className="flex gap-2" role="group" aria-label="Duration">
             {DURATION_PRESETS.map((seconds) => (
-              <button
+              <motion.button
                 key={seconds}
                 type="button"
                 aria-pressed={vm.durationSeconds === seconds}
                 onClick={() => vm.setDurationSeconds(seconds)}
+                whileTap={{ scale: 0.94 }}
+                transition={{ duration: 0.1 }}
                 className={cn(
-                  'h-10 flex-1 rounded-lg border text-sm font-medium transition-colors',
+                  'h-10 flex-1 rounded-lg border text-sm font-medium transition-all duration-150',
                   vm.durationSeconds === seconds
-                    ? 'border-brand bg-brand text-content-inverse'
-                    : 'border-line bg-surface text-content hover:bg-sunken',
+                    ? 'border-brand/40 bg-gradient-brand text-white shadow-glow-sm'
+                    : 'border-line bg-surface-raised text-content hover:border-brand/30 hover:bg-surface',
                 )}
               >
                 {seconds}s
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
@@ -96,7 +100,7 @@ export function GenerateVideoPanel() {
         {vm.formError && <p className="text-sm text-danger">{vm.formError}</p>}
 
         <Button type="submit" size="lg" disabled={vm.isSubmitting}>
-          {vm.isSubmitting ? 'Submitting…' : 'Generate video'}
+          {vm.isSubmitting ? 'Submitting…' : 'Generate · 5 credits'}
         </Button>
       </form>
     </Card>

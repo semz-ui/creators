@@ -35,7 +35,10 @@ export function uploadMiddleware(req: Request, res: Response, next: NextFunction
     activeUploads--;
   };
 
-  const busboy = Busboy({ headers: req.headers, limits: { fileSize: MAX_UPLOAD_BYTES, files: 1 } });
+  const busboy = Busboy({
+    headers: req.headers,
+    limits: { fileSize: MAX_UPLOAD_BYTES, files: 1, fieldSize: 1024 },
+  });
 
   const chunks: Buffer[] = [];
   let fileMime = '';
