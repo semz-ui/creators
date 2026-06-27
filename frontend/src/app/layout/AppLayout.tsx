@@ -150,7 +150,10 @@ export function AppLayout() {
           ))}
         </nav>
 
-        <AnimatePresence mode="wait">
+        {/* initial={false} skips the enter animation on first mount so the page
+            is immediately visible after login. Subsequent route changes still
+            get the fade-slide transition. */}
+        <AnimatePresence mode="wait" initial={false}>
           <motion.main
             key={location.pathname}
             className="min-w-0 flex-1 px-6 py-8"
