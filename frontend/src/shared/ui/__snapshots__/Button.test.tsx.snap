@@ -4,19 +4,22 @@ exports[`Button > matches the snapshot for each variant 1`] = `
 <div>
   <div>
     <button
-      class="inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 ease-out active:translate-y-0 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none disabled:active:scale-100 bg-brand text-content-inverse shadow-sm hover:bg-brand-hover hover:shadow-md hover:-translate-y-0.5 h-10 px-4 text-sm"
+      class="inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 ease-out motion-reduce:transform-none motion-reduce:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-40 bg-gradient-brand text-white shadow-glow-sm hover:shadow-glow-brand disabled:shadow-none h-10 px-4 text-sm gap-2"
+      tabindex="0"
       type="button"
     >
       Primary
     </button>
     <button
-      class="inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 ease-out active:translate-y-0 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none disabled:active:scale-100 bg-brand-secondary text-content-inverse hover:bg-brand hover:shadow-md hover:-translate-y-0.5 h-10 px-4 text-sm"
+      class="inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 ease-out motion-reduce:transform-none motion-reduce:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-40 bg-surface-raised text-content ring-1 ring-white/10 hover:ring-white/20 hover:bg-surface h-10 px-4 text-sm gap-2"
+      tabindex="0"
       type="button"
     >
       Secondary
     </button>
     <button
-      class="inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 ease-out active:translate-y-0 active:scale-[0.97] motion-reduce:transform-none motion-reduce:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none disabled:active:scale-100 bg-transparent text-content hover:bg-sunken h-10 px-4 text-sm"
+      class="inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 ease-out motion-reduce:transform-none motion-reduce:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-40 bg-transparent text-content-secondary hover:bg-white/5 hover:text-content h-10 px-4 text-sm gap-2"
+      tabindex="0"
       type="button"
     >
       Ghost

@@ -1,8 +1,22 @@
+import { motion } from 'framer-motion';
+
 import { cn } from '@/shared/lib/cn';
 
-/** Animated placeholder block for loading states. */
+/** Shimmer placeholder block for loading states. */
 export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden className={cn('animate-pulse rounded-md bg-sunken', className)} />;
+  return (
+    <div
+      aria-hidden
+      className={cn('relative overflow-hidden rounded-lg bg-surface-raised', className)}
+    >
+      <motion.div
+        className="absolute inset-0 bg-shimmer"
+        style={{ backgroundSize: '800px 100%' }}
+        animate={{ backgroundPosition: ['-400px 0', '400px 0'] }}
+        transition={{ repeat: Infinity, duration: 1.4, ease: 'linear' }}
+      />
+    </div>
+  );
 }
 
 /** A grid of card-shaped skeletons (matches the video/library layout). */

@@ -36,6 +36,10 @@ export class ApiClient {
     this.refresh = hooks.refresh;
   }
 
+  getAuthToken(): string | null {
+    return this.getToken();
+  }
+
   async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
     const headers: Record<string, string> = { ...options.headers };
     if (options.body !== undefined) {

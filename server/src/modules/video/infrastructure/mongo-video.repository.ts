@@ -16,6 +16,8 @@ export class MongoVideoRepository implements IVideoRepository {
       {
         $set: {
           ownerId: s.ownerId,
+          source: s.source,
+          title: s.title,
           prompt: s.prompt,
           durationSeconds: s.durationSeconds,
           status: s.status,
@@ -79,6 +81,8 @@ export class MongoVideoRepository implements IVideoRepository {
     return Video.fromSnapshot({
       id: doc._id,
       ownerId: doc.ownerId,
+      source: doc.source ?? 'generated',
+      title: doc.title ?? null,
       prompt: doc.prompt,
       durationSeconds: doc.durationSeconds,
       status: doc.status,

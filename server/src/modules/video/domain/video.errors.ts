@@ -27,3 +27,22 @@ export class InvalidDurationError extends ValidationError {
     super(reason);
   }
 }
+
+/** Raised by the Title value object. */
+export class InvalidTitleError extends ValidationError {
+  constructor(reason: string) {
+    super(reason);
+  }
+}
+
+export class FileTooLargeError extends ValidationError {
+  constructor(maxMb: number) {
+    super(`File exceeds the ${maxMb}MB limit`);
+  }
+}
+
+export class UnsupportedFileTypeError extends ValidationError {
+  constructor(mimeType: string) {
+    super(`Unsupported file type: ${mimeType}. Accepted: video/mp4, video/quicktime, video/webm`);
+  }
+}

@@ -56,4 +56,45 @@ describe('CloudinaryVideoStorage', () => {
       'upload failed',
     );
   });
+
+  describe('uploadWithMetadata', () => {
+    it('returns url and rounded duration', async () => {
+      uploadStream.mockImplementation((_opts: unknown, cb: (e: unknown, r: unknown) => void) => ({
+        end: (_buf: Buffer) =>
+          cb(null, { secure_url: 'https://res.cloudinary.com/reelo/v.mp4', duration: 12.7 }),
+      }));
+      const storage = new CloudinaryVideoStorage('cloudinary://k:s@cloud');
+
+      const result = await storage.uploadWithMetadata(Buffer.from([1, 2, 3]), 'v1', 'video/mp4');
+
+      expect(result).toEqual({
+        url: 'https://res.cloudinary.com/reelo/v.mp4',
+        durationSeconds: 13,
+      });
+    });
+
+    it('rejects when Cloudinary omits duration', async () => {
+      uploadStream.mockImplementation((_opts: unknown, cb: (e: unknown, r: unknown) => void) => ({
+        end: (_buf: Buffer) =>
+          cb(null, { secure_url: 'https://res.cloudinary.com/reelo/v.mp4', duration: undefined }),
+      }));
+      const storage = new CloudinaryVideoStorage('cloudinary://k:s@cloud');
+
+      await expect(storage.uploadWithMetadata(Buffer.from([1]), 'v1', 'video/mp4')).rejects.toThrow(
+        /missing or invalid duration/,
+      );
+    });
+
+    it('rejects when Cloudinary returns a negative duration', async () => {
+      uploadStream.mockImplementation((_opts: unknown, cb: (e: unknown, r: unknown) => void) => ({
+        end: (_buf: Buffer) =>
+          cb(null, { secure_url: 'https://res.cloudinary.com/reelo/v.mp4', duration: -1 }),
+      }));
+      const storage = new CloudinaryVideoStorage('cloudinary://k:s@cloud');
+
+      await expect(storage.uploadWithMetadata(Buffer.from([1]), 'v1', 'video/mp4')).rejects.toThrow(
+        /missing or invalid duration/,
+      );
+    });
+  });
 });

@@ -1,7 +1,10 @@
 export type VideoStatus = 'queued' | 'processing' | 'ready' | 'failed';
+export type VideoSource = 'generated' | 'uploaded';
 
 export interface Video {
   id: string;
+  source: VideoSource;
+  title: string | null;
   prompt: string;
   durationSeconds: number;
   status: VideoStatus;
@@ -21,6 +24,15 @@ export interface CreateVideoInput {
   narrationText?: string | null;
   narrationVoice?: string | null;
 }
+
+export interface UploadVideoInput {
+  title: string;
+  file: File;
+}
+
+export const MAX_UPLOAD_MB = 500;
+export const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
+export const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm'];
 
 export interface VideoPage {
   items: Video[];
