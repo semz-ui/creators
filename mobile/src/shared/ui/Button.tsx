@@ -1,6 +1,8 @@
 import { ActivityIndicator, Pressable, Text, type PressableProps } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { cn } from '@/shared/lib/cn';
+import { usePressScale } from '@/shared/lib/usePressScale';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type Size = 'sm' | 'md' | 'lg';
@@ -13,6 +15,8 @@ export interface ButtonProps extends Omit<PressableProps, 'children'> {
   /** Stretch to the container width. */
   block?: boolean;
 }
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const CONTAINER: Record<Variant, string> = {
   primary: 'bg-brand active:bg-brand-hover',
@@ -42,13 +46,26 @@ export function Button({
   block = false,
   disabled,
   className,
+  onPressIn,
+  onPressOut,
   ...rest
 }: ButtonProps & { className?: string }) {
   const isDisabled = Boolean(disabled) || loading;
+  const press = usePressScale();
+
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       disabled={isDisabled}
+      onPressIn={(e) => {
+        press.onPressIn();
+        onPressIn?.(e);
+      }}
+      onPressOut={(e) => {
+        press.onPressOut();
+        onPressOut?.(e);
+      }}
+      style={press.style}
       className={cn(
         'flex-row items-center justify-center gap-2',
         CONTAINER[variant],
@@ -63,6 +80,6 @@ export function Button({
         <ActivityIndicator size="small" color={variant === 'primary' ? '#ffffff' : '#0284c7'} />
       ) : null}
       <Text className={cn('font-sans-semibold', LABEL[variant], SIZE[size].label)}>{title}</Text>
-    </Pressable>
+    </AnimatedPressable>
   );
 }

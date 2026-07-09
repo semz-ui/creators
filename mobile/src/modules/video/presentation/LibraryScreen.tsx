@@ -38,8 +38,8 @@ export function LibraryScreen() {
         />
       ) : (
         <>
-          {videos.data.items.map((video) => (
-            <VideoCard key={video.id} video={video} />
+          {videos.data.items.map((video, index) => (
+            <VideoCard key={video.id} video={video} index={index} />
           ))}
           {totalPages > 1 ? (
             <View className="mt-3 flex-row items-center justify-between">
