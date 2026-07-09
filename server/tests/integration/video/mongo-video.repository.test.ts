@@ -56,6 +56,42 @@ describe('MongoVideoRepository (integration)', () => {
     expect(await repo.findByJobRef('missing')).toBeNull();
   });
 
+  it('claimTerminal flips a processing job once and reports the winner', async () => {
+    const v = makeVideo('user-1', 'job-claim');
+    await repo.save(v);
+
+    const won = await repo.claimTerminal('job-claim', { status: 'failed', error: 'boom' });
+    expect(won?.status).toBe('failed');
+    expect(won?.error).toBe('boom');
+
+    // A second claim on the now-terminal job finds nothing to flip -> null.
+    const lost = await repo.claimTerminal('job-claim', {
+      status: 'ready',
+      resultUrl: 'https://cdn/late.mp4',
+    });
+    expect(lost).toBeNull();
+
+    const found = await repo.findByJobRef('job-claim');
+    expect(found?.status).toBe('failed'); // unchanged by the lost claim
+  });
+
+  it('claimTerminal is a no-op (null) for an unknown jobRef', async () => {
+    expect(await repo.claimTerminal('nope', { status: 'ready', resultUrl: 'u' })).toBeNull();
+  });
+
+  it('claimTerminal admits only one of two concurrent claims', async () => {
+    const v = makeVideo('user-1', 'job-race');
+    await repo.save(v);
+
+    const [a, b] = await Promise.all([
+      repo.claimTerminal('job-race', { status: 'failed', error: 'a' }),
+      repo.claimTerminal('job-race', { status: 'failed', error: 'b' }),
+    ]);
+
+    // Exactly one wins (non-null); the other loses (null).
+    expect([a, b].filter(Boolean)).toHaveLength(1);
+  });
+
   it('lists an owner page newest-first with a total', async () => {
     for (let i = 0; i < 3; i++) {
       await repo.save(makeVideo('user-1', `job-${i}`));

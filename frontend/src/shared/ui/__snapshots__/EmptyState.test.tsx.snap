@@ -3,18 +3,22 @@
 exports[`EmptyState > matches the snapshot 1`] = `
 <div>
   <div
-    class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm text-center"
+    style="opacity: 0; transform: translateY(12px);"
   >
-    <p
-      class="font-medium text-content"
+    <div
+      class="rounded-xl border border-line-subtle bg-surface p-6 text-center"
     >
-      Empty
-    </p>
-    <p
-      class="mt-1 text-sm text-content-secondary"
-    >
-      None yet
-    </p>
+      <p
+        class="font-medium text-content"
+      >
+        Empty
+      </p>
+      <p
+        class="mt-1 text-sm text-content-secondary"
+      >
+        None yet
+      </p>
+    </div>
   </div>
 </div>
 `;

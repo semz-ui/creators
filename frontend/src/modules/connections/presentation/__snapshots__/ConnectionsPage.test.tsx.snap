@@ -20,7 +20,7 @@ exports[`ConnectionsPage > matches the snapshot once loaded 1`] = `
     >
       <li>
         <div
-          class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm flex items-center justify-between gap-4 p-4"
+          class="rounded-xl border border-line-subtle bg-surface p-6 flex items-center justify-between gap-4 p-4"
         >
           <div>
             <p
@@ -38,12 +38,13 @@ exports[`ConnectionsPage > matches the snapshot once loaded 1`] = `
             class="flex items-center gap-3"
           >
             <span
-              class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-success-bg text-success"
+              class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium bg-success-bg text-success shadow-glow-success"
             >
               Connected
             </span>
             <button
-              class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-transparent text-content hover:bg-sunken h-8 px-3 text-sm"
+              class="inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 ease-out motion-reduce:transform-none motion-reduce:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-40 bg-transparent text-content-secondary hover:bg-white/5 hover:text-content h-8 px-3 text-sm gap-1.5"
+              tabindex="0"
               type="button"
             >
               Disconnect
@@ -53,7 +54,7 @@ exports[`ConnectionsPage > matches the snapshot once loaded 1`] = `
       </li>
       <li>
         <div
-          class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm flex items-center justify-between gap-4 p-4"
+          class="rounded-xl border border-line-subtle bg-surface p-6 flex items-center justify-between gap-4 p-4"
         >
           <div>
             <p
@@ -68,7 +69,8 @@ exports[`ConnectionsPage > matches the snapshot once loaded 1`] = `
             </p>
           </div>
           <button
-            class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-brand text-content-inverse hover:bg-brand-hover shadow-sm h-8 px-3 text-sm"
+            class="inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 ease-out motion-reduce:transform-none motion-reduce:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-40 bg-gradient-brand text-white shadow-glow-sm hover:shadow-glow-brand disabled:shadow-none h-8 px-3 text-sm gap-1.5"
+            tabindex="0"
             type="button"
           >
             Connect
@@ -77,7 +79,7 @@ exports[`ConnectionsPage > matches the snapshot once loaded 1`] = `
       </li>
       <li>
         <div
-          class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm flex items-center justify-between gap-4 p-4"
+          class="rounded-xl border border-line-subtle bg-surface p-6 flex items-center justify-between gap-4 p-4"
         >
           <div>
             <p
@@ -92,7 +94,8 @@ exports[`ConnectionsPage > matches the snapshot once loaded 1`] = `
             </p>
           </div>
           <button
-            class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-brand text-content-inverse hover:bg-brand-hover shadow-sm h-8 px-3 text-sm"
+            class="inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 ease-out motion-reduce:transform-none motion-reduce:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-40 bg-gradient-brand text-white shadow-glow-sm hover:shadow-glow-brand disabled:shadow-none h-8 px-3 text-sm gap-1.5"
+            tabindex="0"
             type="button"
           >
             Connect
@@ -101,7 +104,7 @@ exports[`ConnectionsPage > matches the snapshot once loaded 1`] = `
       </li>
       <li>
         <div
-          class="rounded-xl border border-line-subtle bg-surface p-6 shadow-sm flex items-center justify-between gap-4 p-4"
+          class="rounded-xl border border-line-subtle bg-surface p-6 flex items-center justify-between gap-4 p-4"
         >
           <div>
             <p
@@ -116,7 +119,8 @@ exports[`ConnectionsPage > matches the snapshot once loaded 1`] = `
             </p>
           </div>
           <button
-            class="inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 bg-brand text-content-inverse hover:bg-brand-hover shadow-sm h-8 px-3 text-sm"
+            class="inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 ease-out motion-reduce:transform-none motion-reduce:transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:cursor-not-allowed disabled:opacity-40 bg-gradient-brand text-white shadow-glow-sm hover:shadow-glow-brand disabled:shadow-none h-8 px-3 text-sm gap-1.5"
+            tabindex="0"
             type="button"
           >
             Connect

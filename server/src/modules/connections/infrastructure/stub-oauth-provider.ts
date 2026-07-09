@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto';
 
-import type { IOAuthProvider, OAuthAccount } from '../domain/ports/oauth-provider';
+import type { IOAuthProvider, OAuthAccount, RefreshedTokens } from '../domain/ports/oauth-provider';
 import type { Platform } from '../domain/platform';
 
 const SCOPES: Record<Platform, string[]> = {
   facebook: ['pages_manage_posts', 'pages_read_engagement'],
-  instagram: ['instagram_content_publish'],
+  instagram: ['instagram_business_basic', 'instagram_business_content_publish'],
   youtube: ['https://www.googleapis.com/auth/youtube.upload'],
   tiktok: ['video.publish'],
 };
@@ -30,6 +30,14 @@ export class StubOAuthProvider implements IOAuthProvider {
       accessToken: `stub-access-${randomUUID()}`,
       refreshToken: `stub-refresh-${randomUUID()}`,
       scopes: SCOPES[this.platform],
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    };
+  }
+
+  async refreshAccessToken(_refreshToken: string): Promise<RefreshedTokens> {
+    return {
+      accessToken: `stub-access-${randomUUID()}`,
+      refreshToken: null,
       expiresAt: new Date(Date.now() + 60 * 60 * 1000),
     };
   }

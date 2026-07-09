@@ -26,6 +26,8 @@ describe('StartTopUp', () => {
       createCheckout: jest
         .fn()
         .mockResolvedValue({ providerRef: 'pay_abc', checkoutUrl: 'https://pay/checkout/abc' }),
+      signatureHeader: 'x-test',
+      parseWebhook: jest.fn(),
     };
 
     const result = await new StartTopUp(payments, provider).execute('u1', 50);
@@ -43,7 +45,11 @@ describe('StartTopUp', () => {
 
   it('rejects a non-positive amount', async () => {
     await expect(
-      new StartTopUp(paymentsMock(), { createCheckout: jest.fn() }).execute('u1', 0),
+      new StartTopUp(paymentsMock(), {
+        createCheckout: jest.fn(),
+        signatureHeader: 'x-test',
+        parseWebhook: jest.fn(),
+      }).execute('u1', 0),
     ).rejects.toThrow();
   });
 });

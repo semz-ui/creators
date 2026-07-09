@@ -59,6 +59,32 @@ export const envSchema = z
       .min(16, 'GENERATION_CALLBACK_SECRET must be at least 16 characters')
       .default(DEV_DEFAULT_SECRETS.GENERATION_CALLBACK_SECRET),
 
+    // Kling AI video generator (official API). When both keys are set the
+    // KlingVideoGenerator is wired in; otherwise the app uses the stub.
+    KLING_ACCESS_KEY: z.string().optional(),
+    KLING_SECRET_KEY: z.string().optional(),
+    KLING_BASE_URL: z.string().url().default('https://api-singapore.klingai.com'),
+    KLING_MODEL: z.string().default('kling-v1'),
+    KLING_MODE: z.enum(['std', 'pro']).default('std'),
+    KLING_ASPECT_RATIO: z.enum(['16:9', '9:16', '1:1']).default('16:9'),
+
+    // OpenAI Sora video generator. Sora returns authenticated binary, so its
+    // output is uploaded to Cloudinary (CLOUDINARY_URL required when Sora is used).
+    OPENAI_API_KEY: z.string().optional(),
+    SORA_BASE_URL: z.string().url().default('https://api.openai.com/v1'),
+    SORA_MODEL: z.string().default('sora-2'),
+    SORA_SIZE: z.string().default('1280x720'),
+    // OpenAI TTS model used to synthesize optional video narration.
+    TTS_MODEL: z.string().default('gpt-4o-mini-tts'),
+    CLOUDINARY_URL: z.string().optional(),
+    // Explicit generator selection; when unset (or blank, e.g. an empty
+    // docker-compose passthrough) the provider is auto-detected from configured
+    // credentials (sora → kling → stub).
+    VIDEO_PROVIDER: z.preprocess(
+      (v) => (v === '' ? undefined : v),
+      z.enum(['sora', 'kling', 'stub']).optional(),
+    ),
+
     // Connections module
     // Secret used to derive the AES key that encrypts stored OAuth tokens.
     CONNECTIONS_ENC_KEY: z
@@ -71,6 +97,19 @@ export const envSchema = z
     PUBLIC_BASE_URL: z.string().url().default('http://localhost:4000'),
     // If set, the OAuth callback 302-redirects here (with ?status=); otherwise returns JSON.
     CONNECTIONS_REDIRECT_URL: z.string().default(''),
+    // Google OAuth for the 'youtube' platform. When both are set the real
+    // Google provider is wired in; otherwise the stub is used.
+    GOOGLE_CLIENT_ID: z.string().optional(),
+    GOOGLE_CLIENT_SECRET: z.string().optional(),
+    // Privacy of videos published to YouTube. Unverified Google apps are
+    // forced to 'private' by YouTube regardless; keep the safe default.
+    YOUTUBE_PRIVACY_STATUS: z.enum(['private', 'unlisted', 'public']).default('private'),
+    // Instagram API with Instagram Login ("Business Login") for the
+    // 'instagram' platform. When both are set the real provider + Reels
+    // publisher are wired in. These are the Instagram-product app id/secret,
+    // NOT the parent Meta app id.
+    INSTAGRAM_APP_ID: z.string().optional(),
+    INSTAGRAM_APP_SECRET: z.string().optional(),
 
     // Publishing module — shared secret a scheduler presents to run due publications.
     PUBLISH_SCHEDULER_SECRET: z
@@ -83,11 +122,18 @@ export const envSchema = z
     INITIAL_FREE_CREDITS: z.coerce.number().int().nonnegative().default(100),
     // Flat credit cost charged per video generation.
     VIDEO_CREDIT_COST: z.coerce.number().int().positive().default(10),
-    // Shared secret the payment provider presents on the top-up webhook.
+    // Shared secret the payment provider presents on the top-up webhook (stub provider).
     PAYMENT_WEBHOOK_SECRET: z
       .string()
       .min(16, 'PAYMENT_WEBHOOK_SECRET must be at least 16 characters')
       .default(DEV_DEFAULT_SECRETS.PAYMENT_WEBHOOK_SECRET),
+
+    // Stripe — set STRIPE_SECRET_KEY to take real payments via Stripe Checkout
+    // (else the stub provider is used). STRIPE_WEBHOOK_SECRET is then required.
+    STRIPE_SECRET_KEY: z.string().optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    STRIPE_SUCCESS_URL: z.string().url().default('http://localhost:3000/billing?topup=success'),
+    STRIPE_CANCEL_URL: z.string().url().default('http://localhost:3000/billing?topup=cancelled'),
 
     // Rate limiting (Phase 3) — window in seconds, max requests per window per IP.
     RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(60),
@@ -101,6 +147,65 @@ export const envSchema = z
       .default('info'),
   })
   .superRefine((env, ctx) => {
+    // Sora needs both an OpenAI key and Cloudinary to store its binary output.
+    // Required when Sora is selected explicitly or implied by an OpenAI key.
+    const wantsSora = env.VIDEO_PROVIDER === 'sora' || Boolean(env.OPENAI_API_KEY);
+    if (wantsSora && !env.OPENAI_API_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['OPENAI_API_KEY'],
+        message: 'OPENAI_API_KEY is required when VIDEO_PROVIDER is "sora"',
+      });
+    }
+    if (wantsSora && !env.CLOUDINARY_URL) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['CLOUDINARY_URL'],
+        message: 'CLOUDINARY_URL is required to store Sora-generated videos',
+      });
+    }
+
+    // Google OAuth credentials only work as a pair — catch half-configured deploys.
+    if (Boolean(env.GOOGLE_CLIENT_ID) !== Boolean(env.GOOGLE_CLIENT_SECRET)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['GOOGLE_CLIENT_SECRET'],
+        message: 'GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set together',
+      });
+    }
+
+    // Instagram credentials only work as a pair — catch half-configured deploys.
+    if (Boolean(env.INSTAGRAM_APP_ID) !== Boolean(env.INSTAGRAM_APP_SECRET)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['INSTAGRAM_APP_SECRET'],
+        message: 'INSTAGRAM_APP_ID and INSTAGRAM_APP_SECRET must be set together',
+      });
+    }
+
+    // Enabling Stripe requires its webhook signing secret to verify callbacks.
+    if (env.STRIPE_SECRET_KEY && !env.STRIPE_WEBHOOK_SECRET) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['STRIPE_WEBHOOK_SECRET'],
+        message: 'STRIPE_WEBHOOK_SECRET is required when STRIPE_SECRET_KEY is set',
+      });
+    }
+
+    // In production with Stripe enabled, the post-checkout redirect URLs must be
+    // real public URLs — the localhost defaults would strand real customers.
+    if (env.STRIPE_SECRET_KEY && env.NODE_ENV === 'production') {
+      for (const key of ['STRIPE_SUCCESS_URL', 'STRIPE_CANCEL_URL'] as const) {
+        if (/\blocalhost\b|127\.0\.0\.1/.test(env[key])) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [key],
+            message: `${key} must be a public URL (not localhost) when Stripe is enabled in production`,
+          });
+        }
+      }
+    }
+
     // Outside production the dev defaults are fine. In production a secret left
     // at its publicly-known default is a misconfiguration — fail fast.
     if (env.NODE_ENV !== 'production') return;

@@ -23,6 +23,134 @@ describe('envSchema', () => {
     expect(result.PORT).toBe(8080);
   });
 
+  it('applies Kling defaults and leaves the keys optional', () => {
+    const result = envSchema.parse(validInput);
+    expect(result.KLING_ACCESS_KEY).toBeUndefined();
+    expect(result.KLING_SECRET_KEY).toBeUndefined();
+    expect(result.KLING_BASE_URL).toBe('https://api-singapore.klingai.com');
+    expect(result.KLING_MODEL).toBe('kling-v1');
+    expect(result.KLING_MODE).toBe('std');
+    expect(result.KLING_ASPECT_RATIO).toBe('16:9');
+  });
+
+  it('rejects an invalid Kling mode', () => {
+    const result = envSchema.safeParse({ ...validInput, KLING_MODE: 'turbo' });
+    expect(result.success).toBe(false);
+  });
+
+  it('requires CLOUDINARY_URL when an OpenAI (Sora) key is set', () => {
+    const result = envSchema.safeParse({ ...validInput, OPENAI_API_KEY: 'sk-x' });
+    expect(result.success).toBe(false);
+    const paths = result.success ? [] : result.error.issues.map((i) => i.path.join('.'));
+    expect(paths).toContain('CLOUDINARY_URL');
+  });
+
+  it('requires OPENAI_API_KEY when VIDEO_PROVIDER is sora', () => {
+    const result = envSchema.safeParse({
+      ...validInput,
+      VIDEO_PROVIDER: 'sora',
+      CLOUDINARY_URL: 'cloudinary://k:s@c',
+    });
+    expect(result.success).toBe(false);
+    const paths = result.success ? [] : result.error.issues.map((i) => i.path.join('.'));
+    expect(paths).toContain('OPENAI_API_KEY');
+  });
+
+  it('accepts a complete Sora configuration', () => {
+    const result = envSchema.safeParse({
+      ...validInput,
+      OPENAI_API_KEY: 'sk-x',
+      CLOUDINARY_URL: 'cloudinary://k:s@c',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('treats a blank VIDEO_PROVIDER as unset (auto-detect)', () => {
+    const result = envSchema.safeParse({ ...validInput, VIDEO_PROVIDER: '' });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.VIDEO_PROVIDER).toBeUndefined();
+  });
+
+  it('requires Google OAuth credentials to be set as a pair', () => {
+    expect(envSchema.safeParse({ ...validInput, GOOGLE_CLIENT_ID: 'id-x' }).success).toBe(false);
+    expect(envSchema.safeParse({ ...validInput, GOOGLE_CLIENT_SECRET: 'sec-x' }).success).toBe(
+      false,
+    );
+    expect(
+      envSchema.safeParse({
+        ...validInput,
+        GOOGLE_CLIENT_ID: 'id-x',
+        GOOGLE_CLIENT_SECRET: 'sec-x',
+      }).success,
+    ).toBe(true);
+  });
+
+  it('requires Instagram credentials to be set as a pair', () => {
+    expect(envSchema.safeParse({ ...validInput, INSTAGRAM_APP_ID: 'id-x' }).success).toBe(false);
+    expect(envSchema.safeParse({ ...validInput, INSTAGRAM_APP_SECRET: 'sec-x' }).success).toBe(
+      false,
+    );
+    expect(
+      envSchema.safeParse({
+        ...validInput,
+        INSTAGRAM_APP_ID: 'id-x',
+        INSTAGRAM_APP_SECRET: 'sec-x',
+      }).success,
+    ).toBe(true);
+  });
+
+  it('requires STRIPE_WEBHOOK_SECRET when STRIPE_SECRET_KEY is set', () => {
+    const result = envSchema.safeParse({ ...validInput, STRIPE_SECRET_KEY: 'sk_test_x' });
+    expect(result.success).toBe(false);
+  });
+
+  it('allows the localhost Stripe redirect defaults outside production', () => {
+    const result = envSchema.safeParse({
+      ...validInput,
+      STRIPE_SECRET_KEY: 'sk_test_x',
+      STRIPE_WEBHOOK_SECRET: 'whsec_x',
+    });
+    expect(result.success).toBe(true); // NODE_ENV defaults to development
+  });
+
+  it('rejects localhost Stripe redirect URLs in production', () => {
+    const result = envSchema.safeParse({
+      ...validInput,
+      NODE_ENV: 'production',
+      STRIPE_SECRET_KEY: 'sk_live_x',
+      STRIPE_WEBHOOK_SECRET: 'whsec_x',
+      // STRIPE_SUCCESS_URL/CANCEL_URL left at their localhost defaults
+      // (plus the other prod secrets so only the URL issues surface)
+      JWT_ACCESS_SECRET: 'a'.repeat(32),
+      JWT_REFRESH_SECRET: 'b'.repeat(32),
+      GENERATION_CALLBACK_SECRET: 'x'.repeat(16),
+      CONNECTIONS_ENC_KEY: 'x'.repeat(16),
+      PUBLISH_SCHEDULER_SECRET: 'x'.repeat(16),
+      PAYMENT_WEBHOOK_SECRET: 'x'.repeat(16),
+    });
+    expect(result.success).toBe(false);
+    const paths = result.success ? [] : result.error.issues.map((i) => i.path.join('.'));
+    expect(paths).toEqual(expect.arrayContaining(['STRIPE_SUCCESS_URL', 'STRIPE_CANCEL_URL']));
+  });
+
+  it('accepts public Stripe redirect URLs in production', () => {
+    const result = envSchema.safeParse({
+      ...validInput,
+      NODE_ENV: 'production',
+      STRIPE_SECRET_KEY: 'sk_live_x',
+      STRIPE_WEBHOOK_SECRET: 'whsec_x',
+      STRIPE_SUCCESS_URL: 'https://app.reelo.example/billing?topup=success',
+      STRIPE_CANCEL_URL: 'https://app.reelo.example/billing?topup=cancelled',
+      JWT_ACCESS_SECRET: 'a'.repeat(32),
+      JWT_REFRESH_SECRET: 'b'.repeat(32),
+      GENERATION_CALLBACK_SECRET: 'x'.repeat(16),
+      CONNECTIONS_ENC_KEY: 'x'.repeat(16),
+      PUBLISH_SCHEDULER_SECRET: 'x'.repeat(16),
+      PAYMENT_WEBHOOK_SECRET: 'x'.repeat(16),
+    });
+    expect(result.success).toBe(true);
+  });
+
   it('splits CORS_ORIGINS into a trimmed array', () => {
     const result = envSchema.parse({
       ...validInput,

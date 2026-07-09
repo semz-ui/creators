@@ -1,11 +1,16 @@
 import { z } from 'zod';
 
+import { NARRATION_MAX_LENGTH, VOICES, isMusicTrack } from '../domain/audio';
 import { DURATION_MAX_SECONDS, DURATION_MIN_SECONDS } from '../domain/value-objects/duration';
 import { PROMPT_MAX_LENGTH } from '../domain/value-objects/prompt';
 
 export const createVideoSchema = z.object({
   prompt: z.string().min(1).max(PROMPT_MAX_LENGTH),
   durationSeconds: z.number().int().min(DURATION_MIN_SECONDS).max(DURATION_MAX_SECONDS),
+  // Optional audio (Sora+Cloudinary only; ignored by other generators).
+  musicTrackId: z.string().refine(isMusicTrack, { message: 'Unknown music track' }).nullish(),
+  narrationText: z.string().trim().min(1).max(NARRATION_MAX_LENGTH).nullish(),
+  narrationVoice: z.enum(VOICES).nullish(),
 });
 
 export const listVideosQuerySchema = z.object({
@@ -26,6 +31,10 @@ export const generationCallbackSchema = z.discriminatedUnion('status', [
     error: z.string().min(1).optional(),
   }),
 ]);
+
+export const uploadVideoSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+});
 
 export type CreateVideoBody = z.infer<typeof createVideoSchema>;
 export type GenerationCallbackBody = z.infer<typeof generationCallbackSchema>;

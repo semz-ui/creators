@@ -15,6 +15,7 @@ function repoMock() {
     save: jest.fn().mockResolvedValue(undefined),
     findById: jest.fn(),
     findByJobRef: jest.fn(),
+    claimTerminal: jest.fn(),
     findByOwner: jest.fn(),
   } satisfies Record<keyof IVideoRepository, jest.Mock>;
 }
@@ -42,6 +43,7 @@ describe('CreateVideo', () => {
     const credits = creditGuardMock();
     const generator: IVideoGenerator = {
       submit: jest.fn().mockResolvedValue({ jobRef: 'job-xyz' }),
+      poll: jest.fn().mockResolvedValue({ state: 'processing' }),
     };
 
     const result = await new CreateVideo(videos, generator, credits).execute('user-1', {
@@ -65,6 +67,7 @@ describe('CreateVideo', () => {
     const credits = creditGuardMock();
     const generator: IVideoGenerator = {
       submit: jest.fn().mockRejectedValue(new Error('provider down')),
+      poll: jest.fn().mockResolvedValue({ state: 'processing' }),
     };
 
     await expect(
@@ -80,7 +83,7 @@ describe('CreateVideo', () => {
   it('rejects an invalid duration before charging or submitting', async () => {
     const videos = repoMock();
     const credits = creditGuardMock();
-    const generator: IVideoGenerator = { submit: jest.fn() };
+    const generator: IVideoGenerator = { submit: jest.fn(), poll: jest.fn() };
 
     await expect(
       new CreateVideo(videos, generator, credits).execute('user-1', {
@@ -130,11 +133,17 @@ describe('ListVideos', () => {
 });
 
 describe('ApplyGenerationResult', () => {
-  it('marks a processing video ready (no refund)', async () => {
+  function terminalVideo(transition: 'ready' | 'failed', ownerId = 'user-1') {
+    const v = processingVideo(ownerId);
+    if (transition === 'ready') v.markReady('https://cdn/v.mp4');
+    else v.markFailed('nope');
+    return v;
+  }
+
+  it('claims a ready transition (no refund)', async () => {
     const videos = repoMock();
     const credits = creditGuardMock();
-    const v = processingVideo();
-    videos.findByJobRef.mockResolvedValue(v);
+    videos.claimTerminal.mockResolvedValue(terminalVideo('ready'));
 
     await new ApplyGenerationResult(videos, credits).execute({
       jobRef: 'job-1',
@@ -142,16 +151,18 @@ describe('ApplyGenerationResult', () => {
       resultUrl: 'https://cdn/v.mp4',
     });
 
-    expect(v.status).toBe('ready');
-    expect(videos.save).toHaveBeenCalledWith(v);
+    expect(videos.claimTerminal).toHaveBeenCalledWith('job-1', {
+      status: 'ready',
+      resultUrl: 'https://cdn/v.mp4',
+    });
     expect(credits.refundGeneration).not.toHaveBeenCalled();
   });
 
-  it('marks a processing video failed and refunds the credits', async () => {
+  it('claims a failed transition and refunds the credits', async () => {
     const videos = repoMock();
     const credits = creditGuardMock();
-    const v = processingVideo();
-    videos.findByJobRef.mockResolvedValue(v);
+    const v = terminalVideo('failed');
+    videos.claimTerminal.mockResolvedValue(v);
 
     await new ApplyGenerationResult(videos, credits).execute({
       jobRef: 'job-1',
@@ -159,33 +170,20 @@ describe('ApplyGenerationResult', () => {
       error: 'nope',
     });
 
-    expect(v.status).toBe('failed');
+    expect(videos.claimTerminal).toHaveBeenCalledWith('job-1', {
+      status: 'failed',
+      error: 'nope',
+    });
     expect(credits.refundGeneration).toHaveBeenCalledWith(
       v.ownerId,
       expect.objectContaining({ videoId: v.id }),
     );
   });
 
-  it('is a no-op for an unknown jobRef', async () => {
+  it('does not refund when the failed claim is lost (already terminal / concurrent / unknown)', async () => {
     const videos = repoMock();
     const credits = creditGuardMock();
-    videos.findByJobRef.mockResolvedValue(null);
-
-    await new ApplyGenerationResult(videos, credits).execute({
-      jobRef: 'ghost',
-      status: 'ready',
-      resultUrl: 'u',
-    });
-    expect(videos.save).not.toHaveBeenCalled();
-    expect(credits.refundGeneration).not.toHaveBeenCalled();
-  });
-
-  it('ignores a duplicate callback once terminal (idempotent)', async () => {
-    const videos = repoMock();
-    const credits = creditGuardMock();
-    const v = processingVideo();
-    v.markReady('https://cdn/v.mp4');
-    videos.findByJobRef.mockResolvedValue(v);
+    videos.claimTerminal.mockResolvedValue(null);
 
     await new ApplyGenerationResult(videos, credits).execute({
       jobRef: 'job-1',
@@ -193,8 +191,20 @@ describe('ApplyGenerationResult', () => {
       error: 'late',
     });
 
-    expect(v.status).toBe('ready');
-    expect(videos.save).not.toHaveBeenCalled();
+    expect(credits.refundGeneration).not.toHaveBeenCalled();
+  });
+
+  it('is a no-op for an unknown jobRef on a ready result', async () => {
+    const videos = repoMock();
+    const credits = creditGuardMock();
+    videos.claimTerminal.mockResolvedValue(null);
+
+    await new ApplyGenerationResult(videos, credits).execute({
+      jobRef: 'ghost',
+      status: 'ready',
+      resultUrl: 'u',
+    });
+
     expect(credits.refundGeneration).not.toHaveBeenCalled();
   });
 });

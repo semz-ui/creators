@@ -1,4 +1,9 @@
-import type { IVideoRepository, ListOptions, PagedVideos } from '../domain/ports/video-repository';
+import type {
+  IVideoRepository,
+  ListOptions,
+  PagedVideos,
+  TerminalTransition,
+} from '../domain/ports/video-repository';
 import { Video } from '../domain/video.entity';
 import { VideoModel, type VideoDocument } from './video.model';
 
@@ -11,12 +16,17 @@ export class MongoVideoRepository implements IVideoRepository {
       {
         $set: {
           ownerId: s.ownerId,
+          source: s.source,
+          title: s.title,
           prompt: s.prompt,
           durationSeconds: s.durationSeconds,
           status: s.status,
           jobRef: s.jobRef,
           resultUrl: s.resultUrl,
           error: s.error,
+          musicTrackId: s.musicTrackId,
+          narrationText: s.narrationText,
+          narrationVoice: s.narrationVoice,
           updatedAt: s.updatedAt,
         },
         $setOnInsert: { createdAt: s.createdAt },
@@ -32,6 +42,24 @@ export class MongoVideoRepository implements IVideoRepository {
 
   async findByJobRef(jobRef: string): Promise<Video | null> {
     const doc = await VideoModel.findOne({ jobRef }).lean<VideoDocument>().exec();
+    return doc ? this.toEntity(doc) : null;
+  }
+
+  async claimTerminal(jobRef: string, transition: TerminalTransition): Promise<Video | null> {
+    const set =
+      transition.status === 'ready'
+        ? { status: 'ready', resultUrl: transition.resultUrl, updatedAt: new Date() }
+        : { status: 'failed', error: transition.error, updatedAt: new Date() };
+
+    // The `status: 'processing'` filter is the compare-and-set guard: only the
+    // first caller flips the document; concurrent callers match nothing → null.
+    const doc = await VideoModel.findOneAndUpdate(
+      { jobRef, status: 'processing' },
+      { $set: set },
+      { new: true },
+    )
+      .lean<VideoDocument>()
+      .exec();
     return doc ? this.toEntity(doc) : null;
   }
 
@@ -53,12 +81,17 @@ export class MongoVideoRepository implements IVideoRepository {
     return Video.fromSnapshot({
       id: doc._id,
       ownerId: doc.ownerId,
+      source: doc.source ?? 'generated',
+      title: doc.title ?? null,
       prompt: doc.prompt,
       durationSeconds: doc.durationSeconds,
       status: doc.status,
       jobRef: doc.jobRef ?? null,
       resultUrl: doc.resultUrl ?? null,
       error: doc.error ?? null,
+      musicTrackId: doc.musicTrackId ?? null,
+      narrationText: doc.narrationText ?? null,
+      narrationVoice: doc.narrationVoice ?? null,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,
     });

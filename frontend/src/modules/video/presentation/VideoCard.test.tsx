@@ -8,11 +8,16 @@ import { VideoCard } from './VideoCard';
 
 const baseVideo: Video = {
   id: 'vid-1',
+  source: 'generated',
+  title: null,
   prompt: 'a neon city skyline',
   durationSeconds: 15,
   status: 'ready',
   resultUrl: 'https://cdn/v.mp4',
   error: null,
+  musicTrackId: null,
+  narrationText: null,
+  narrationVoice: null,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
