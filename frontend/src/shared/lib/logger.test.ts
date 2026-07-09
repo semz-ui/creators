@@ -26,9 +26,7 @@ describe('logger', () => {
 
     expect(console.log).toHaveBeenCalledTimes(1);
     const line = vi.mocked(console.log).mock.calls[0]?.[0];
-    expect(line).toMatch(
-      /^\[\d{4}-\d{2}-\d{2}T[\d:.]+Z\] \[INFO\] \[Auth\] signed in$/,
-    );
+    expect(line).toMatch(/^\[\d{4}-\d{2}-\d{2}T[\d:.]+Z\] \[INFO\] \[Auth\] signed in$/);
   });
 
   it('forwards extra args to the console method', () => {
