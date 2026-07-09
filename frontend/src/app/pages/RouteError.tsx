@@ -1,10 +1,11 @@
 import { Link, useRouteError } from 'react-router-dom';
 
+import { logger } from '@/shared/lib/logger';
+
 /** Router `errorElement` — shown when a route throws while rendering. */
 export function RouteError() {
   const error = useRouteError();
-  // eslint-disable-next-line no-console
-  console.error('Route error:', error);
+  logger('RouteError').error('Route error:', error);
 
   return (
     <main className="mx-auto flex min-h-full max-w-md flex-col items-center justify-center gap-4 px-6 py-16 text-center">

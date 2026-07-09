@@ -1,5 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
+import { logger } from '@/shared/lib/logger';
+
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
@@ -36,8 +38,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, info: ErrorInfo): void {
-    // eslint-disable-next-line no-console
-    console.error('Uncaught error:', error, info.componentStack);
+    logger('ErrorBoundary').error('Uncaught error:', error, info.componentStack);
   }
 
   override render(): ReactNode {
