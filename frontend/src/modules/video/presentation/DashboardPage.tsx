@@ -37,7 +37,7 @@ const cardItem = {
 
 export function DashboardPage() {
   const { user } = useSession();
-  const { data, isPending } = useVideoLibrary(1, 6);
+  const { data, isPending, isError } = useVideoLibrary(1, 6);
 
   const totalVideos = data?.total ?? 0;
   const published = data?.items.filter((v) => v.status === 'ready').length ?? 0;
@@ -108,6 +108,8 @@ export function DashboardPage() {
       <h2 className="mb-4 font-display text-lg font-semibold text-content">Recent</h2>
       {isPending ? (
         <CardGridSkeleton count={3} />
+      ) : isError ? (
+        <p className="text-content-secondary">Couldn&apos;t load your videos.</p>
       ) : !data || data.items.length === 0 ? (
         <EmptyState
           icon={Film}

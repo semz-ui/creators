@@ -68,12 +68,21 @@ test('creates a video and sees it become ready', async ({ page }) => {
 
   await login(page);
 
-  await page.getByRole('link', { name: /create video/i }).click();
+  await page
+    .getByRole('navigation', { name: 'Primary', exact: true })
+    .getByRole('link', { name: 'Create', exact: true })
+    .click();
   await expect(page).toHaveURL(/\/create$/);
+
+  // Wait for the routed page's fade/slide-in (AppLayout transition) to finish
+  // before touching the form: filling a controlled input mid-transition races
+  // with React's mount commit and the typed value gets reset.
+  await expect(page.getByRole('heading', { name: /add a video/i })).toBeVisible();
+  await expect(page.getByRole('main')).toHaveCSS('opacity', '1');
 
   await page.getByLabel(/prompt/i).fill('a cat surfing a neon wave');
   await page.getByRole('button', { name: '30s' }).click();
-  await page.getByRole('button', { name: /generate video/i }).click();
+  await page.getByRole('button', { name: /generate.*credits/i }).click();
 
   await expect(page).toHaveURL(/\/videos\/vid-1$/);
   await expect(page.getByText('a cat')).toBeVisible();
@@ -112,7 +121,10 @@ test('library lists videos', async ({ page }) => {
   );
 
   await login(page);
-  await page.getByRole('link', { name: /^library$/i }).click();
+  await page
+    .getByRole('navigation', { name: 'Primary', exact: true })
+    .getByRole('link', { name: 'Library', exact: true })
+    .click();
   await expect(page).toHaveURL(/\/library$/);
   await expect(page.getByText('sunset over the sea')).toBeVisible();
   await expect(page.getByText('city at night')).toBeVisible();
