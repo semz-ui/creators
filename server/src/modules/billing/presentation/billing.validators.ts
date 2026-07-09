@@ -1,7 +1,14 @@
 import { z } from 'zod';
 
+import { CREDIT_PACKS, isCreditPack } from '../domain/credit-packs';
+
 export const topUpSchema = z.object({
-  credits: z.number().int().positive(),
+  // Only the known, priced packs can be purchased (kept in sync with the
+  // frontend CREDIT_PACKS and the payment provider's price map).
+  credits: z
+    .number()
+    .int()
+    .refine(isCreditPack, { message: `credits must be one of: ${CREDIT_PACKS.join(', ')}` }),
 });
 
 export const paymentWebhookSchema = z.object({

@@ -1,5 +1,5 @@
+import type { ConnectionAccessService } from '@modules/connections/application/connection-access.service';
 import type { Platform } from '@modules/connections/domain/platform';
-import type { IConnectionRepository } from '@modules/connections/domain/ports/connection-repository';
 
 import type {
   ActiveConnection,
@@ -8,28 +8,18 @@ import type {
 
 /**
  * Implements the publishing-side {@link IConnectionTokenProvider} over the
- * Connections module's repository (which decrypts tokens). Only returns active
- * connections.
+ * Connections module's access service, so tokens handed to publishers are
+ * fresh (expiring ones get refreshed; unrefreshable connections read as
+ * inactive).
  */
 export class ConnectionTokenProviderAdapter implements IConnectionTokenProvider {
-  constructor(private readonly connections: IConnectionRepository) {}
+  constructor(private readonly connectionAccess: ConnectionAccessService) {}
 
-  async getActiveConnection(userId: string, platform: Platform): Promise<ActiveConnection | null> {
-    const connection = await this.connections.findByUserAndPlatform(userId, platform);
-    if (!connection || connection.status !== 'active') {
-      return null;
-    }
-    return { connectionId: connection.id, accessToken: connection.accessToken };
+  getActiveConnection(userId: string, platform: Platform): Promise<ActiveConnection | null> {
+    return this.connectionAccess.getFreshConnection(userId, platform);
   }
 
-  async getActiveConnectionById(
-    userId: string,
-    connectionId: string,
-  ): Promise<ActiveConnection | null> {
-    const connection = await this.connections.findById(connectionId);
-    if (!connection || connection.userId !== userId || connection.status !== 'active') {
-      return null;
-    }
-    return { connectionId: connection.id, accessToken: connection.accessToken };
+  getActiveConnectionById(userId: string, connectionId: string): Promise<ActiveConnection | null> {
+    return this.connectionAccess.getFreshConnectionById(userId, connectionId);
   }
 }

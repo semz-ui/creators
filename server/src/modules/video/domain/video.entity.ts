@@ -5,6 +5,7 @@ import type { Duration } from './value-objects/duration';
 import type { Prompt } from './value-objects/prompt';
 
 export type VideoStatus = 'queued' | 'processing' | 'ready' | 'failed';
+export type VideoSource = 'generated' | 'uploaded';
 
 const TERMINAL: ReadonlySet<VideoStatus> = new Set(['ready', 'failed']);
 
@@ -12,12 +13,18 @@ const TERMINAL: ReadonlySet<VideoStatus> = new Set(['ready', 'failed']);
 export interface VideoSnapshot {
   id: string;
   ownerId: string;
+  source: VideoSource;
+  title: string | null;
   prompt: string;
   durationSeconds: number;
   status: VideoStatus;
   jobRef: string | null;
   resultUrl: string | null;
   error: string | null;
+  /** Optional audio settings, chosen at creation and applied on completion. */
+  musicTrackId: string | null;
+  narrationText: string | null;
+  narrationVoice: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,8 +37,13 @@ export interface VideoSnapshot {
 export class Video {
   readonly id: string;
   readonly ownerId: string;
+  readonly source: VideoSource;
+  readonly title: string | null;
   readonly prompt: string;
   readonly durationSeconds: number;
+  readonly musicTrackId: string | null;
+  readonly narrationText: string | null;
+  readonly narrationVoice: string | null;
   readonly createdAt: Date;
 
   private _status: VideoStatus;
@@ -43,8 +55,13 @@ export class Video {
   private constructor(snapshot: VideoSnapshot) {
     this.id = snapshot.id;
     this.ownerId = snapshot.ownerId;
+    this.source = snapshot.source;
+    this.title = snapshot.title;
     this.prompt = snapshot.prompt;
     this.durationSeconds = snapshot.durationSeconds;
+    this.musicTrackId = snapshot.musicTrackId;
+    this.narrationText = snapshot.narrationText;
+    this.narrationVoice = snapshot.narrationVoice;
     this.createdAt = snapshot.createdAt;
     this._status = snapshot.status;
     this._jobRef = snapshot.jobRef;
@@ -69,17 +86,55 @@ export class Video {
     return this._updatedAt;
   }
 
-  static create(params: { ownerId: string; prompt: Prompt; duration: Duration }): Video {
+  static create(params: {
+    ownerId: string;
+    prompt: Prompt;
+    duration: Duration;
+    musicTrackId?: string | null;
+    narrationText?: string | null;
+    narrationVoice?: string | null;
+  }): Video {
     const now = new Date();
     return new Video({
       id: randomUUID(),
       ownerId: params.ownerId,
+      source: 'generated',
+      title: null,
       prompt: params.prompt.value,
       durationSeconds: params.duration.seconds,
       status: 'queued',
       jobRef: null,
       resultUrl: null,
       error: null,
+      musicTrackId: params.musicTrackId ?? null,
+      narrationText: params.narrationText ?? null,
+      narrationVoice: params.narrationVoice ?? null,
+      createdAt: now,
+      updatedAt: now,
+    });
+  }
+
+  static createUploaded(params: {
+    ownerId: string;
+    title: string;
+    resultUrl: string;
+    durationSeconds: number;
+  }): Video {
+    const now = new Date();
+    return new Video({
+      id: randomUUID(),
+      ownerId: params.ownerId,
+      source: 'uploaded',
+      title: params.title,
+      prompt: '',
+      durationSeconds: params.durationSeconds,
+      status: 'ready',
+      jobRef: null,
+      resultUrl: params.resultUrl,
+      error: null,
+      musicTrackId: null,
+      narrationText: null,
+      narrationVoice: null,
       createdAt: now,
       updatedAt: now,
     });
@@ -128,12 +183,17 @@ export class Video {
     return {
       id: this.id,
       ownerId: this.ownerId,
+      source: this.source,
+      title: this.title,
       prompt: this.prompt,
       durationSeconds: this.durationSeconds,
       status: this._status,
       jobRef: this._jobRef,
       resultUrl: this._resultUrl,
       error: this._error,
+      musicTrackId: this.musicTrackId,
+      narrationText: this.narrationText,
+      narrationVoice: this.narrationVoice,
       createdAt: this.createdAt,
       updatedAt: this._updatedAt,
     };
