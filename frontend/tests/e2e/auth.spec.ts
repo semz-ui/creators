@@ -40,7 +40,7 @@ test('registers and lands on the dashboard', async ({ page }) => {
   await page.getByRole('button', { name: /create account/i }).click();
 
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByRole('heading', { name: /welcome/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /turn a prompt into a video/i })).toBeVisible();
   await expect(page.getByText(user.email).first()).toBeVisible();
 });
 
@@ -53,7 +53,7 @@ test('logs in and lands on the dashboard', async ({ page }) => {
   await page.getByRole('button', { name: /^log in$/i }).click();
 
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByRole('heading', { name: /welcome/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /turn a prompt into a video/i })).toBeVisible();
 });
 
 test('protected route redirects unauthenticated users to login', async ({ page }) => {

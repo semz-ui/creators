@@ -75,6 +75,9 @@ test('shows balance + ledger and starts a top-up', async ({ page }) => {
     .first()
     .click();
   await expect(page).toHaveURL(/\/billing$/);
+  // Let the page's enter transition settle before clicking, so a re-render
+  // mid-animation doesn't detach the button under us.
+  await expect(page.getByRole('main')).toHaveCSS('opacity', '1');
 
   await expect(page.getByTestId('balance')).toHaveText('90 credits');
   await expect(page.getByText('Video generation', { exact: true })).toBeVisible();
