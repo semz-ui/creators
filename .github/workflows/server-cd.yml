@@ -56,13 +56,12 @@ jobs:
         run: |
           set -euo pipefail
           IMAGE="$REGISTRY/$ECR_REPO:latest"
-          # A short-lived ECR token is passed to the box so it needs no AWS CLI
-          # or ECR permissions of its own — only the SSM agent.
-          TOKEN=$(aws ecr get-login-password --region "$AWS_REGION")
-
+          # The box authenticates to ECR using its own instance IAM role, so no
+          # credential is ever embedded in the SSM command (which SSM persists in
+          # cleartext command history). The role needs ECR read access.
           SCRIPT=$(cat <<EOF
           set -e
-          echo "$TOKEN" | sudo docker login --username AWS --password-stdin $REGISTRY
+          aws ecr get-login-password --region $AWS_REGION | sudo docker login --username AWS --password-stdin $REGISTRY
           sudo docker pull $IMAGE
           sudo docker rm -f reelo 2>/dev/null || true
           sudo docker run -d --name reelo --restart unless-stopped -p 80:4000 --env-file /home/ec2-user/server.env $IMAGE

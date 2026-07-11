@@ -52,8 +52,9 @@ creator/
 └── nginx/      # Reverse proxy / load balancer for the Dockerized API
 ```
 
-Each app has its own path-filtered CI workflow running format → lint → typecheck → test
-(→ build/e2e).
+Each app has its own path-filtered CI workflow. All run format → lint → typecheck → test;
+the server also builds (compile + Docker image), and the frontend also builds and runs
+Playwright e2e.
 
 ## Backend (`server/`)
 
