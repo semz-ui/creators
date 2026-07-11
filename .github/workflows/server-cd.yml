@@ -1,0 +1,109 @@
+name: Server CD
+
+# Deploys the server to the EC2 instance after Server CI succeeds on main.
+# Build + push to ECR happens on the runner; the instance pulls & restarts via
+# AWS SSM (no SSH, no inbound ports, no SSH key stored in GitHub).
+on:
+  workflow_run:
+    workflows: ['Server CI']
+    types: [completed]
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: server-cd
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPO: reelo-server
+  INSTANCE_ID: i-09127e1926b37ff3e
+
+jobs:
+  deploy:
+    name: Build, push, deploy to EC2
+    runs-on: ubuntu-latest
+    # Manual runs always proceed; automatic runs only when the CI run passed.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          IMAGE="$REGISTRY/$ECR_REPO:${GITHUB_SHA}"
+          LATEST="$REGISTRY/$ECR_REPO:latest"
+          docker build -t "$IMAGE" -t "$LATEST" ./server
+          docker push "$IMAGE"
+          docker push "$LATEST"
+
+      - name: Deploy to EC2 via SSM
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          set -euo pipefail
+          IMAGE="$REGISTRY/$ECR_REPO:latest"
+          # The box authenticates to ECR using its own instance IAM role, so no
+          # credential is ever embedded in the SSM command (which SSM persists in
+          # cleartext command history). The role needs ECR read access.
+          SCRIPT=$(cat <<EOF
+          set -e
+          aws ecr get-login-password --region $AWS_REGION | sudo docker login --username AWS --password-stdin $REGISTRY
+          sudo docker pull $IMAGE
+          sudo docker rm -f reelo 2>/dev/null || true
+          sudo docker run -d --name reelo --restart unless-stopped -p 80:4000 --env-file /home/ec2-user/server.env $IMAGE
+          sudo docker image prune -f || true
+          sudo docker logout $REGISTRY || true
+          EOF
+          )
+
+          PARAMS=$(jq -n --arg s "$SCRIPT" '{commands: ($s | split("\n"))}')
+          CMD_ID=$(aws ssm send-command \
+            --region "$AWS_REGION" \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --comment "Deploy reelo-server ${GITHUB_SHA::7}" \
+            --parameters "$PARAMS" \
+            --query 'Command.CommandId' --output text)
+          echo "SSM command: $CMD_ID"
+
+          aws ssm wait command-executed \
+            --region "$AWS_REGION" --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" || true
+
+          echo "----- deploy output -----"
+          aws ssm get-command-invocation \
+            --region "$AWS_REGION" --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
+            --query '{status:Status,stdout:StandardOutputContent,stderr:StandardErrorContent}' \
+            --output json
+          STATUS=$(aws ssm get-command-invocation \
+            --region "$AWS_REGION" --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
+            --query 'Status' --output text)
+          echo "Final status: $STATUS"
+          test "$STATUS" = "Success"
+
+      - name: Smoke test /health
+        run: |
+          set -e
+          IP=$(aws ec2 describe-instances --region "$AWS_REGION" --instance-ids "$INSTANCE_ID" \
+                --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)
+          echo "Instance IP: $IP"
+          for i in $(seq 1 10); do
+            if curl -fsS -m 5 "http://$IP/health" >/dev/null; then
+              echo "✅ health OK"; curl -s "http://$IP/health"; exit 0
+            fi
+            echo "waiting for health... ($i)"; sleep 3
+          done
+          echo "❌ health check failed"; exit 1
