@@ -11,10 +11,14 @@ export function VideoCard({ video }: { video: Video }) {
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02, y: -2 }}
+      animate={hovered ? { scale: 1.02, y: -2 } : { scale: 1, y: 0 }}
       transition={{ duration: 0.15 }}
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
+      // Hover is driven by pointer *movement*, not enter: browsers fire
+      // enter/hover for content that mounts under a stationary cursor
+      // (e.g. these cards right after the login redirect), which would
+      // show the overlay on a card nobody touched.
+      onPointerMove={(e) => e.pointerType === 'mouse' && setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
     >
       <Link to={`/videos/${video.id}`} className="block focus-visible:outline-none">
         <div className="overflow-hidden rounded-xl border border-line-subtle bg-surface">
@@ -56,8 +60,7 @@ export function VideoCard({ video }: { video: Video }) {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.12 }}
-                  className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[2px]"
-                  onClick={(e) => e.preventDefault()}
+                  className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[2px]"
                 >
                   <span className="rounded-full bg-gradient-brand px-4 py-1.5 text-xs font-semibold text-white shadow-glow-sm">
                     Open

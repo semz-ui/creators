@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   BarChart2,
   CreditCard,
@@ -9,6 +9,7 @@ import {
   Send,
   Sparkles,
 } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import { useLocation, NavLink, Outlet } from 'react-router-dom';
 
 import { useSession } from '@/modules/auth/viewmodels/useSession';
@@ -38,7 +39,6 @@ const navItemVariants = {
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.18 } },
-  exit: { opacity: 0, transition: { duration: 0.1 } },
 };
 
 function initials(email: string): string {
@@ -50,6 +50,12 @@ function initials(email: string): string {
 export function AppLayout() {
   const { user, logout } = useSession();
   const location = useLocation();
+  // True only for the page shown right after login, so that first page is
+  // immediately visible; every later route change gets the fade-slide enter.
+  const isFirstPage = useRef(true);
+  useEffect(() => {
+    isFirstPage.current = false;
+  }, []);
 
   return (
     <div className="flex min-h-full">
@@ -150,21 +156,19 @@ export function AppLayout() {
           ))}
         </nav>
 
-        {/* initial={false} skips the enter animation on first mount so the page
-            is immediately visible after login. Subsequent route changes still
-            get the fade-slide transition. */}
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.main
-            key={location.pathname}
-            className="min-w-0 flex-1 px-6 py-8"
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          >
-            <Outlet />
-          </motion.main>
-        </AnimatePresence>
+        {/* Enter-only page transition. No AnimatePresence: with mode="wait",
+            a navigation landing mid-exit could drop the incoming page's enter
+            signal and leave it stuck invisible at opacity 0. A keyed remount
+            animates itself in with no dependency on the outgoing page. */}
+        <motion.main
+          key={location.pathname}
+          className="min-w-0 flex-1 px-6 py-8"
+          variants={pageVariants}
+          initial={isFirstPage.current ? false : 'initial'}
+          animate="animate"
+        >
+          <Outlet />
+        </motion.main>
       </div>
     </div>
   );

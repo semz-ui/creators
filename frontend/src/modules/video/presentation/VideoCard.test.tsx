@@ -1,4 +1,5 @@
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
+import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
 import { renderWithProviders } from '@/test/render';
@@ -35,6 +36,23 @@ describe('VideoCard', () => {
       <VideoCard video={{ ...baseVideo, status: 'processing', resultUrl: null }} />,
     );
     expect(screen.getByText('Generating')).toBeInTheDocument();
+  });
+
+  it('navigates to the video when clicked through the hover overlay', () => {
+    renderWithProviders(
+      <Routes>
+        <Route path="/" element={<VideoCard video={baseVideo} />} />
+        <Route path="/videos/vid-1" element={<div>detail probe</div>} />
+      </Routes>,
+    );
+
+    // jsdom has no PointerEvent; build one so pointerType survives.
+    const move = new MouseEvent('pointermove', { bubbles: true });
+    Object.defineProperty(move, 'pointerType', { value: 'mouse' });
+    fireEvent(screen.getByRole('link'), move);
+    fireEvent.click(screen.getByText('Open'));
+
+    expect(screen.getByText('detail probe')).toBeInTheDocument();
   });
 
   it('matches the snapshot', () => {
