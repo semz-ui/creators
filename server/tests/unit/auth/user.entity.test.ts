@@ -20,6 +20,19 @@ describe('User entity', () => {
     expect(pub).not.toHaveProperty('passwordHash');
   });
 
+  it('withNewPassword returns a copy with the new hash, leaving the original intact', () => {
+    const original = User.register(Email.create('a@b.com'), 'old-hash');
+    const updated = original.withNewPassword('new-hash');
+
+    expect(updated).not.toBe(original);
+    expect(updated.passwordHash).toBe('new-hash');
+    expect(updated.id).toBe(original.id);
+    expect(updated.email).toBe(original.email);
+    expect(updated.createdAt).toBe(original.createdAt);
+    expect(updated.updatedAt.getTime()).toBeGreaterThanOrEqual(original.updatedAt.getTime());
+    expect(original.passwordHash).toBe('old-hash');
+  });
+
   it('round-trips through a snapshot', () => {
     const original = User.register(Email.create('a@b.com'), 'hashed');
     const restored = User.fromSnapshot(original.toSnapshot());

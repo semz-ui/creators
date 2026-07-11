@@ -28,3 +28,12 @@ export interface LoginInput {
 export interface RefreshInput {
   refreshToken: string;
 }
+
+export interface RequestPasswordResetInput {
+  email: string;
+}
+
+export interface ResetPasswordInput {
+  token: string;
+  password: string;
+}

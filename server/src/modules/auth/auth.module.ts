@@ -3,6 +3,7 @@ import type { Redis } from 'ioredis';
 
 import { RedisCacheService } from '@shared/infrastructure/cache/cache-service';
 import { env } from '@shared/infrastructure/config/env';
+import { logger } from '@shared/infrastructure/logging/logger';
 import { durationToSeconds } from '@shared/utils/duration';
 
 import { GetCurrentUser } from './application/get-current-user.usecase';
@@ -10,12 +11,18 @@ import { LoginUser } from './application/login-user.usecase';
 import { LogoutAllSessions, LogoutUser } from './application/logout.usecase';
 import { RefreshTokens } from './application/refresh-tokens.usecase';
 import { RegisterUser } from './application/register-user.usecase';
+import { RequestPasswordReset } from './application/request-password-reset.usecase';
+import { ResetPassword } from './application/reset-password.usecase';
 import { SessionService } from './application/session.service';
+import type { IEmailSender } from './domain/ports/email-sender';
 import { BcryptHasher } from './infrastructure/bcrypt-hasher';
 import { CachedUserRepository } from './infrastructure/cached-user.repository';
 import { JwtTokenService } from './infrastructure/jwt-token.service';
 import { MongoUserRepository } from './infrastructure/mongo-user.repository';
+import { RedisPasswordResetTokenStore } from './infrastructure/redis-password-reset-token.store';
 import { RedisRefreshTokenStore } from './infrastructure/redis-refresh-token.store';
+import { ResendEmailSender } from './infrastructure/resend-email-sender';
+import { StubEmailSender } from './infrastructure/stub-email-sender';
 import { AuthController } from './presentation/auth.controller';
 import { createAuthGuard } from './presentation/auth.guard';
 import { createAuthRouter } from './presentation/auth.routes';
@@ -29,6 +36,16 @@ export interface AuthModuleDeps {
 export interface AuthModule {
   router: Router;
   authGuard: RequestHandler;
+}
+
+/** Real Resend sender when its API key is configured, else the logging stub. */
+function buildEmailSender(): IEmailSender {
+  if (env.RESEND_API_KEY) {
+    logger.info('Email: Resend');
+    return new ResendEmailSender({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM });
+  }
+  logger.info('Email: stub (set RESEND_API_KEY to send real email) — reset links are logged');
+  return new StubEmailSender();
 }
 
 /**
@@ -50,6 +67,8 @@ export function buildAuthModule({ redisClient, authRateLimit }: AuthModuleDeps):
     durationToSeconds(env.JWT_REFRESH_TTL),
   );
   const sessions = new SessionService(tokens, refreshStore);
+  const resetTokens = new RedisPasswordResetTokenStore(redisClient);
+  const emailSender = buildEmailSender();
 
   const controller = new AuthController({
     register: new RegisterUser(users, hasher, sessions),
@@ -58,6 +77,11 @@ export function buildAuthModule({ redisClient, authRateLimit }: AuthModuleDeps):
     logout: new LogoutUser(tokens, refreshStore),
     logoutAll: new LogoutAllSessions(refreshStore),
     getCurrentUser: new GetCurrentUser(users),
+    requestPasswordReset: new RequestPasswordReset(users, resetTokens, emailSender, {
+      ttlSeconds: env.PASSWORD_RESET_TTL,
+      resetBaseUrl: env.PASSWORD_RESET_URL,
+    }),
+    resetPassword: new ResetPassword(resetTokens, users, hasher, refreshStore),
   });
 
   const authGuard = createAuthGuard(tokens);

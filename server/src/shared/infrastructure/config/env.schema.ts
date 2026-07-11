@@ -50,6 +50,15 @@ export const envSchema = z
     JWT_ACCESS_TTL: z.string().default('15m'),
     JWT_REFRESH_TTL: z.string().default('7d'),
 
+    // Password reset — TTL (seconds) for one-time reset tokens, and the
+    // frontend page the emailed link points at (token appended as ?token=).
+    PASSWORD_RESET_TTL: z.coerce.number().int().positive().default(900),
+    PASSWORD_RESET_URL: z.string().url().default('http://localhost:3000/reset-password'),
+    // Resend — set RESEND_API_KEY to send real emails (else the stub sender
+    // logs reset links). EMAIL_FROM must be a verified sender in production.
+    RESEND_API_KEY: z.string().optional(),
+    EMAIL_FROM: z.string().default('Reelo <onboarding@resend.dev>'),
+
     // Caching (Phase 2) — default TTL in seconds for cache-aside reads.
     CACHE_DEFAULT_TTL: z.coerce.number().int().positive().default(300),
 
@@ -204,6 +213,21 @@ export const envSchema = z
           });
         }
       }
+    }
+
+    // In production with real email enabled, the reset link must be a public
+    // URL — the localhost default would email dead links to real users.
+    if (
+      env.RESEND_API_KEY &&
+      env.NODE_ENV === 'production' &&
+      /\blocalhost\b|127\.0\.0\.1/.test(env.PASSWORD_RESET_URL)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['PASSWORD_RESET_URL'],
+        message:
+          'PASSWORD_RESET_URL must be a public URL (not localhost) when Resend is enabled in production',
+      });
     }
 
     // Outside production the dev defaults are fine. In production a secret left

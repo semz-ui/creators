@@ -7,6 +7,8 @@ import type { LoginUser } from '../application/login-user.usecase';
 import type { LogoutAllSessions, LogoutUser } from '../application/logout.usecase';
 import type { RefreshTokens } from '../application/refresh-tokens.usecase';
 import type { RegisterUser } from '../application/register-user.usecase';
+import type { RequestPasswordReset } from '../application/request-password-reset.usecase';
+import type { ResetPassword } from '../application/reset-password.usecase';
 
 export interface AuthUseCases {
   register: RegisterUser;
@@ -15,6 +17,8 @@ export interface AuthUseCases {
   logout: LogoutUser;
   logoutAll: LogoutAllSessions;
   getCurrentUser: GetCurrentUser;
+  requestPasswordReset: RequestPasswordReset;
+  resetPassword: ResetPassword;
 }
 
 /** Thin HTTP adapter: maps requests to use cases and shapes the JSON response. */
@@ -34,6 +38,19 @@ export class AuthController {
   refresh = async (req: Request, res: Response): Promise<void> => {
     const tokens = await this.useCases.refresh.execute(req.body);
     res.status(200).json(tokens);
+  };
+
+  forgotPassword = async (req: Request, res: Response): Promise<void> => {
+    await this.useCases.requestPasswordReset.execute(req.body);
+    // Same response whether or not the account exists (anti-enumeration).
+    res.status(202).json({
+      message: 'If an account exists for that email, a password reset link has been sent.',
+    });
+  };
+
+  resetPassword = async (req: Request, res: Response): Promise<void> => {
+    await this.useCases.resetPassword.execute(req.body);
+    res.status(204).send();
   };
 
   logout = async (req: Request, res: Response): Promise<void> => {
