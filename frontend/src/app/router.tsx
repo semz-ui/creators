@@ -2,8 +2,10 @@ import { createBrowserRouter } from 'react-router-dom';
 
 import { AnalyticsOverviewPage } from '@/modules/analytics/presentation/AnalyticsOverviewPage';
 import { VideoAnalyticsPage } from '@/modules/analytics/presentation/VideoAnalyticsPage';
+import { ForgotPasswordPage } from '@/modules/auth/presentation/ForgotPasswordPage';
 import { LoginPage } from '@/modules/auth/presentation/LoginPage';
 import { RegisterPage } from '@/modules/auth/presentation/RegisterPage';
+import { ResetPasswordPage } from '@/modules/auth/presentation/ResetPasswordPage';
 import { RequireAuth } from '@/modules/auth/presentation/RequireAuth';
 import { BillingPage } from '@/modules/billing/presentation/BillingPage';
 import { ConnectionCallbackPage } from '@/modules/connections/presentation/ConnectionCallbackPage';
@@ -26,6 +28,8 @@ export const router = createBrowserRouter(
     { path: '/', element: <LandingPage />, errorElement: <RouteError /> },
     { path: '/signup', element: <RegisterPage /> },
     { path: '/login', element: <LoginPage /> },
+    { path: '/forgot-password', element: <ForgotPasswordPage /> },
+    { path: '/reset-password', element: <ResetPasswordPage /> },
     {
       element: (
         <RequireAuth>
