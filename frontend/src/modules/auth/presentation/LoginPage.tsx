@@ -1,4 +1,5 @@
-import { Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { Button, Input } from '@/shared/ui';
 
@@ -7,8 +8,16 @@ import { AuthFormLayout } from './AuthFormLayout';
 
 export function LoginPage() {
   const vm = useLoginViewModel();
-  // One-shot notice from a completed flow (e.g. password reset) via router state.
-  const notice = (useLocation().state as { notice?: string } | null)?.notice;
+  const location = useLocation();
+  const navigate = useNavigate();
+  // One-shot notice from a completed flow (e.g. password reset). Captured in
+  // state and then cleared from the history entry, since router state persists
+  // in history.state and would otherwise survive reloads and tab restores.
+  const [notice] = useState(() => (location.state as { notice?: string } | null)?.notice);
+
+  useEffect(() => {
+    if (notice) navigate(location.pathname, { replace: true, state: null });
+  }, [notice, navigate, location.pathname]);
 
   return (
     <AuthFormLayout
