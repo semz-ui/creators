@@ -1,6 +1,15 @@
 import { apiClient } from '@/shared/data/api-client';
 
-import type { AuthResult, AuthTokens, AuthUser, LoginInput, RegisterInput } from './auth.types';
+import type {
+  AuthResult,
+  AuthTokens,
+  AuthUser,
+  ForgotPasswordInput,
+  ForgotPasswordResult,
+  LoginInput,
+  RegisterInput,
+  ResetPasswordInput,
+} from './auth.types';
 
 const BASE = '/api/v1/auth';
 
@@ -17,6 +26,13 @@ export const authApi = {
 
   logout: (refreshToken: string) =>
     apiClient.post<void>(`${BASE}/logout`, { refreshToken }, { auth: false }),
+
+  /** Always 202 with a generic message, whether or not the account exists. */
+  forgotPassword: (input: ForgotPasswordInput) =>
+    apiClient.post<ForgotPasswordResult>(`${BASE}/forgot-password`, input, { auth: false }),
+
+  resetPassword: (input: ResetPasswordInput) =>
+    apiClient.post<void>(`${BASE}/reset-password`, input, { auth: false }),
 
   me: () => apiClient.get<AuthUser>(`${BASE}/me`),
 };
