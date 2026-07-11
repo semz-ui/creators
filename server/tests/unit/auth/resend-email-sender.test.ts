@@ -3,15 +3,15 @@ import { ResendEmailSender } from '@modules/auth/infrastructure/resend-email-sen
 const CONFIG = { apiKey: 're_test_key', from: 'Reelo <no-reply@reelo.app>' };
 const EMAIL = { to: 'a@b.com', resetUrl: 'http://localhost:3000/reset-password?token=tok-1' };
 
+// spyOn (not direct assignment) so restoreAllMocks puts the real fetch back
+// and the mock can't leak into other test files.
 function mockFetch(init: { ok?: boolean; status?: number; body?: string } = {}) {
-  const fn = jest.fn().mockResolvedValue({
+  return jest.spyOn(globalThis, 'fetch').mockResolvedValue({
     ok: init.ok ?? true,
     status: init.status ?? 200,
     statusText: 'OK',
     text: async () => init.body ?? '',
-  });
-  global.fetch = fn as unknown as typeof fetch;
-  return fn;
+  } as unknown as Response);
 }
 
 afterEach(() => jest.restoreAllMocks());
@@ -29,6 +29,7 @@ describe('ResendEmailSender', () => {
       Authorization: 'Bearer re_test_key',
       'Content-Type': 'application/json',
     });
+    expect(init.signal).toBeInstanceOf(AbortSignal);
     const body = JSON.parse(init.body as string);
     expect(body.from).toBe(CONFIG.from);
     expect(body.to).toEqual(['a@b.com']);

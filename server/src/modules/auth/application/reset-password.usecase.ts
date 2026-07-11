@@ -1,3 +1,5 @@
+import { logger } from '@shared/infrastructure/logging/logger';
+
 import { InvalidTokenError } from '../domain/auth.errors';
 import type { IPasswordHasher } from '../domain/ports/password-hasher';
 import type { IPasswordResetTokenStore } from '../domain/ports/password-reset-token-store';
@@ -32,7 +34,14 @@ export class ResetPassword {
     const passwordHash = await this.hasher.hash(password.value);
     await this.users.save(user.withNewPassword(passwordHash));
 
-    // The password changed: every existing session is now suspect.
-    await this.refreshTokens.revokeUser(userId);
+    // The password changed: every existing session is now suspect. But the
+    // reset itself already succeeded (hash saved, token consumed) — failing
+    // the request now would strand the user with a burned token, so log and
+    // let old sessions age out with the refresh TTL instead.
+    try {
+      await this.refreshTokens.revokeUser(userId);
+    } catch (err) {
+      logger.error({ err, userId }, 'Password reset: failed to revoke existing sessions');
+    }
   }
 }

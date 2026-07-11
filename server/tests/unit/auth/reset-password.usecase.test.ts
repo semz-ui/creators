@@ -6,6 +6,7 @@ import type { IRefreshTokenStore } from '@modules/auth/domain/ports/refresh-toke
 import type { IUserRepository } from '@modules/auth/domain/ports/user-repository';
 import { User } from '@modules/auth/domain/user.entity';
 import { Email } from '@modules/auth/domain/value-objects/email';
+import { logger } from '@shared/infrastructure/logging/logger';
 
 function setup() {
   const user = User.register(Email.create('a@b.com'), 'old-hash');
@@ -51,6 +52,20 @@ describe('ResetPassword', () => {
     expect(saved.id).toBe(user.id);
     expect(saved.passwordHash).toBe('NEW-HASH');
     expect(refreshTokens.revokeUser).toHaveBeenCalledWith(user.id);
+  });
+
+  it('still succeeds when session revocation fails, logging the error', async () => {
+    const { users, refreshTokens, useCase } = setup();
+    refreshTokens.revokeUser.mockRejectedValue(new Error('redis down'));
+    const errorSpy = jest.spyOn(logger, 'error').mockImplementation(() => logger);
+
+    await expect(
+      useCase.execute({ token: 'tok-1', password: 'new-password-123' }),
+    ).resolves.toBeUndefined();
+
+    expect(users.save).toHaveBeenCalledTimes(1);
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    errorSpy.mockRestore();
   });
 
   it('rejects a weak password before consuming the token', async () => {

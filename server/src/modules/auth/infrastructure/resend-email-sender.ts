@@ -8,6 +8,8 @@ export interface ResendConfig {
 }
 
 const DEFAULT_BASE_URL = 'https://api.resend.com';
+// A stalled Resend request must not hold the forgot-password handler open.
+const REQUEST_TIMEOUT_MS = 10_000;
 
 /** Sends transactional email through the Resend HTTP API. */
 export class ResendEmailSender implements IEmailSender {
@@ -16,6 +18,7 @@ export class ResendEmailSender implements IEmailSender {
   async sendPasswordResetEmail({ to, resetUrl }: PasswordResetEmail): Promise<void> {
     const res = await fetch(`${this.config.baseUrl ?? DEFAULT_BASE_URL}/emails`, {
       method: 'POST',
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       headers: {
         Authorization: `Bearer ${this.config.apiKey}`,
         'Content-Type': 'application/json',

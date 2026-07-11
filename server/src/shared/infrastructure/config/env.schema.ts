@@ -230,6 +230,22 @@ export const envSchema = z
       });
     }
 
+    // Likewise the sender: resend.dev is Resend's sandbox domain and only
+    // delivers to the account owner. Left at the default, real users would get
+    // a 202 but never an email (the send failure is deliberately swallowed).
+    if (
+      env.RESEND_API_KEY &&
+      env.NODE_ENV === 'production' &&
+      /\bresend\.dev\b/.test(env.EMAIL_FROM)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['EMAIL_FROM'],
+        message:
+          'EMAIL_FROM must use a domain verified in Resend (not the resend.dev sandbox) when Resend is enabled in production',
+      });
+    }
+
     // Outside production the dev defaults are fine. In production a secret left
     // at its publicly-known default is a misconfiguration — fail fast.
     if (env.NODE_ENV !== 'production') return;
