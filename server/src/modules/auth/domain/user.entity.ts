@@ -42,6 +42,11 @@ export class User {
     );
   }
 
+  /** Copy of this user with a replaced (already-hashed) password. */
+  withNewPassword(passwordHash: string): User {
+    return new User(this.id, this.email, passwordHash, this.createdAt, new Date());
+  }
+
   toSnapshot(): UserSnapshot {
     return {
       id: this.id,

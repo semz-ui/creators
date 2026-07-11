@@ -151,6 +151,41 @@ describe('envSchema', () => {
     expect(result.success).toBe(true);
   });
 
+  it('rejects the localhost reset URL and sandbox sender in production with Resend', () => {
+    const result = envSchema.safeParse({
+      ...validInput,
+      NODE_ENV: 'production',
+      RESEND_API_KEY: 're_live_x',
+      // PASSWORD_RESET_URL / EMAIL_FROM left at their dev defaults
+      GENERATION_CALLBACK_SECRET: 'x'.repeat(16),
+      CONNECTIONS_ENC_KEY: 'x'.repeat(16),
+      PUBLISH_SCHEDULER_SECRET: 'x'.repeat(16),
+      PAYMENT_WEBHOOK_SECRET: 'x'.repeat(16),
+    });
+    expect(result.success).toBe(false);
+    const paths = result.success ? [] : result.error.issues.map((i) => i.path.join('.'));
+    expect(paths).toEqual(expect.arrayContaining(['PASSWORD_RESET_URL', 'EMAIL_FROM']));
+  });
+
+  it('accepts a public reset URL and verified sender in production with Resend', () => {
+    const result = envSchema.safeParse({
+      ...validInput,
+      NODE_ENV: 'production',
+      RESEND_API_KEY: 're_live_x',
+      PASSWORD_RESET_URL: 'https://app.reelo.example/reset-password',
+      EMAIL_FROM: 'Reelo <no-reply@reelo.example>',
+      GENERATION_CALLBACK_SECRET: 'x'.repeat(16),
+      CONNECTIONS_ENC_KEY: 'x'.repeat(16),
+      PUBLISH_SCHEDULER_SECRET: 'x'.repeat(16),
+      PAYMENT_WEBHOOK_SECRET: 'x'.repeat(16),
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('allows the email defaults outside production or without Resend', () => {
+    expect(envSchema.safeParse({ ...validInput, RESEND_API_KEY: 're_test_x' }).success).toBe(true);
+  });
+
   it('splits CORS_ORIGINS into a trimmed array', () => {
     const result = envSchema.parse({
       ...validInput,

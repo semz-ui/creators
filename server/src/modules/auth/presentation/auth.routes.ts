@@ -4,7 +4,13 @@ import { asyncHandler } from '@shared/presentation/http/async-handler';
 import { validateBody } from '@shared/presentation/middleware/validate';
 
 import type { AuthController } from './auth.controller';
-import { loginSchema, refreshSchema, registerSchema } from './auth.validators';
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  refreshSchema,
+  registerSchema,
+  resetPasswordSchema,
+} from './auth.validators';
 
 /**
  * Builds the `/auth` router. `authGuard` protects session-scoped routes;
@@ -24,6 +30,18 @@ export function createAuthRouter(
     asyncHandler(controller.register),
   );
   router.post('/login', authRateLimit, validateBody(loginSchema), asyncHandler(controller.login));
+  router.post(
+    '/forgot-password',
+    authRateLimit,
+    validateBody(forgotPasswordSchema),
+    asyncHandler(controller.forgotPassword),
+  );
+  router.post(
+    '/reset-password',
+    authRateLimit,
+    validateBody(resetPasswordSchema),
+    asyncHandler(controller.resetPassword),
+  );
   router.post('/refresh', validateBody(refreshSchema), asyncHandler(controller.refresh));
   router.post('/logout', validateBody(refreshSchema), asyncHandler(controller.logout));
 

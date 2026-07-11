@@ -20,6 +20,8 @@ process.env.RATE_LIMIT_AUTH_MAX ??= '100000';
 // them; empty is falsy, so buildGenerator() falls back to the stub.
 process.env.KLING_ACCESS_KEY = '';
 process.env.KLING_SECRET_KEY = '';
+// Same for Resend — force the stub email sender so tests never send real email.
+process.env.RESEND_API_KEY = '';
 // Same for Stripe — force the stub payment provider so tests never hit the API.
 process.env.STRIPE_SECRET_KEY = '';
 process.env.STRIPE_WEBHOOK_SECRET = '';
