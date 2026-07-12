@@ -81,15 +81,15 @@ function formatSize(bytes: number): string {
 
 function GeneratePanel() {
   const router = useRouter();
-  const vm = useCreateVideoViewModel();
+  const createVideoViewModel = useCreateVideoViewModel();
 
   return (
     <Card className="gap-5">
       <Field
         label="Prompt"
-        value={vm.prompt}
-        onChangeText={vm.setPrompt}
-        error={vm.promptError}
+        value={createVideoViewModel.prompt}
+        onChangeText={createVideoViewModel.setPrompt}
+        error={createVideoViewModel.promptError}
         multiline
         numberOfLines={5}
         placeholder="A neon-lit city timelapse at night, cinematic, rain on the streets…"
@@ -102,8 +102,8 @@ function GeneratePanel() {
             <Chip
               key={seconds}
               label={`${seconds}s`}
-              selected={vm.durationSeconds === seconds}
-              onPress={() => vm.setDurationSeconds(seconds)}
+              selected={createVideoViewModel.durationSeconds === seconds}
+              onPress={() => createVideoViewModel.setDurationSeconds(seconds)}
             />
           ))}
         </View>
@@ -114,15 +114,15 @@ function GeneratePanel() {
         <View className="flex-row flex-wrap gap-2">
           <Chip
             label="None"
-            selected={vm.musicTrackId === ''}
-            onPress={() => vm.setMusicTrackId('')}
+            selected={createVideoViewModel.musicTrackId === ''}
+            onPress={() => createVideoViewModel.setMusicTrackId('')}
           />
           {MUSIC_TRACKS.map((track) => (
             <Chip
               key={track.id}
               label={track.label}
-              selected={vm.musicTrackId === track.id}
-              onPress={() => vm.setMusicTrackId(track.id)}
+              selected={createVideoViewModel.musicTrackId === track.id}
+              onPress={() => createVideoViewModel.setMusicTrackId(track.id)}
             />
           ))}
         </View>
@@ -130,16 +130,16 @@ function GeneratePanel() {
 
       <Field
         label="Narration (optional)"
-        value={vm.narrationText}
-        onChangeText={vm.setNarrationText}
-        error={vm.narrationError}
+        value={createVideoViewModel.narrationText}
+        onChangeText={createVideoViewModel.setNarrationText}
+        error={createVideoViewModel.narrationError}
         multiline
         numberOfLines={3}
         maxLength={NARRATION_MAX + 100}
         placeholder="What the voice-over should say…"
       />
 
-      {vm.narrationText.trim().length > 0 ? (
+      {createVideoViewModel.narrationText.trim().length > 0 ? (
         <View>
           <SectionLabel>Voice</SectionLabel>
           <View className="flex-row flex-wrap gap-2">
@@ -147,16 +147,18 @@ function GeneratePanel() {
               <Chip
                 key={voice}
                 label={voice}
-                selected={vm.narrationVoice === voice}
-                onPress={() => vm.setNarrationVoice(voice)}
+                selected={createVideoViewModel.narrationVoice === voice}
+                onPress={() => createVideoViewModel.setNarrationVoice(voice)}
               />
             ))}
           </View>
         </View>
       ) : null}
 
-      {vm.formError ? <Text className="font-sans text-sm text-danger">{vm.formError}</Text> : null}
-      {vm.outOfCredits ? (
+      {createVideoViewModel.formError ? (
+        <Text className="font-sans text-sm text-danger">{createVideoViewModel.formError}</Text>
+      ) : null}
+      {createVideoViewModel.outOfCredits ? (
         <Button
           title="Top up credits"
           variant="secondary"
@@ -165,43 +167,50 @@ function GeneratePanel() {
         />
       ) : null}
 
-      <Button title="Generate video" onPress={vm.onSubmit} loading={vm.isSubmitting} block />
+      <Button
+        title="Generate video"
+        onPress={createVideoViewModel.onSubmit}
+        loading={createVideoViewModel.isSubmitting}
+        block
+      />
     </Card>
   );
 }
 
 function UploadPanel() {
-  const vm = useUploadVideoViewModel();
+  const uploadVideoViewModel = useUploadVideoViewModel();
 
   return (
     <Card className="gap-5">
       <Field
         label="Title"
-        value={vm.title}
-        onChangeText={vm.setTitle}
-        error={vm.titleError}
+        value={uploadVideoViewModel.title}
+        onChangeText={uploadVideoViewModel.setTitle}
+        error={uploadVideoViewModel.titleError}
         placeholder="My awesome video"
       />
 
       <View className="gap-1.5">
         <SectionLabel>Video file</SectionLabel>
         <Pressable
-          onPress={vm.pickFile}
+          onPress={uploadVideoViewModel.pickFile}
           className={cn(
             'items-center justify-center rounded-xl border-2 border-dashed px-4 py-8',
-            vm.file ? 'border-success bg-success-bg' : 'border-line bg-sunken active:bg-surface',
+            uploadVideoViewModel.file
+              ? 'border-success bg-success-bg'
+              : 'border-line bg-sunken active:bg-surface',
           )}
         >
-          {vm.file ? (
+          {uploadVideoViewModel.file ? (
             <View className="items-center gap-1">
               <Ionicons name="checkmark-circle" size={24} color="#22c55e" />
               <Text className="font-sans-medium text-sm text-content" numberOfLines={1}>
-                {vm.file.fileName}
+                {uploadVideoViewModel.file.fileName}
               </Text>
               <Text className="font-sans text-xs text-content-muted">
-                {formatSize(vm.file.size)}
+                {formatSize(uploadVideoViewModel.file.size)}
               </Text>
-              <Pressable onPress={vm.clearFile} className="mt-1">
+              <Pressable onPress={uploadVideoViewModel.clearFile} className="mt-1">
                 <Text className="font-sans text-xs text-brand">Change file</Text>
               </Pressable>
             </View>
@@ -217,30 +226,37 @@ function UploadPanel() {
             </View>
           )}
         </Pressable>
-        {vm.fileError ? (
-          <Text className="font-sans text-sm text-danger">{vm.fileError}</Text>
+        {uploadVideoViewModel.fileError ? (
+          <Text className="font-sans text-sm text-danger">{uploadVideoViewModel.fileError}</Text>
         ) : null}
       </View>
 
-      {vm.progress !== null ? (
+      {uploadVideoViewModel.progress !== null ? (
         <View className="gap-1.5">
           <View className="flex-row items-center justify-between">
             <Text className="font-sans text-sm text-content-secondary">Uploading…</Text>
-            <Text className="font-sans text-xs text-content-muted">{vm.progress}%</Text>
+            <Text className="font-sans text-xs text-content-muted">
+              {uploadVideoViewModel.progress}%
+            </Text>
           </View>
           <View className="h-2 overflow-hidden rounded-full bg-sunken">
-            <View className="h-full rounded-full bg-brand" style={{ width: `${vm.progress}%` }} />
+            <View
+              className="h-full rounded-full bg-brand"
+              style={{ width: `${uploadVideoViewModel.progress}%` }}
+            />
           </View>
         </View>
       ) : null}
 
-      {vm.formError ? <Text className="font-sans text-sm text-danger">{vm.formError}</Text> : null}
+      {uploadVideoViewModel.formError ? (
+        <Text className="font-sans text-sm text-danger">{uploadVideoViewModel.formError}</Text>
+      ) : null}
 
       <Button
-        title={vm.isUploading ? 'Uploading…' : 'Upload video'}
-        onPress={vm.onSubmit}
-        loading={vm.isUploading}
-        disabled={vm.isUploading || !vm.file}
+        title={uploadVideoViewModel.isUploading ? 'Uploading…' : 'Upload video'}
+        onPress={uploadVideoViewModel.onSubmit}
+        loading={uploadVideoViewModel.isUploading}
+        disabled={uploadVideoViewModel.isUploading || !uploadVideoViewModel.file}
         block
       />
     </Card>

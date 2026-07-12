@@ -8,7 +8,7 @@ import { useLoginViewModel } from '../viewmodels/useLoginViewModel';
 import { AuthFormLayout } from './AuthFormLayout';
 
 export function LoginScreen() {
-  const vm = useLoginViewModel();
+  const loginViewModel = useLoginViewModel();
   const router = useRouter();
   const params = useLocalSearchParams<{ notice?: string }>();
   // One-shot notice from a completed flow (e.g. password reset). Captured in
@@ -36,9 +36,9 @@ export function LoginScreen() {
       {notice ? <Text className="font-sans text-sm text-success">{notice}</Text> : null}
       <Field
         label="Email"
-        value={vm.email}
-        onChangeText={vm.setEmail}
-        error={vm.fieldErrors.email}
+        value={loginViewModel.email}
+        onChangeText={loginViewModel.setEmail}
+        error={loginViewModel.fieldErrors.email}
         autoCapitalize="none"
         autoComplete="email"
         keyboardType="email-address"
@@ -46,13 +46,13 @@ export function LoginScreen() {
       />
       <Field
         label="Password"
-        value={vm.password}
-        onChangeText={vm.setPassword}
-        error={vm.fieldErrors.password}
+        value={loginViewModel.password}
+        onChangeText={loginViewModel.setPassword}
+        error={loginViewModel.fieldErrors.password}
         secureTextEntry
         autoComplete="password"
         placeholder="••••••••"
-        onSubmitEditing={vm.onSubmit}
+        onSubmitEditing={loginViewModel.onSubmit}
       />
       <Link
         href="/(auth)/forgot-password"
@@ -60,8 +60,15 @@ export function LoginScreen() {
       >
         Forgot password?
       </Link>
-      {vm.formError ? <Text className="font-sans text-sm text-danger">{vm.formError}</Text> : null}
-      <Button title="Log in" onPress={vm.onSubmit} loading={vm.isSubmitting} block />
+      {loginViewModel.formError ? (
+        <Text className="font-sans text-sm text-danger">{loginViewModel.formError}</Text>
+      ) : null}
+      <Button
+        title="Log in"
+        onPress={loginViewModel.onSubmit}
+        loading={loginViewModel.isSubmitting}
+        block
+      />
     </AuthFormLayout>
   );
 }

@@ -43,7 +43,7 @@ export function PublishScreen({ videoId }: { videoId: string }) {
   const router = useRouter();
   const video = useVideo(videoId);
   const connections = useConnections();
-  const vm = useCreatePublication(videoId);
+  const createPublicationViewModel = useCreatePublication(videoId);
 
   if (video.isPending || connections.isPending) {
     return (
@@ -97,11 +97,11 @@ export function PublishScreen({ videoId }: { videoId: string }) {
           <Text className="mb-2 font-sans-medium text-sm text-content-secondary">Platforms</Text>
           <View className="flex-row flex-wrap gap-2">
             {PLATFORMS.filter(({ id }) => activePlatforms.has(id)).map(({ id, label }) => {
-              const selected = vm.platforms.includes(id);
+              const selected = createPublicationViewModel.platforms.includes(id);
               return (
                 <Pressable
                   key={id}
-                  onPress={() => vm.togglePlatform(id)}
+                  onPress={() => createPublicationViewModel.togglePlatform(id)}
                   className={cn(
                     'rounded-full border px-4 py-2',
                     selected ? 'border-brand bg-brand' : 'border-line bg-surface active:bg-sunken',
@@ -123,8 +123,8 @@ export function PublishScreen({ videoId }: { videoId: string }) {
 
         <Field
           label="Caption (optional)"
-          value={vm.caption}
-          onChangeText={vm.setCaption}
+          value={createPublicationViewModel.caption}
+          onChangeText={createPublicationViewModel.setCaption}
           multiline
           numberOfLines={3}
           placeholder="Say something about this video…"
@@ -137,26 +137,31 @@ export function PublishScreen({ videoId }: { videoId: string }) {
               <ModeOption
                 key={id}
                 label={label}
-                selected={vm.schedule === id}
-                onPress={() => vm.setSchedule(id)}
+                selected={createPublicationViewModel.schedule === id}
+                onPress={() => createPublicationViewModel.setSchedule(id)}
               />
             ))}
           </View>
-          {vm.schedule === 'later' ? (
+          {createPublicationViewModel.schedule === 'later' ? (
             <View className="mt-3">
-              <ScheduleField value={vm.scheduledAt} onChange={vm.setScheduledAt} />
+              <ScheduleField
+                value={createPublicationViewModel.scheduledAt}
+                onChange={createPublicationViewModel.setScheduledAt}
+              />
             </View>
           ) : null}
         </View>
 
-        {vm.formError ? (
-          <Text className="font-sans text-sm text-danger">{vm.formError}</Text>
+        {createPublicationViewModel.formError ? (
+          <Text className="font-sans text-sm text-danger">
+            {createPublicationViewModel.formError}
+          </Text>
         ) : null}
 
         <Button
-          title={vm.schedule === 'later' ? 'Schedule' : 'Publish now'}
-          onPress={vm.onSubmit}
-          loading={vm.isSubmitting}
+          title={createPublicationViewModel.schedule === 'later' ? 'Schedule' : 'Publish now'}
+          onPress={createPublicationViewModel.onSubmit}
+          loading={createPublicationViewModel.isSubmitting}
           block
         />
       </Card>
