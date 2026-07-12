@@ -6,6 +6,7 @@ import { validateBody } from '@shared/presentation/middleware/validate';
 import type { AuthController } from './auth.controller';
 import {
   forgotPasswordSchema,
+  googleSignInSchema,
   loginSchema,
   refreshSchema,
   registerSchema,
@@ -30,6 +31,12 @@ export function createAuthRouter(
     asyncHandler(controller.register),
   );
   router.post('/login', authRateLimit, validateBody(loginSchema), asyncHandler(controller.login));
+  router.post(
+    '/google',
+    authRateLimit,
+    validateBody(googleSignInSchema),
+    asyncHandler(controller.signInWithGoogle),
+  );
   router.post(
     '/forgot-password',
     authRateLimit,

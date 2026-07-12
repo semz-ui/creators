@@ -107,7 +107,8 @@ export const envSchema = z
     // If set, the OAuth callback 302-redirects here (with ?status=); otherwise returns JSON.
     CONNECTIONS_REDIRECT_URL: z.string().default(''),
     // Google OAuth for the 'youtube' platform. When both are set the real
-    // Google provider is wired in; otherwise the stub is used.
+    // Google provider is wired in; otherwise the stub is used. GOOGLE_CLIENT_ID
+    // is also the accepted `aud` for Sign in with Google ID tokens.
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
     // Privacy of videos published to YouTube. Unverified Google apps are

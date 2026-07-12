@@ -29,6 +29,10 @@ export interface RefreshInput {
   refreshToken: string;
 }
 
+export interface GoogleSignInInput {
+  idToken: string;
+}
+
 export interface RequestPasswordResetInput {
   email: string;
 }

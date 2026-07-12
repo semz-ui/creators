@@ -14,15 +14,19 @@ import { RegisterUser } from './application/register-user.usecase';
 import { RequestPasswordReset } from './application/request-password-reset.usecase';
 import { ResetPassword } from './application/reset-password.usecase';
 import { SessionService } from './application/session.service';
+import { SignInWithGoogle } from './application/sign-in-with-google.usecase';
 import type { IEmailSender } from './domain/ports/email-sender';
+import type { IGoogleIdentityVerifier } from './domain/ports/google-identity-verifier';
 import { BcryptHasher } from './infrastructure/bcrypt-hasher';
 import { CachedUserRepository } from './infrastructure/cached-user.repository';
+import { GoogleIdTokenVerifier } from './infrastructure/google-id-token.verifier';
 import { JwtTokenService } from './infrastructure/jwt-token.service';
 import { MongoUserRepository } from './infrastructure/mongo-user.repository';
 import { RedisPasswordResetTokenStore } from './infrastructure/redis-password-reset-token.store';
 import { RedisRefreshTokenStore } from './infrastructure/redis-refresh-token.store';
 import { ResendEmailSender } from './infrastructure/resend-email-sender';
 import { StubEmailSender } from './infrastructure/stub-email-sender';
+import { StubGoogleIdentityVerifier } from './infrastructure/stub-google-identity.verifier';
 import { AuthController } from './presentation/auth.controller';
 import { createAuthGuard } from './presentation/auth.guard';
 import { createAuthRouter } from './presentation/auth.routes';
@@ -46,6 +50,16 @@ function buildEmailSender(): IEmailSender {
   }
   logger.info('Email: stub (set RESEND_API_KEY to send real email) — reset links are logged');
   return new StubEmailSender();
+}
+
+/** Real Google ID-token verifier when a client id is configured, else the stub. */
+function buildGoogleVerifier(): IGoogleIdentityVerifier {
+  if (env.GOOGLE_CLIENT_ID) {
+    logger.info('Google sign-in: verifying real ID tokens');
+    return new GoogleIdTokenVerifier({ clientId: env.GOOGLE_CLIENT_ID });
+  }
+  logger.info('Google sign-in: stub verifier (set GOOGLE_CLIENT_ID to verify real tokens)');
+  return new StubGoogleIdentityVerifier();
 }
 
 /**
@@ -73,6 +87,7 @@ export function buildAuthModule({ redisClient, authRateLimit }: AuthModuleDeps):
   const controller = new AuthController({
     register: new RegisterUser(users, hasher, sessions),
     login: new LoginUser(users, hasher, sessions),
+    signInWithGoogle: new SignInWithGoogle(buildGoogleVerifier(), users, sessions),
     refresh: new RefreshTokens(tokens, refreshStore, sessions),
     logout: new LogoutUser(tokens, refreshStore),
     logoutAll: new LogoutAllSessions(refreshStore),

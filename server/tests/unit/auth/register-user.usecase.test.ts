@@ -14,6 +14,7 @@ function setup() {
     save: jest.fn().mockResolvedValue(undefined),
     findById: jest.fn(),
     findByEmail: jest.fn(),
+    findByGoogleId: jest.fn().mockResolvedValue(null),
   } satisfies Record<keyof IUserRepository, jest.Mock>;
 
   const hasher = {

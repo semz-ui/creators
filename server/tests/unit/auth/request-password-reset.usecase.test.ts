@@ -12,6 +12,7 @@ const CONFIG = { ttlSeconds: 900, resetBaseUrl: 'http://localhost:3000/reset-pas
 function setup(user: User | null = User.register(Email.create('a@b.com'), 'hashed')) {
   const users = {
     findByEmail: jest.fn().mockResolvedValue(user),
+    findByGoogleId: jest.fn().mockResolvedValue(null),
     findById: jest.fn(),
     existsByEmail: jest.fn(),
     save: jest.fn(),

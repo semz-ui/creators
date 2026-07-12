@@ -14,6 +14,7 @@ function setup() {
     save: jest.fn(),
     findById: jest.fn(),
     findByEmail: jest.fn().mockResolvedValue(existing),
+    findByGoogleId: jest.fn().mockResolvedValue(null),
   } satisfies Record<keyof IUserRepository, jest.Mock>;
 
   const hasher = {
@@ -55,6 +56,16 @@ describe('LoginUser', () => {
     await expect(useCase.execute({ email: 'a@b.com', password: 'wrong-password' })).rejects.toThrow(
       InvalidCredentialsError,
     );
+  });
+
+  it('rejects a Google-only account without comparing passwords', async () => {
+    const { users, hasher, useCase } = setup();
+    users.findByEmail.mockResolvedValue(User.registerWithGoogle(Email.create('a@b.com'), 'sub-1'));
+
+    await expect(useCase.execute({ email: 'a@b.com', password: 'password123' })).rejects.toThrow(
+      InvalidCredentialsError,
+    );
+    expect(hasher.compare).not.toHaveBeenCalled();
   });
 
   it('treats a malformed email as invalid credentials (no enumeration)', async () => {

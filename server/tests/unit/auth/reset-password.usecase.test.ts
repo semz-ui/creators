@@ -19,6 +19,7 @@ function setup() {
   const users = {
     findById: jest.fn().mockResolvedValue(user),
     findByEmail: jest.fn(),
+    findByGoogleId: jest.fn().mockResolvedValue(null),
     existsByEmail: jest.fn(),
     save: jest.fn().mockResolvedValue(undefined),
   } satisfies Record<keyof IUserRepository, jest.Mock>;
@@ -41,6 +42,18 @@ function setup() {
 }
 
 describe('ResetPassword', () => {
+  it('lets a Google-only user set a password, preserving the Google link', async () => {
+    const { users, useCase } = setup();
+    const googleUser = User.registerWithGoogle(Email.create('g@user.com'), 'sub-1');
+    users.findById.mockResolvedValue(googleUser);
+
+    await useCase.execute({ token: 'tok-1', password: 'new-password-123' });
+
+    const saved = users.save.mock.calls[0][0] as User;
+    expect(saved.passwordHash).toBe('NEW-HASH');
+    expect(saved.googleId).toBe('sub-1');
+  });
+
   it('consumes the token, saves the new hash, and revokes all sessions', async () => {
     const { user, resetTokens, users, hasher, refreshTokens, useCase } = setup();
 

@@ -9,10 +9,12 @@ import type { RefreshTokens } from '../application/refresh-tokens.usecase';
 import type { RegisterUser } from '../application/register-user.usecase';
 import type { RequestPasswordReset } from '../application/request-password-reset.usecase';
 import type { ResetPassword } from '../application/reset-password.usecase';
+import type { SignInWithGoogle } from '../application/sign-in-with-google.usecase';
 
 export interface AuthUseCases {
   register: RegisterUser;
   login: LoginUser;
+  signInWithGoogle: SignInWithGoogle;
   refresh: RefreshTokens;
   logout: LogoutUser;
   logoutAll: LogoutAllSessions;
@@ -32,6 +34,11 @@ export class AuthController {
 
   login = async (req: Request, res: Response): Promise<void> => {
     const result = await this.useCases.login.execute(req.body);
+    res.status(200).json(result);
+  };
+
+  signInWithGoogle = async (req: Request, res: Response): Promise<void> => {
+    const result = await this.useCases.signInWithGoogle.execute(req.body);
     res.status(200).json(result);
   };
 

@@ -5,6 +5,7 @@ import type { User } from '../user.entity';
 export interface IUserRepository {
   findById(id: string): Promise<User | null>;
   findByEmail(email: Email): Promise<User | null>;
+  findByGoogleId(googleId: string): Promise<User | null>;
   existsByEmail(email: Email): Promise<boolean>;
   save(user: User): Promise<void>;
 }
