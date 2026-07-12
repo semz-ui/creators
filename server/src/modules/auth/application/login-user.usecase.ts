@@ -28,6 +28,12 @@ export class LoginUser {
       throw new InvalidCredentialsError();
     }
 
+    // Google-only accounts have no password; indistinguishable from a wrong
+    // password to avoid leaking how the account was created.
+    if (user.passwordHash === null) {
+      throw new InvalidCredentialsError();
+    }
+
     const passwordMatches = await this.hasher.compare(input.password, user.passwordHash);
     if (!passwordMatches) {
       throw new InvalidCredentialsError();

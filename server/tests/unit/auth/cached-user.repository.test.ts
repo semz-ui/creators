@@ -13,6 +13,7 @@ function setup() {
   const inner = {
     findById: jest.fn().mockResolvedValue(user),
     findByEmail: jest.fn().mockResolvedValue(user),
+    findByGoogleId: jest.fn().mockResolvedValue(null),
     existsByEmail: jest.fn().mockResolvedValue(true),
     save: jest.fn().mockResolvedValue(undefined),
   } satisfies Record<keyof IUserRepository, jest.Mock>;
@@ -87,5 +88,31 @@ describe('CachedUserRepository', () => {
     expect(inner.findByEmail).toHaveBeenCalled();
     expect(inner.existsByEmail).toHaveBeenCalled();
     expect(cache.get).not.toHaveBeenCalled();
+  });
+
+  it('delegates findByGoogleId uncached', async () => {
+    const { inner, cache, repo } = setup();
+
+    await repo.findByGoogleId('sub-1');
+
+    expect(inner.findByGoogleId).toHaveBeenCalledWith('sub-1');
+    expect(cache.get).not.toHaveBeenCalled();
+  });
+
+  it('round-trips a Google-only user (null password) through the cache record', async () => {
+    const { inner, cache, repo } = setup();
+    const googleUser = User.registerWithGoogle(Email.create('g@user.com'), 'sub-1');
+    inner.findById.mockResolvedValue(googleUser);
+
+    await repo.findById(googleUser.id);
+    const cachedRecord = cache.set.mock.calls[0][1];
+    cache.get.mockResolvedValue(cachedRecord);
+    inner.findById.mockClear();
+
+    const fromCache = await repo.findById(googleUser.id);
+
+    expect(inner.findById).not.toHaveBeenCalled();
+    expect(fromCache?.passwordHash).toBeNull();
+    expect(fromCache?.googleId).toBe('sub-1');
   });
 });

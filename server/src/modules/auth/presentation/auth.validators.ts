@@ -14,6 +14,10 @@ export const refreshSchema = z.object({
   refreshToken: z.string().min(1),
 });
 
+export const googleSignInSchema = z.object({
+  idToken: z.string().min(1),
+});
+
 export const forgotPasswordSchema = z.object({
   email: z.string().email(),
 });
@@ -26,5 +30,6 @@ export const resetPasswordSchema = z.object({
 export type RegisterBody = z.infer<typeof registerSchema>;
 export type LoginBody = z.infer<typeof loginSchema>;
 export type RefreshBody = z.infer<typeof refreshSchema>;
+export type GoogleSignInBody = z.infer<typeof googleSignInSchema>;
 export type ForgotPasswordBody = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordBody = z.infer<typeof resetPasswordSchema>;

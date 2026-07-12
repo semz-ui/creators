@@ -21,6 +21,13 @@ export class InvalidTokenError extends UnauthorizedError {
   }
 }
 
+/** Raised when a Google ID token's email is not verified by Google. */
+export class GoogleEmailNotVerifiedError extends UnauthorizedError {
+  constructor() {
+    super('Google account email is not verified');
+  }
+}
+
 /** Raised by the Email value object on a malformed address. */
 export class InvalidEmailError extends ValidationError {
   constructor() {

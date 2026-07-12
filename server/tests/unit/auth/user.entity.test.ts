@@ -33,10 +33,39 @@ describe('User entity', () => {
     expect(original.passwordHash).toBe('old-hash');
   });
 
+  it('registerWithGoogle creates a password-less user linked to the Google id', () => {
+    const user = User.registerWithGoogle(Email.create('g@user.com'), 'sub-1');
+
+    expect(user.id).toMatch(/^[0-9a-f-]{36}$/);
+    expect(user.email).toBe('g@user.com');
+    expect(user.passwordHash).toBeNull();
+    expect(user.googleId).toBe('sub-1');
+  });
+
+  it('withGoogleId links a copy, preserving id and password hash', () => {
+    const original = User.register(Email.create('a@b.com'), 'hashed');
+    const linked = original.withGoogleId('sub-1');
+
+    expect(linked).not.toBe(original);
+    expect(linked.googleId).toBe('sub-1');
+    expect(linked.id).toBe(original.id);
+    expect(linked.passwordHash).toBe('hashed');
+    expect(linked.updatedAt.getTime()).toBeGreaterThanOrEqual(original.updatedAt.getTime());
+    expect(original.googleId).toBeNull();
+  });
+
   it('round-trips through a snapshot', () => {
     const original = User.register(Email.create('a@b.com'), 'hashed');
     const restored = User.fromSnapshot(original.toSnapshot());
 
     expect(restored.toSnapshot()).toEqual(original.toSnapshot());
+  });
+
+  it('round-trips a Google-only user (null password) through a snapshot', () => {
+    const original = User.registerWithGoogle(Email.create('g@user.com'), 'sub-1');
+    const restored = User.fromSnapshot(original.toSnapshot());
+
+    expect(restored.toSnapshot()).toEqual(original.toSnapshot());
+    expect(restored.passwordHash).toBeNull();
   });
 });

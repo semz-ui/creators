@@ -11,7 +11,8 @@ const USER_NAMESPACE = 'user';
 interface UserCacheRecord {
   id: string;
   email: string;
-  passwordHash: string;
+  passwordHash: string | null;
+  googleId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -22,6 +23,7 @@ function serialize(user: User): UserCacheRecord {
     id: s.id,
     email: s.email,
     passwordHash: s.passwordHash,
+    googleId: s.googleId,
     createdAt: s.createdAt.toISOString(),
     updatedAt: s.updatedAt.toISOString(),
   };
@@ -31,7 +33,8 @@ function deserialize(record: UserCacheRecord): User {
   return User.fromSnapshot({
     id: record.id,
     email: record.email,
-    passwordHash: record.passwordHash,
+    passwordHash: record.passwordHash ?? null,
+    googleId: record.googleId ?? null,
     createdAt: new Date(record.createdAt),
     updatedAt: new Date(record.updatedAt),
   });
@@ -71,6 +74,10 @@ export class CachedUserRepository implements IUserRepository {
 
   findByEmail(email: Email): Promise<User | null> {
     return this.inner.findByEmail(email);
+  }
+
+  findByGoogleId(googleId: string): Promise<User | null> {
+    return this.inner.findByGoogleId(googleId);
   }
 
   existsByEmail(email: Email): Promise<boolean> {
