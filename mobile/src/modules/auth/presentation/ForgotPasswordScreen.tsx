@@ -7,7 +7,7 @@ import { useForgotPasswordViewModel } from '../viewmodels/useForgotPasswordViewM
 import { AuthFormLayout } from './AuthFormLayout';
 
 export function ForgotPasswordScreen() {
-  const vm = useForgotPasswordViewModel();
+  const forgotPasswordViewModel = useForgotPasswordViewModel();
 
   return (
     <AuthFormLayout
@@ -22,9 +22,11 @@ export function ForgotPasswordScreen() {
         </Text>
       }
     >
-      {vm.isSubmitted ? (
+      {forgotPasswordViewModel.isSubmitted ? (
         <View className="gap-4">
-          <Text className="font-sans text-sm text-content-secondary">{vm.successMessage}</Text>
+          <Text className="font-sans text-sm text-content-secondary">
+            {forgotPasswordViewModel.successMessage}
+          </Text>
           <Link href="/(auth)/login" className="font-sans-semibold text-sm text-content-brand">
             Back to log in
           </Link>
@@ -33,19 +35,26 @@ export function ForgotPasswordScreen() {
         <>
           <Field
             label="Email"
-            value={vm.email}
-            onChangeText={vm.setEmail}
-            error={vm.fieldErrors.email}
+            value={forgotPasswordViewModel.email}
+            onChangeText={forgotPasswordViewModel.setEmail}
+            error={forgotPasswordViewModel.fieldErrors.email}
             autoCapitalize="none"
             autoComplete="email"
             keyboardType="email-address"
             placeholder="you@example.com"
-            onSubmitEditing={vm.onSubmit}
+            onSubmitEditing={forgotPasswordViewModel.onSubmit}
           />
-          {vm.formError ? (
-            <Text className="font-sans text-sm text-danger">{vm.formError}</Text>
+          {forgotPasswordViewModel.formError ? (
+            <Text className="font-sans text-sm text-danger">
+              {forgotPasswordViewModel.formError}
+            </Text>
           ) : null}
-          <Button title="Send reset link" onPress={vm.onSubmit} loading={vm.isSubmitting} block />
+          <Button
+            title="Send reset link"
+            onPress={forgotPasswordViewModel.onSubmit}
+            loading={forgotPasswordViewModel.isSubmitting}
+            block
+          />
         </>
       )}
     </AuthFormLayout>
