@@ -6,7 +6,7 @@ import { useRegisterViewModel } from '../viewmodels/useRegisterViewModel';
 import { AuthFormLayout } from './AuthFormLayout';
 
 export function RegisterPage() {
-  const vm = useRegisterViewModel();
+  const registerViewModel = useRegisterViewModel();
 
   return (
     <AuthFormLayout
@@ -21,26 +21,28 @@ export function RegisterPage() {
         </>
       }
     >
-      <form className="flex flex-col gap-4" onSubmit={vm.onSubmit} noValidate>
+      <form className="flex flex-col gap-4" onSubmit={registerViewModel.onSubmit} noValidate>
         <Input
           label="Email"
           type="email"
           autoComplete="email"
-          value={vm.email}
-          onChange={(e) => vm.setEmail(e.target.value)}
-          error={vm.fieldErrors.email}
+          value={registerViewModel.email}
+          onChange={(e) => registerViewModel.setEmail(e.target.value)}
+          error={registerViewModel.fieldErrors.email}
         />
         <Input
           label="Password"
           type="password"
           autoComplete="new-password"
-          value={vm.password}
-          onChange={(e) => vm.setPassword(e.target.value)}
-          error={vm.fieldErrors.password}
+          value={registerViewModel.password}
+          onChange={(e) => registerViewModel.setPassword(e.target.value)}
+          error={registerViewModel.fieldErrors.password}
         />
-        {vm.formError && <p className="text-sm text-danger">{vm.formError}</p>}
-        <Button type="submit" size="lg" disabled={vm.isSubmitting}>
-          {vm.isSubmitting ? 'Creating account…' : 'Create account'}
+        {registerViewModel.formError && (
+          <p className="text-sm text-danger">{registerViewModel.formError}</p>
+        )}
+        <Button type="submit" size="lg" disabled={registerViewModel.isSubmitting}>
+          {registerViewModel.isSubmitting ? 'Creating account…' : 'Create account'}
         </Button>
       </form>
     </AuthFormLayout>

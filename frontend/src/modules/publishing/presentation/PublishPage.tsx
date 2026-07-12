@@ -16,7 +16,7 @@ export function PublishPage() {
   const { id = '' } = useParams();
   const { data: video, isPending: videoPending } = useVideo(id);
   const { data: connections, isPending: connectionsPending } = useConnections();
-  const vm = useCreatePublication(id);
+  const createPublicationViewModel = useCreatePublication(id);
 
   if (videoPending || connectionsPending) {
     return (
@@ -55,7 +55,11 @@ export function PublishPage() {
         </Card>
       ) : (
         <Card className="mt-6">
-          <form className="flex flex-col gap-5" onSubmit={vm.onSubmit} noValidate>
+          <form
+            className="flex flex-col gap-5"
+            onSubmit={createPublicationViewModel.onSubmit}
+            noValidate
+          >
             <div className="flex flex-col gap-1.5">
               <span className="text-sm font-medium text-content-secondary">Platforms</span>
               <div className="flex flex-wrap gap-2">
@@ -63,11 +67,11 @@ export function PublishPage() {
                   <button
                     key={platform}
                     type="button"
-                    aria-pressed={vm.platforms.includes(platform)}
-                    onClick={() => vm.togglePlatform(platform)}
+                    aria-pressed={createPublicationViewModel.platforms.includes(platform)}
+                    onClick={() => createPublicationViewModel.togglePlatform(platform)}
                     className={cn(
                       'h-10 rounded-lg border px-4 text-sm font-medium transition-colors',
-                      vm.platforms.includes(platform)
+                      createPublicationViewModel.platforms.includes(platform)
                         ? 'border-brand bg-brand text-content-inverse'
                         : 'border-line bg-surface text-content hover:bg-sunken',
                     )}
@@ -80,8 +84,8 @@ export function PublishPage() {
 
             <Textarea
               label="Caption (optional)"
-              value={vm.caption}
-              onChange={(e) => vm.setCaption(e.target.value)}
+              value={createPublicationViewModel.caption}
+              onChange={(e) => createPublicationViewModel.setCaption(e.target.value)}
               rows={3}
             />
 
@@ -92,8 +96,8 @@ export function PublishPage() {
                   <input
                     type="radio"
                     name="schedule"
-                    checked={vm.schedule === 'now'}
-                    onChange={() => vm.setSchedule('now')}
+                    checked={createPublicationViewModel.schedule === 'now'}
+                    onChange={() => createPublicationViewModel.setSchedule('now')}
                   />
                   Publish now
                 </label>
@@ -101,29 +105,31 @@ export function PublishPage() {
                   <input
                     type="radio"
                     name="schedule"
-                    checked={vm.schedule === 'later'}
-                    onChange={() => vm.setSchedule('later')}
+                    checked={createPublicationViewModel.schedule === 'later'}
+                    onChange={() => createPublicationViewModel.setSchedule('later')}
                   />
                   Schedule
                 </label>
               </div>
-              {vm.schedule === 'later' && (
+              {createPublicationViewModel.schedule === 'later' && (
                 <input
                   type="datetime-local"
                   aria-label="Schedule date and time"
-                  value={vm.scheduledAt}
-                  onChange={(e) => vm.setScheduledAt(e.target.value)}
+                  value={createPublicationViewModel.scheduledAt}
+                  onChange={(e) => createPublicationViewModel.setScheduledAt(e.target.value)}
                   className="h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm text-content"
                 />
               )}
             </div>
 
-            {vm.formError && <p className="text-sm text-danger">{vm.formError}</p>}
+            {createPublicationViewModel.formError && (
+              <p className="text-sm text-danger">{createPublicationViewModel.formError}</p>
+            )}
 
-            <Button type="submit" size="lg" disabled={vm.isSubmitting}>
-              {vm.isSubmitting
+            <Button type="submit" size="lg" disabled={createPublicationViewModel.isSubmitting}>
+              {createPublicationViewModel.isSubmitting
                 ? 'Submitting…'
-                : vm.schedule === 'later'
+                : createPublicationViewModel.schedule === 'later'
                   ? 'Schedule'
                   : 'Publish now'}
             </Button>

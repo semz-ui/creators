@@ -7,7 +7,7 @@ import { useLoginViewModel } from '../viewmodels/useLoginViewModel';
 import { AuthFormLayout } from './AuthFormLayout';
 
 export function LoginPage() {
-  const vm = useLoginViewModel();
+  const loginViewModel = useLoginViewModel();
   const location = useLocation();
   const navigate = useNavigate();
   // One-shot notice from a completed flow (e.g. password reset). Captured in
@@ -32,30 +32,32 @@ export function LoginPage() {
         </>
       }
     >
-      <form className="flex flex-col gap-4" onSubmit={vm.onSubmit} noValidate>
+      <form className="flex flex-col gap-4" onSubmit={loginViewModel.onSubmit} noValidate>
         {notice && <p className="text-sm text-success">{notice}</p>}
         <Input
           label="Email"
           type="email"
           autoComplete="email"
-          value={vm.email}
-          onChange={(e) => vm.setEmail(e.target.value)}
-          error={vm.fieldErrors.email}
+          value={loginViewModel.email}
+          onChange={(e) => loginViewModel.setEmail(e.target.value)}
+          error={loginViewModel.fieldErrors.email}
         />
         <Input
           label="Password"
           type="password"
           autoComplete="current-password"
-          value={vm.password}
-          onChange={(e) => vm.setPassword(e.target.value)}
-          error={vm.fieldErrors.password}
+          value={loginViewModel.password}
+          onChange={(e) => loginViewModel.setPassword(e.target.value)}
+          error={loginViewModel.fieldErrors.password}
         />
         <Link to="/forgot-password" className="self-end text-sm text-brand hover:underline">
           Forgot password?
         </Link>
-        {vm.formError && <p className="text-sm text-danger">{vm.formError}</p>}
-        <Button type="submit" size="lg" disabled={vm.isSubmitting}>
-          {vm.isSubmitting ? 'Logging in…' : 'Log in'}
+        {loginViewModel.formError && (
+          <p className="text-sm text-danger">{loginViewModel.formError}</p>
+        )}
+        <Button type="submit" size="lg" disabled={loginViewModel.isSubmitting}>
+          {loginViewModel.isSubmitting ? 'Logging in…' : 'Log in'}
         </Button>
       </form>
     </AuthFormLayout>
