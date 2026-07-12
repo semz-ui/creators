@@ -7,7 +7,7 @@ import { useResetPasswordViewModel } from '../viewmodels/useResetPasswordViewMod
 import { AuthFormLayout } from './AuthFormLayout';
 
 export function ResetPasswordScreen() {
-  const vm = useResetPasswordViewModel();
+  const resetPasswordViewModel = useResetPasswordViewModel();
 
   return (
     <AuthFormLayout
@@ -22,7 +22,7 @@ export function ResetPasswordScreen() {
         </Text>
       }
     >
-      {vm.isTokenMissing ? (
+      {resetPasswordViewModel.isTokenMissing ? (
         <View className="gap-4">
           <Text className="font-sans text-sm text-danger">
             This reset link is invalid or incomplete.
@@ -38,18 +38,20 @@ export function ResetPasswordScreen() {
         <>
           <Field
             label="New password"
-            value={vm.password}
-            onChangeText={vm.setPassword}
-            error={vm.fieldErrors.password}
+            value={resetPasswordViewModel.password}
+            onChangeText={resetPasswordViewModel.setPassword}
+            error={resetPasswordViewModel.fieldErrors.password}
             secureTextEntry
             autoComplete="new-password"
             placeholder="••••••••"
-            onSubmitEditing={vm.onSubmit}
+            onSubmitEditing={resetPasswordViewModel.onSubmit}
           />
-          {vm.formError ? (
+          {resetPasswordViewModel.formError ? (
             <View className="gap-1">
-              <Text className="font-sans text-sm text-danger">{vm.formError}</Text>
-              {vm.isTokenError ? (
+              <Text className="font-sans text-sm text-danger">
+                {resetPasswordViewModel.formError}
+              </Text>
+              {resetPasswordViewModel.isTokenError ? (
                 <Link
                   href="/(auth)/forgot-password"
                   className="font-sans-semibold text-sm text-content-brand"
@@ -59,7 +61,12 @@ export function ResetPasswordScreen() {
               ) : null}
             </View>
           ) : null}
-          <Button title="Reset password" onPress={vm.onSubmit} loading={vm.isSubmitting} block />
+          <Button
+            title="Reset password"
+            onPress={resetPasswordViewModel.onSubmit}
+            loading={resetPasswordViewModel.isSubmitting}
+            block
+          />
         </>
       )}
     </AuthFormLayout>

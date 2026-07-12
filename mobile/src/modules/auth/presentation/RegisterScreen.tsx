@@ -7,7 +7,7 @@ import { useRegisterViewModel } from '../viewmodels/useRegisterViewModel';
 import { AuthFormLayout } from './AuthFormLayout';
 
 export function RegisterScreen() {
-  const vm = useRegisterViewModel();
+  const registerViewModel = useRegisterViewModel();
 
   return (
     <AuthFormLayout
@@ -24,9 +24,9 @@ export function RegisterScreen() {
     >
       <Field
         label="Email"
-        value={vm.email}
-        onChangeText={vm.setEmail}
-        error={vm.fieldErrors.email}
+        value={registerViewModel.email}
+        onChangeText={registerViewModel.setEmail}
+        error={registerViewModel.fieldErrors.email}
         autoCapitalize="none"
         autoComplete="email"
         keyboardType="email-address"
@@ -34,16 +34,23 @@ export function RegisterScreen() {
       />
       <Field
         label="Password"
-        value={vm.password}
-        onChangeText={vm.setPassword}
-        error={vm.fieldErrors.password}
+        value={registerViewModel.password}
+        onChangeText={registerViewModel.setPassword}
+        error={registerViewModel.fieldErrors.password}
         secureTextEntry
         autoComplete="new-password"
         placeholder="At least 8 characters"
-        onSubmitEditing={vm.onSubmit}
+        onSubmitEditing={registerViewModel.onSubmit}
       />
-      {vm.formError ? <Text className="font-sans text-sm text-danger">{vm.formError}</Text> : null}
-      <Button title="Sign up" onPress={vm.onSubmit} loading={vm.isSubmitting} block />
+      {registerViewModel.formError ? (
+        <Text className="font-sans text-sm text-danger">{registerViewModel.formError}</Text>
+      ) : null}
+      <Button
+        title="Sign up"
+        onPress={registerViewModel.onSubmit}
+        loading={registerViewModel.isSubmitting}
+        block
+      />
     </AuthFormLayout>
   );
 }
