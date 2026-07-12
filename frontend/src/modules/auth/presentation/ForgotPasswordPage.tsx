@@ -6,7 +6,7 @@ import { useForgotPasswordViewModel } from '../viewmodels/useForgotPasswordViewM
 import { AuthFormLayout } from './AuthFormLayout';
 
 export function ForgotPasswordPage() {
-  const vm = useForgotPasswordViewModel();
+  const forgotPasswordViewModel = useForgotPasswordViewModel();
 
   return (
     <AuthFormLayout
@@ -21,26 +21,32 @@ export function ForgotPasswordPage() {
         </>
       }
     >
-      {vm.isSubmitted ? (
+      {forgotPasswordViewModel.isSubmitted ? (
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-content-secondary">{vm.successMessage}</p>
+          <p className="text-sm text-content-secondary">{forgotPasswordViewModel.successMessage}</p>
           <Link to="/login" className="text-sm text-brand hover:underline">
             Back to log in
           </Link>
         </div>
       ) : (
-        <form className="flex flex-col gap-4" onSubmit={vm.onSubmit} noValidate>
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={forgotPasswordViewModel.onSubmit}
+          noValidate
+        >
           <Input
             label="Email"
             type="email"
             autoComplete="email"
-            value={vm.email}
-            onChange={(e) => vm.setEmail(e.target.value)}
-            error={vm.fieldErrors.email}
+            value={forgotPasswordViewModel.email}
+            onChange={(e) => forgotPasswordViewModel.setEmail(e.target.value)}
+            error={forgotPasswordViewModel.fieldErrors.email}
           />
-          {vm.formError && <p className="text-sm text-danger">{vm.formError}</p>}
-          <Button type="submit" size="lg" disabled={vm.isSubmitting}>
-            {vm.isSubmitting ? 'Sending…' : 'Send reset link'}
+          {forgotPasswordViewModel.formError && (
+            <p className="text-sm text-danger">{forgotPasswordViewModel.formError}</p>
+          )}
+          <Button type="submit" size="lg" disabled={forgotPasswordViewModel.isSubmitting}>
+            {forgotPasswordViewModel.isSubmitting ? 'Sending…' : 'Send reset link'}
           </Button>
         </form>
       )}

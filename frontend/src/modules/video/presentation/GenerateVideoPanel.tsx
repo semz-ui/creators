@@ -10,17 +10,17 @@ const SELECT_CLASS =
   'h-10 rounded-lg border border-line bg-surface-raised px-3 text-sm text-content transition-all focus-visible:outline-none focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/50';
 
 export function GenerateVideoPanel() {
-  const vm = useCreateVideoViewModel();
+  const createVideoViewModel = useCreateVideoViewModel();
 
   return (
     <Card className="mt-6">
-      <form className="flex flex-col gap-5" onSubmit={vm.onSubmit} noValidate>
+      <form className="flex flex-col gap-5" onSubmit={createVideoViewModel.onSubmit} noValidate>
         <Textarea
           label="Prompt"
           placeholder="A neon city skyline at night, cinematic drone shot…"
-          value={vm.prompt}
-          onChange={(e) => vm.setPrompt(e.target.value)}
-          error={vm.promptError}
+          value={createVideoViewModel.prompt}
+          onChange={(e) => createVideoViewModel.setPrompt(e.target.value)}
+          error={createVideoViewModel.promptError}
           rows={5}
         />
 
@@ -31,13 +31,13 @@ export function GenerateVideoPanel() {
               <motion.button
                 key={seconds}
                 type="button"
-                aria-pressed={vm.durationSeconds === seconds}
-                onClick={() => vm.setDurationSeconds(seconds)}
+                aria-pressed={createVideoViewModel.durationSeconds === seconds}
+                onClick={() => createVideoViewModel.setDurationSeconds(seconds)}
                 whileTap={{ scale: 0.94 }}
                 transition={{ duration: 0.1 }}
                 className={cn(
                   'h-10 flex-1 rounded-lg border text-sm font-medium transition-all duration-150',
-                  vm.durationSeconds === seconds
+                  createVideoViewModel.durationSeconds === seconds
                     ? 'border-brand/40 bg-gradient-brand text-white shadow-glow-sm'
                     : 'border-line bg-surface-raised text-content hover:border-brand/30 hover:bg-surface',
                 )}
@@ -55,8 +55,8 @@ export function GenerateVideoPanel() {
           <select
             id="music"
             className={SELECT_CLASS}
-            value={vm.musicTrackId}
-            onChange={(e) => vm.setMusicTrackId(e.target.value)}
+            value={createVideoViewModel.musicTrackId}
+            onChange={(e) => createVideoViewModel.setMusicTrackId(e.target.value)}
           >
             <option value="">None</option>
             {MUSIC_TRACKS.map((track) => (
@@ -71,12 +71,12 @@ export function GenerateVideoPanel() {
           <Textarea
             label="Narration (optional)"
             placeholder="Words to speak over the video…"
-            value={vm.narrationText}
-            onChange={(e) => vm.setNarrationText(e.target.value)}
-            error={vm.narrationError}
+            value={createVideoViewModel.narrationText}
+            onChange={(e) => createVideoViewModel.setNarrationText(e.target.value)}
+            error={createVideoViewModel.narrationError}
             rows={3}
           />
-          {vm.narrationText.trim() && (
+          {createVideoViewModel.narrationText.trim() && (
             <div className="flex items-center gap-2">
               <label htmlFor="voice" className="text-sm text-content-secondary">
                 Voice
@@ -84,8 +84,8 @@ export function GenerateVideoPanel() {
               <select
                 id="voice"
                 className={SELECT_CLASS}
-                value={vm.narrationVoice}
-                onChange={(e) => vm.setNarrationVoice(e.target.value as Voice)}
+                value={createVideoViewModel.narrationVoice}
+                onChange={(e) => createVideoViewModel.setNarrationVoice(e.target.value as Voice)}
               >
                 {VOICES.map((voice) => (
                   <option key={voice} value={voice}>
@@ -97,10 +97,12 @@ export function GenerateVideoPanel() {
           )}
         </div>
 
-        {vm.formError && <p className="text-sm text-danger">{vm.formError}</p>}
+        {createVideoViewModel.formError && (
+          <p className="text-sm text-danger">{createVideoViewModel.formError}</p>
+        )}
 
-        <Button type="submit" size="lg" disabled={vm.isSubmitting}>
-          {vm.isSubmitting ? 'Submitting…' : 'Generate · 5 credits'}
+        <Button type="submit" size="lg" disabled={createVideoViewModel.isSubmitting}>
+          {createVideoViewModel.isSubmitting ? 'Submitting…' : 'Generate · 5 credits'}
         </Button>
       </form>
     </Card>

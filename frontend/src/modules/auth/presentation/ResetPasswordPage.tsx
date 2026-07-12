@@ -6,7 +6,7 @@ import { useResetPasswordViewModel } from '../viewmodels/useResetPasswordViewMod
 import { AuthFormLayout } from './AuthFormLayout';
 
 export function ResetPasswordPage() {
-  const vm = useResetPasswordViewModel();
+  const resetPasswordViewModel = useResetPasswordViewModel();
 
   return (
     <AuthFormLayout
@@ -21,7 +21,7 @@ export function ResetPasswordPage() {
         </>
       }
     >
-      {vm.isTokenMissing ? (
+      {resetPasswordViewModel.isTokenMissing ? (
         <div className="flex flex-col gap-4">
           <p className="text-sm text-danger">This reset link is invalid or incomplete.</p>
           <Link to="/forgot-password" className="text-sm text-brand hover:underline">
@@ -29,27 +29,27 @@ export function ResetPasswordPage() {
           </Link>
         </div>
       ) : (
-        <form className="flex flex-col gap-4" onSubmit={vm.onSubmit} noValidate>
+        <form className="flex flex-col gap-4" onSubmit={resetPasswordViewModel.onSubmit} noValidate>
           <Input
             label="New password"
             type="password"
             autoComplete="new-password"
-            value={vm.password}
-            onChange={(e) => vm.setPassword(e.target.value)}
-            error={vm.fieldErrors.password}
+            value={resetPasswordViewModel.password}
+            onChange={(e) => resetPasswordViewModel.setPassword(e.target.value)}
+            error={resetPasswordViewModel.fieldErrors.password}
           />
-          {vm.formError && (
+          {resetPasswordViewModel.formError && (
             <div className="flex flex-col gap-1">
-              <p className="text-sm text-danger">{vm.formError}</p>
-              {vm.isTokenError && (
+              <p className="text-sm text-danger">{resetPasswordViewModel.formError}</p>
+              {resetPasswordViewModel.isTokenError && (
                 <Link to="/forgot-password" className="text-sm text-brand hover:underline">
                   Request a new link
                 </Link>
               )}
             </div>
           )}
-          <Button type="submit" size="lg" disabled={vm.isSubmitting}>
-            {vm.isSubmitting ? 'Resetting…' : 'Reset password'}
+          <Button type="submit" size="lg" disabled={resetPasswordViewModel.isSubmitting}>
+            {resetPasswordViewModel.isSubmitting ? 'Resetting…' : 'Reset password'}
           </Button>
         </form>
       )}
