@@ -4,6 +4,7 @@ import { Button, Input } from '@/shared/ui';
 
 import { useRegisterViewModel } from '../viewmodels/useRegisterViewModel';
 import { AuthFormLayout } from './AuthFormLayout';
+import { GoogleSignInButton } from './GoogleSignInButton';
 
 export function RegisterPage() {
   const registerViewModel = useRegisterViewModel();
@@ -45,6 +46,7 @@ export function RegisterPage() {
           {registerViewModel.isSubmitting ? 'Creating account…' : 'Create account'}
         </Button>
       </form>
+      <GoogleSignInButton />
     </AuthFormLayout>
   );
 }

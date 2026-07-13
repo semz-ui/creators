@@ -10,6 +10,8 @@ describe('RegisterPage', () => {
     renderWithProviders(<RegisterPage />, { route: '/signup' });
     expect(screen.getByRole('heading', { name: /create your account/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /create account/i })).toBeInTheDocument();
+    // Stub Google button — no VITE_GOOGLE_CLIENT_ID in tests.
+    expect(screen.getByRole('button', { name: /continue with google/i })).toBeInTheDocument();
   });
 
   it('matches the snapshot', () => {

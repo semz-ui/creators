@@ -13,6 +13,8 @@ describe('LoginPage', () => {
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /forgot password/i })).toBeInTheDocument();
+    // Stub Google button — no VITE_GOOGLE_CLIENT_ID in tests.
+    expect(screen.getByRole('button', { name: /continue with google/i })).toBeInTheDocument();
   });
 
   it('matches the snapshot', () => {

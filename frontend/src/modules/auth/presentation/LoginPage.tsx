@@ -5,6 +5,7 @@ import { Button, Input } from '@/shared/ui';
 
 import { useLoginViewModel } from '../viewmodels/useLoginViewModel';
 import { AuthFormLayout } from './AuthFormLayout';
+import { GoogleSignInButton } from './GoogleSignInButton';
 
 export function LoginPage() {
   const loginViewModel = useLoginViewModel();
@@ -60,6 +61,7 @@ export function LoginPage() {
           {loginViewModel.isSubmitting ? 'Logging in…' : 'Log in'}
         </Button>
       </form>
+      <GoogleSignInButton />
     </AuthFormLayout>
   );
 }
