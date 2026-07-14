@@ -50,9 +50,12 @@ describe('useRegisterViewModel', () => {
       http.post(`${env.apiUrl}/api/v1/auth/register`, () =>
         HttpResponse.json(
           {
-            user: { id: 'u1', email: 'new@reelo.app' },
-            accessToken: 'access-1',
-            refreshToken: 'refresh-1',
+            success: true,
+            data: {
+              user: { id: 'u1', email: 'new@reelo.app' },
+              accessToken: 'access-1',
+              refreshToken: 'refresh-1',
+            },
           },
           { status: 201 },
         ),

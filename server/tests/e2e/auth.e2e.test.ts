@@ -36,9 +36,9 @@ describe('Auth flow (e2e)', () => {
     const res = await request(app).post(`${BASE}/register`).send(credentials);
 
     expect(res.status).toBe(201);
-    expect(res.body.user).toEqual({ id: expect.any(String), email: credentials.email });
-    expect(res.body.accessToken).toEqual(expect.any(String));
-    expect(res.body.refreshToken).toEqual(expect.any(String));
+    expect(res.body.data.user).toEqual({ id: expect.any(String), email: credentials.email });
+    expect(res.body.data.accessToken).toEqual(expect.any(String));
+    expect(res.body.data.refreshToken).toEqual(expect.any(String));
   });
 
   it('rejects duplicate registration with 409', async () => {
@@ -58,7 +58,7 @@ describe('Auth flow (e2e)', () => {
   it('logs in with valid credentials and rejects bad ones', async () => {
     const ok = await request(app).post(`${BASE}/login`).send(credentials);
     expect(ok.status).toBe(200);
-    expect(ok.body.accessToken).toEqual(expect.any(String));
+    expect(ok.body.data.accessToken).toEqual(expect.any(String));
 
     const bad = await request(app)
       .post(`${BASE}/login`)
@@ -69,13 +69,13 @@ describe('Auth flow (e2e)', () => {
 
   it('GET /me requires a valid bearer token', async () => {
     const login = await request(app).post(`${BASE}/login`).send(credentials);
-    const { accessToken } = login.body;
+    const { accessToken } = login.body.data;
 
     const authed = await request(app)
       .get(`${BASE}/me`)
       .set('Authorization', `Bearer ${accessToken}`);
     expect(authed.status).toBe(200);
-    expect(authed.body.email).toBe(credentials.email);
+    expect(authed.body.data.email).toBe(credentials.email);
 
     const anon = await request(app).get(`${BASE}/me`);
     expect(anon.status).toBe(401);
@@ -83,12 +83,12 @@ describe('Auth flow (e2e)', () => {
 
   it('rotates refresh tokens and detects reuse', async () => {
     const login = await request(app).post(`${BASE}/login`).send(credentials);
-    const original = login.body.refreshToken as string;
+    const original = login.body.data.refreshToken as string;
 
     // First rotation succeeds and yields a new refresh token.
     const rotated = await request(app).post(`${BASE}/refresh`).send({ refreshToken: original });
     expect(rotated.status).toBe(200);
-    const next = rotated.body.refreshToken as string;
+    const next = rotated.body.data.refreshToken as string;
     expect(next).not.toBe(original);
 
     // Reusing the original (already-rotated) token is rejected...
@@ -102,7 +102,7 @@ describe('Auth flow (e2e)', () => {
 
   it('logout revokes the refresh token', async () => {
     const login = await request(app).post(`${BASE}/login`).send(credentials);
-    const refreshToken = login.body.refreshToken as string;
+    const refreshToken = login.body.data.refreshToken as string;
 
     const out = await request(app).post(`${BASE}/logout`).send({ refreshToken });
     expect(out.status).toBe(204);

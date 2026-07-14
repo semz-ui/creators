@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { UnauthorizedError } from '@shared/domain/errors';
 
 import { ValidationError } from '@shared/domain/errors';
+import { respond } from '@shared/presentation/http/respond';
 
 import type { ApplyGenerationResult } from '../application/apply-generation-result.usecase';
 import type { CreateVideo } from '../application/create-video.usecase';
@@ -27,7 +28,7 @@ export class VideoController {
 
   create = async (req: Request, res: Response): Promise<void> => {
     const video = await this.useCases.create.execute(this.requireUserId(req), req.body);
-    res.status(201).json(video);
+    respond(res, 201, video);
   };
 
   upload = async (req: Request, res: Response): Promise<void> => {
@@ -41,13 +42,13 @@ export class VideoController {
     }
     const input = uploadVideoSchema.parse({ title: (res.locals.uploadTitle as string) ?? '' });
     const video = await this.useCases.upload.execute(userId, input, file);
-    res.status(201).json(video);
+    respond(res, 201, video);
   };
 
   list = async (req: Request, res: Response): Promise<void> => {
     const query = listVideosQuerySchema.parse(req.query);
     const page = await this.useCases.list.execute(this.requireUserId(req), query);
-    res.status(200).json(page);
+    respond(res, 200, page);
   };
 
   get = async (req: Request, res: Response): Promise<void> => {
@@ -58,7 +59,7 @@ export class VideoController {
     // terminal state before returning. Best-effort — never blocks the read.
     await this.useCases.reconcile.execute(userId, id);
     const video = await this.useCases.get.execute(userId, id);
-    res.status(200).json(video);
+    respond(res, 200, video);
   };
 
   generationCallback = async (req: Request, res: Response): Promise<void> => {

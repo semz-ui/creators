@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { ok } from './support/envelope';
+
 const user = { id: 'u1', email: 'creator@reelo.app' };
 
 async function login(page: Page) {
@@ -7,24 +9,24 @@ async function login(page: Page) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ user, accessToken: 'a', refreshToken: 'r' }),
+      body: ok({ user, accessToken: 'a', refreshToken: 'r' }),
     }),
   );
   await page.route('**/api/v1/auth/me', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) }),
+    route.fulfill({ status: 200, contentType: 'application/json', body: ok(user) }),
   );
   await page.route(/\/api\/v1\/videos(\?|$)/, (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ items: [], page: 1, limit: 6, total: 0 }),
+      body: ok({ items: [], page: 1, limit: 6, total: 0 }),
     }),
   );
   await page.route('**/api/v1/billing/balance', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ balance: 90 }),
+      body: ok({ balance: 90 }),
     }),
   );
   await page.goto('/login');

@@ -114,9 +114,13 @@ Caching is a **decorator over a port**, not baked into repositories. `CachedUser
 
 **Never read `process.env` directly.** Import `env` from `@shared/infrastructure/config/env` — Zod-validated, frozen. Add new vars to `env.schema.ts`, `.env.example`, and `tests/setup-env.ts`. Helpers: `isProduction`, `isTest`.
 
+#### Response envelope
+
+Every successful API response is `{ success: true, data: <dto> }`, sent via `respond(res, status, data)` from `@shared/presentation/http/respond` — never `res.json(dto)` directly. Outside the envelope: 204 no-content responses, the billing payment webhook ack, the connections OAuth 302 redirect, and `/health*`. The clients unwrap `data` centrally (`api-client.ts` + the XHR path in `video.api.ts`), so data-layer types stay envelope-free.
+
 #### Errors
 
-Throw subclasses of `AppError` (`@shared/domain/errors`: `NotFoundError`, `ValidationError`, `UnauthorizedError`, `ConflictError`, `TooManyRequestsError`, …). The global `errorHandler` maps `AppError` → its `statusCode`/`code`, `ZodError` → 422, else → 500. Every error response carries a `requestId`. Don't `res.status(500)` by hand.
+Throw subclasses of `AppError` (`@shared/domain/errors`: `NotFoundError`, `ValidationError`, `UnauthorizedError`, `ConflictError`, `TooManyRequestsError`, …). The global `errorHandler` maps `AppError` → its `statusCode`/`code`, `ZodError` → 422, else → 500. Error responses are `{ success: false, error: { code, message, requestId, details? } }`. Don't `res.status(500)` by hand.
 
 #### Path aliases
 

@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 
 import { UnauthorizedError } from '@shared/domain/errors';
+import { respond } from '@shared/presentation/http/respond';
 
 import type { GetCurrentUser } from '../application/get-current-user.usecase';
 import type { LoginUser } from '../application/login-user.usecase';
@@ -29,28 +30,28 @@ export class AuthController {
 
   register = async (req: Request, res: Response): Promise<void> => {
     const result = await this.useCases.register.execute(req.body);
-    res.status(201).json(result);
+    respond(res, 201, result);
   };
 
   login = async (req: Request, res: Response): Promise<void> => {
     const result = await this.useCases.login.execute(req.body);
-    res.status(200).json(result);
+    respond(res, 200, result);
   };
 
   signInWithGoogle = async (req: Request, res: Response): Promise<void> => {
     const result = await this.useCases.signInWithGoogle.execute(req.body);
-    res.status(200).json(result);
+    respond(res, 200, result);
   };
 
   refresh = async (req: Request, res: Response): Promise<void> => {
     const tokens = await this.useCases.refresh.execute(req.body);
-    res.status(200).json(tokens);
+    respond(res, 200, tokens);
   };
 
   forgotPassword = async (req: Request, res: Response): Promise<void> => {
     await this.useCases.requestPasswordReset.execute(req.body);
     // Same response whether or not the account exists (anti-enumeration).
-    res.status(202).json({
+    respond(res, 202, {
       message: 'If an account exists for that email, a password reset link has been sent.',
     });
   };
@@ -72,7 +73,7 @@ export class AuthController {
 
   me = async (req: Request, res: Response): Promise<void> => {
     const user = await this.useCases.getCurrentUser.execute(this.requireUserId(req));
-    res.status(200).json(user);
+    respond(res, 200, user);
   };
 
   /** Guarded routes always set req.userId; this narrows the type defensively. */

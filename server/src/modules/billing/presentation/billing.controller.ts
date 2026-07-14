@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 
 import { UnauthorizedError } from '@shared/domain/errors';
+import { respond } from '@shared/presentation/http/respond';
 
 import type { ConfirmPayment } from '../application/confirm-payment.usecase';
 import type { GetBalance } from '../application/get-balance.usecase';
@@ -24,13 +25,13 @@ export class BillingController {
 
   balance = async (req: Request, res: Response): Promise<void> => {
     const result = await this.useCases.getBalance.execute(this.requireUserId(req));
-    res.status(200).json(result);
+    respond(res, 200, result);
   };
 
   ledger = async (req: Request, res: Response): Promise<void> => {
     const query = ledgerQuerySchema.parse(req.query);
     const page = await this.useCases.listLedger.execute(this.requireUserId(req), query);
-    res.status(200).json(page);
+    respond(res, 200, page);
   };
 
   topUp = async (req: Request, res: Response): Promise<void> => {
@@ -38,7 +39,7 @@ export class BillingController {
       this.requireUserId(req),
       req.body.credits,
     );
-    res.status(201).json(result);
+    respond(res, 201, result);
   };
 
   paymentWebhook = async (req: Request, res: Response): Promise<void> => {

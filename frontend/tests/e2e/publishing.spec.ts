@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { ok } from './support/envelope';
+
 const user = { id: 'u1', email: 'creator@reelo.app' };
 
 const readyVideo = {
@@ -28,31 +30,31 @@ async function login(page: Page) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ user, accessToken: 'a', refreshToken: 'r' }),
+      body: ok({ user, accessToken: 'a', refreshToken: 'r' }),
     }),
   );
   await page.route('**/api/v1/auth/me', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) }),
+    route.fulfill({ status: 200, contentType: 'application/json', body: ok(user) }),
   );
   await page.route('**/api/v1/billing/balance', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ balance: 90 }),
+      body: ok({ balance: 90 }),
     }),
   );
   await page.route('**/api/v1/auth/refresh', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ accessToken: 'a2', refreshToken: 'r2' }),
+      body: ok({ accessToken: 'a2', refreshToken: 'r2' }),
     }),
   );
   await page.route(/\/api\/v1\/videos(\?|$)/, (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ items: [], page: 1, limit: 6, total: 0 }),
+      body: ok({ items: [], page: 1, limit: 6, total: 0 }),
     }),
   );
   await page.goto('/login');
@@ -67,14 +69,14 @@ test('publishes a ready video and sees per-platform status', async ({ page }) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(readyVideo),
+      body: ok(readyVideo),
     }),
   );
   await page.route('**/api/v1/connections', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ items: [facebookConnection] }),
+      body: ok({ items: [facebookConnection] }),
     }),
   );
   await page.route('**/api/v1/publications', (route) => {
@@ -84,7 +86,7 @@ test('publishes a ready video and sees per-platform status', async ({ page }) =>
     return route.fulfill({
       status: 201,
       contentType: 'application/json',
-      body: JSON.stringify({
+      body: ok({
         id: 'pub-1',
         videoId: 'vid-1',
         caption: 'check it out',
@@ -102,7 +104,7 @@ test('publishes a ready video and sees per-platform status', async ({ page }) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({
+      body: ok({
         id: 'pub-1',
         videoId: 'vid-1',
         caption: 'check it out',
@@ -134,7 +136,7 @@ test('publications list shows status', async ({ page }) => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({
+      body: ok({
         items: [
           {
             id: 'pub-1',

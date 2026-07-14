@@ -52,7 +52,7 @@ describe('useCreatePublication', () => {
       http.post(`${env.apiUrl}/api/v1/publications`, async ({ request }) => {
         body = await request.json();
         return HttpResponse.json(
-          { id: 'pub-1', status: 'completed', targets: [] },
+          { success: true, data: { id: 'pub-1', status: 'completed', targets: [] } },
           { status: 201 },
         );
       }),

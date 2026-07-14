@@ -31,7 +31,7 @@ describe('useForgotPasswordViewModel', () => {
     server.use(
       http.post(`${env.apiUrl}/api/v1/auth/forgot-password`, () => {
         requests += 1;
-        return HttpResponse.json({ message: 'sent' }, { status: 202 });
+        return HttpResponse.json({ success: true, data: { message: 'sent' } }, { status: 202 });
       }),
     );
 
@@ -47,7 +47,7 @@ describe('useForgotPasswordViewModel', () => {
     const message = 'If an account exists for that email, a password reset link has been sent.';
     server.use(
       http.post(`${env.apiUrl}/api/v1/auth/forgot-password`, () =>
-        HttpResponse.json({ message }, { status: 202 }),
+        HttpResponse.json({ success: true, data: { message } }, { status: 202 }),
       ),
     );
 

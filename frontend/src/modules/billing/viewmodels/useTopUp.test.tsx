@@ -29,7 +29,10 @@ describe('useTopUp', () => {
     server.use(
       http.post(`${env.apiUrl}/api/v1/billing/topup`, async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({ paymentId: 'p1', checkoutUrl: 'https://pay.stub/checkout/p1' });
+        return HttpResponse.json({
+          success: true,
+          data: { paymentId: 'p1', checkoutUrl: 'https://pay.stub/checkout/p1' },
+        });
       }),
     );
 

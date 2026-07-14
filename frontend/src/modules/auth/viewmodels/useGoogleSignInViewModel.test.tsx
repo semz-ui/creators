@@ -41,9 +41,12 @@ describe('useGoogleSignInViewModel', () => {
       http.post(`${env.apiUrl}/api/v1/auth/google`, async ({ request }) => {
         body = await request.json();
         return HttpResponse.json({
-          user: { id: 'u1', email: 'google.user@reelo.local' },
-          accessToken: 'access-1',
-          refreshToken: 'refresh-1',
+          success: true,
+          data: {
+            user: { id: 'u1', email: 'google.user@reelo.local' },
+            accessToken: 'access-1',
+            refreshToken: 'refresh-1',
+          },
         });
       }),
     );
@@ -62,9 +65,12 @@ describe('useGoogleSignInViewModel', () => {
       http.post(`${env.apiUrl}/api/v1/auth/google`, async ({ request }) => {
         body = await request.json();
         return HttpResponse.json({
-          user: { id: 'u1', email: 'google.user@reelo.local' },
-          accessToken: 'access-1',
-          refreshToken: 'refresh-1',
+          success: true,
+          data: {
+            user: { id: 'u1', email: 'google.user@reelo.local' },
+            accessToken: 'access-1',
+            refreshToken: 'refresh-1',
+          },
         });
       }),
     );

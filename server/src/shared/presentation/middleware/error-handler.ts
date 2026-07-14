@@ -6,6 +6,7 @@ import { isProduction } from '@shared/infrastructure/config/env';
 import { logger } from '@shared/infrastructure/logging/logger';
 
 interface ErrorBody {
+  success: false;
   error: {
     code: string;
     message: string;
@@ -17,6 +18,7 @@ interface ErrorBody {
 /** 404 fallback for unmatched routes. Registered after all routers. */
 export function notFoundHandler(req: Request, res: Response): void {
   res.status(404).json({
+    success: false,
     error: {
       code: 'NOT_FOUND',
       message: `Cannot ${req.method} ${req.path}`,
@@ -35,6 +37,7 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
 
   if (err instanceof ZodError) {
     res.status(422).json({
+      success: false,
       error: {
         code: 'VALIDATION_ERROR',
         message: 'Request validation failed',
@@ -47,6 +50,7 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
 
   if (err instanceof AppError) {
     const body: ErrorBody = {
+      success: false,
       error: { code: err.code, message: err.message, requestId },
     };
     if ('details' in err && err.details !== undefined) {
@@ -59,6 +63,7 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
   // Unexpected — log the full error, but never leak internals to the client.
   logger.error({ err, requestId }, 'Unhandled error');
   res.status(500).json({
+    success: false,
     error: {
       code: 'INTERNAL_ERROR',
       message: isProduction ? 'Something went wrong' : String(err),

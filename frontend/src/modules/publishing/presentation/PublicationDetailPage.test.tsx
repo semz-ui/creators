@@ -32,7 +32,9 @@ const publication = {
 describe('PublicationDetailPage', () => {
   it('shows the overall status and per-platform targets', async () => {
     server.use(
-      http.get(`${env.apiUrl}/api/v1/publications/pub-1`, () => HttpResponse.json(publication)),
+      http.get(`${env.apiUrl}/api/v1/publications/pub-1`, () =>
+        HttpResponse.json({ success: true, data: publication }),
+      ),
     );
     renderWithProviders(routed, { route: '/publications/pub-1' });
 
@@ -45,7 +47,9 @@ describe('PublicationDetailPage', () => {
 
   it('matches the snapshot', async () => {
     server.use(
-      http.get(`${env.apiUrl}/api/v1/publications/pub-1`, () => HttpResponse.json(publication)),
+      http.get(`${env.apiUrl}/api/v1/publications/pub-1`, () =>
+        HttpResponse.json({ success: true, data: publication }),
+      ),
     );
     const { container } = renderWithProviders(routed, {
       route: '/publications/pub-1',

@@ -115,7 +115,10 @@ describe('useUploadVideoViewModel', () => {
       onload: null as (() => void) | null,
       onerror: null as (() => void) | null,
       status: 201,
-      responseText: JSON.stringify({ id: 'vid-up-1', status: 'ready', source: 'uploaded' }),
+      responseText: JSON.stringify({
+        success: true,
+        data: { id: 'vid-up-1', status: 'ready', source: 'uploaded' },
+      }),
     }));
     globalThis.XMLHttpRequest = MockXHR as unknown as typeof XMLHttpRequest;
 
