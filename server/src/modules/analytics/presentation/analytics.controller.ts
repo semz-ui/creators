@@ -6,6 +6,7 @@ import { respond } from '@shared/presentation/http/respond';
 import type { GetOverview } from '../application/get-overview.usecase';
 import type { GetVideoAnalytics } from '../application/get-video-analytics.usecase';
 import type { SyncUserMetrics } from '../application/sync-user-metrics.usecase';
+import { presentOverview, presentSync, presentVideoAnalytics } from './analytics.presenter';
 
 export interface AnalyticsUseCases {
   sync: SyncUserMetrics;
@@ -19,18 +20,18 @@ export class AnalyticsController {
 
   refresh = async (req: Request, res: Response): Promise<void> => {
     const result = await this.useCases.sync.execute(this.requireUserId(req));
-    respond(res, 200, result);
+    respond(res, 200, presentSync(result));
   };
 
   overview = async (req: Request, res: Response): Promise<void> => {
     const result = await this.useCases.overview.execute(this.requireUserId(req));
-    respond(res, 200, result);
+    respond(res, 200, presentOverview(result));
   };
 
   videoAnalytics = async (req: Request, res: Response): Promise<void> => {
     const videoId = req.params.videoId as string;
     const result = await this.useCases.videoAnalytics.execute(this.requireUserId(req), videoId);
-    respond(res, 200, result);
+    respond(res, 200, presentVideoAnalytics(result));
   };
 
   private requireUserId(req: Request): string {

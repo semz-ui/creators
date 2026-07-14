@@ -8,6 +8,7 @@ import type { DisconnectConnection } from '../application/disconnect-connection.
 import type { ListConnections } from '../application/list-connections.usecase';
 import type { StartConnection } from '../application/start-connection.usecase';
 import { parsePlatform } from '../domain/platform';
+import { presentConnection, presentConnectionList, presentStart } from './connections.presenter';
 import { oauthCallbackQuerySchema } from './connections.validators';
 
 export interface ConnectionsUseCases {
@@ -32,12 +33,12 @@ export class ConnectionsController {
   start = async (req: Request, res: Response): Promise<void> => {
     const platform = parsePlatform(String(req.params.platform));
     const result = await this.useCases.start.execute(this.requireUserId(req), platform);
-    respond(res, 200, result);
+    respond(res, 200, presentStart(result));
   };
 
   list = async (req: Request, res: Response): Promise<void> => {
     const connections = await this.useCases.list.execute(this.requireUserId(req));
-    respond(res, 200, { items: connections });
+    respond(res, 200, presentConnectionList(connections));
   };
 
   disconnect = async (req: Request, res: Response): Promise<void> => {
@@ -54,7 +55,7 @@ export class ConnectionsController {
     if (!this.config.redirectUrl) {
       const { state, code } = oauthCallbackQuerySchema.parse(req.query);
       const connection = await this.useCases.complete.execute({ state, code });
-      respond(res, 200, connection);
+      respond(res, 200, presentConnection(connection));
       return;
     }
 

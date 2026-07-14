@@ -11,6 +11,7 @@ import type { RegisterUser } from '../application/register-user.usecase';
 import type { RequestPasswordReset } from '../application/request-password-reset.usecase';
 import type { ResetPassword } from '../application/reset-password.usecase';
 import type { SignInWithGoogle } from '../application/sign-in-with-google.usecase';
+import { presentAuthResult, presentTokens, presentUser } from './auth.presenter';
 
 export interface AuthUseCases {
   register: RegisterUser;
@@ -30,22 +31,22 @@ export class AuthController {
 
   register = async (req: Request, res: Response): Promise<void> => {
     const result = await this.useCases.register.execute(req.body);
-    respond(res, 201, result);
+    respond(res, 201, presentAuthResult(result));
   };
 
   login = async (req: Request, res: Response): Promise<void> => {
     const result = await this.useCases.login.execute(req.body);
-    respond(res, 200, result);
+    respond(res, 200, presentAuthResult(result));
   };
 
   signInWithGoogle = async (req: Request, res: Response): Promise<void> => {
     const result = await this.useCases.signInWithGoogle.execute(req.body);
-    respond(res, 200, result);
+    respond(res, 200, presentAuthResult(result));
   };
 
   refresh = async (req: Request, res: Response): Promise<void> => {
     const tokens = await this.useCases.refresh.execute(req.body);
-    respond(res, 200, tokens);
+    respond(res, 200, presentTokens(tokens));
   };
 
   forgotPassword = async (req: Request, res: Response): Promise<void> => {
@@ -73,7 +74,7 @@ export class AuthController {
 
   me = async (req: Request, res: Response): Promise<void> => {
     const user = await this.useCases.getCurrentUser.execute(this.requireUserId(req));
-    respond(res, 200, user);
+    respond(res, 200, presentUser(user));
   };
 
   /** Guarded routes always set req.userId; this narrows the type defensively. */

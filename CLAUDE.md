@@ -116,7 +116,7 @@ Caching is a **decorator over a port**, not baked into repositories. `CachedUser
 
 #### Response envelope
 
-Every successful API response is `{ success: true, data: <dto> }`, sent via `respond(res, status, data)` from `@shared/presentation/http/respond` — never `res.json(dto)` directly. Outside the envelope: 204 no-content responses, the billing payment webhook ack, the connections OAuth 302 redirect, and `/health*`. The clients unwrap `data` centrally (`api-client.ts` + the XHR path in `video.api.ts`), so data-layer types stay envelope-free.
+Every successful API response is `{ success: true, data: <fields> }`, sent via `respond(res, status, data)` from `@shared/presentation/http/respond` — never `res.json(dto)` directly. `data` is built field-by-field by the module's presenter (`presentation/<module>.presenter.ts`, e.g. `presentVideo`, `presentAuthResult`); controllers never forward a use-case result wholesale, so the presentation layer owns the wire contract and a grown DTO can't silently leak new fields. Outside the envelope: 204 no-content responses, the billing payment webhook ack, the connections OAuth 302 redirect, and `/health*`. The clients unwrap `data` centrally (`api-client.ts` + the XHR path in `video.api.ts`), so data-layer types stay envelope-free.
 
 #### Errors
 
