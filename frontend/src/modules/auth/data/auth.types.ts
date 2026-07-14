@@ -22,6 +22,10 @@ export interface LoginInput {
   password: string;
 }
 
+export interface GoogleSignInInput {
+  idToken: string;
+}
+
 export interface ForgotPasswordInput {
   email: string;
 }

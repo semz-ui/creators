@@ -6,6 +6,7 @@ import type {
   AuthUser,
   ForgotPasswordInput,
   ForgotPasswordResult,
+  GoogleSignInInput,
   LoginInput,
   RegisterInput,
   ResetPasswordInput,
@@ -19,6 +20,10 @@ export const authApi = {
     apiClient.post<AuthResult>(`${BASE}/register`, input, { auth: false }),
 
   login: (input: LoginInput) => apiClient.post<AuthResult>(`${BASE}/login`, input, { auth: false }),
+
+  /** Exchange a verified Google ID token for a Reelo session. */
+  googleSignIn: (input: GoogleSignInInput) =>
+    apiClient.post<AuthResult>(`${BASE}/google`, input, { auth: false }),
 
   /** Rotate tokens. Sent without a Bearer header to avoid refresh recursion. */
   refresh: (refreshToken: string) =>
