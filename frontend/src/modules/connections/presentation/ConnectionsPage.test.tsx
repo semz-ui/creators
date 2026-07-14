@@ -23,7 +23,9 @@ const facebook = {
 describe('ConnectionsPage', () => {
   it('shows connected and not-connected platforms', async () => {
     server.use(
-      http.get(`${env.apiUrl}/api/v1/connections`, () => HttpResponse.json({ items: [facebook] })),
+      http.get(`${env.apiUrl}/api/v1/connections`, () =>
+        HttpResponse.json({ success: true, data: { items: [facebook] } }),
+      ),
     );
     renderWithProviders(<ConnectionsPage />, { route: '/connections' });
 
@@ -35,7 +37,9 @@ describe('ConnectionsPage', () => {
 
   it('matches the snapshot once loaded', async () => {
     server.use(
-      http.get(`${env.apiUrl}/api/v1/connections`, () => HttpResponse.json({ items: [facebook] })),
+      http.get(`${env.apiUrl}/api/v1/connections`, () =>
+        HttpResponse.json({ success: true, data: { items: [facebook] } }),
+      ),
     );
     const { container } = renderWithProviders(<ConnectionsPage />, { route: '/connections' });
     await waitFor(() => expect(screen.getByText('My Page')).toBeInTheDocument());

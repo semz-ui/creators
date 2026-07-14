@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { ok } from './support/envelope';
+
 const user = { id: 'u1', email: 'creator@reelo.app' };
 
 const facebook = {
@@ -19,17 +21,17 @@ async function login(page: Page) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ user, accessToken: 'a', refreshToken: 'r' }),
+      body: ok({ user, accessToken: 'a', refreshToken: 'r' }),
     }),
   );
   await page.route('**/api/v1/auth/me', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) }),
+    route.fulfill({ status: 200, contentType: 'application/json', body: ok(user) }),
   );
   await page.route('**/api/v1/billing/balance', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ balance: 90 }),
+      body: ok({ balance: 90 }),
     }),
   );
   // A full page reload (e.g. the OAuth return) re-runs session restore via refresh.
@@ -37,14 +39,14 @@ async function login(page: Page) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ accessToken: 'a2', refreshToken: 'r2' }),
+      body: ok({ accessToken: 'a2', refreshToken: 'r2' }),
     }),
   );
   await page.route(/\/api\/v1\/videos(\?|$)/, (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ items: [], page: 1, limit: 6, total: 0 }),
+      body: ok({ items: [], page: 1, limit: 6, total: 0 }),
     }),
   );
   await page.goto('/login');
@@ -59,14 +61,14 @@ test('connects a platform via the OAuth redirect', async ({ page }) => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ items: [] }),
+      body: ok({ items: [] }),
     }),
   );
   await page.route('**/api/v1/connections/facebook/start', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({
+      body: ok({
         authorizationUrl: 'https://oauth.stub.local/facebook/authorize?state=x',
       }),
     }),
@@ -99,7 +101,7 @@ test('disconnects a linked platform', async ({ page }) => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ items: disconnected ? [] : [facebook] }),
+      body: ok({ items: disconnected ? [] : [facebook] }),
     }),
   );
   await page.route('**/api/v1/connections/c1', (route) => {
@@ -120,7 +122,7 @@ test('callback page returns to connections', async ({ page }) => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ items: [] }),
+      body: ok({ items: [] }),
     }),
   );
   await login(page);

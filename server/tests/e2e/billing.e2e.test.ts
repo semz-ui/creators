@@ -27,7 +27,7 @@ describe('Billing flow (e2e)', () => {
 
   const bearer = () => ({ Authorization: `Bearer ${token}` });
   const balance = async (): Promise<number> =>
-    (await request(app).get('/api/v1/billing/balance').set(bearer())).body.balance;
+    (await request(app).get('/api/v1/billing/balance').set(bearer())).body.data.balance;
 
   beforeAll(async () => {
     mongod = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
@@ -37,7 +37,7 @@ describe('Billing flow (e2e)', () => {
     const reg = await request(app)
       .post('/api/v1/auth/register')
       .send({ email: 'billing@reelo.app', password: 'password123' });
-    token = reg.body.accessToken;
+    token = reg.body.data.accessToken;
   });
 
   afterAll(async () => {
@@ -64,7 +64,7 @@ describe('Billing flow (e2e)', () => {
     expect(await balance()).toBe(INITIAL - COST);
 
     // Provider reports failure → credits refunded.
-    const doc = await VideoModel.findById(created.body.id).lean();
+    const doc = await VideoModel.findById(created.body.data.id).lean();
     await request(app)
       .post('/api/v1/videos/callbacks/generation')
       .set('x-generation-secret', GENERATION_SECRET)
@@ -81,9 +81,9 @@ describe('Billing flow (e2e)', () => {
       .set(bearer())
       .send({ credits: 50 });
     expect(topup.status).toBe(201);
-    expect(topup.body.checkoutUrl).toEqual(expect.any(String));
+    expect(topup.body.data.checkoutUrl).toEqual(expect.any(String));
 
-    const payment = await PaymentModel.findById(topup.body.paymentId).lean();
+    const payment = await PaymentModel.findById(topup.body.data.paymentId).lean();
     const providerRef = payment?.providerRef;
 
     // Bad secret rejected.
@@ -114,7 +114,7 @@ describe('Billing flow (e2e)', () => {
   it('lists ledger entries for the recorded movements', async () => {
     const res = await request(app).get('/api/v1/billing/ledger').set(bearer());
     expect(res.status).toBe(200);
-    const reasons = res.body.items.map((e: { reason: string }) => e.reason);
+    const reasons = res.body.data.items.map((e: { reason: string }) => e.reason);
     expect(reasons).toEqual(expect.arrayContaining(['generation', 'refund', 'topup']));
   });
 
@@ -122,7 +122,7 @@ describe('Billing flow (e2e)', () => {
     const broke = await request(app)
       .post('/api/v1/auth/register')
       .send({ email: 'broke@reelo.app', password: 'password123' });
-    const brokeToken = broke.body.accessToken as string;
+    const brokeToken = broke.body.data.accessToken as string;
 
     // Drain the initial grant (INITIAL / COST generations), then the next is blocked.
     for (let i = 0; i < INITIAL / COST; i++) {

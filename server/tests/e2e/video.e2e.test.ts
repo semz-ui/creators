@@ -17,7 +17,7 @@ async function registerUser(app: Express, email: string): Promise<string> {
   const res = await request(app)
     .post('/api/v1/auth/register')
     .send({ email, password: 'password123' });
-  return res.body.accessToken as string;
+  return res.body.data.accessToken as string;
 }
 
 describe('Video flow (e2e)', () => {
@@ -69,8 +69,8 @@ describe('Video flow (e2e)', () => {
       .set(auth(tokenA))
       .send({ prompt: 'a neon city at night', durationSeconds: 15 });
     expect(created.status).toBe(201);
-    expect(created.body).toMatchObject({ status: 'processing', durationSeconds: 15 });
-    const id = created.body.id as string;
+    expect(created.body.data).toMatchObject({ status: 'processing', durationSeconds: 15 });
+    const id = created.body.data.id as string;
 
     // Owner can read it; another user cannot.
     expect((await request(app).get(`/api/v1/videos/${id}`).set(auth(tokenA))).status).toBe(200);
@@ -79,8 +79,8 @@ describe('Video flow (e2e)', () => {
     // It appears in the owner's list.
     const list = await request(app).get('/api/v1/videos').set(auth(tokenA));
     expect(list.status).toBe(200);
-    expect(list.body.total).toBeGreaterThanOrEqual(1);
-    expect(list.body.items.some((v: { id: string }) => v.id === id)).toBe(true);
+    expect(list.body.data.total).toBeGreaterThanOrEqual(1);
+    expect(list.body.data.items.some((v: { id: string }) => v.id === id)).toBe(true);
 
     // The provider posts the result (we read the jobRef as the provider would know it).
     const doc = await VideoModel.findById(id).lean();
@@ -100,7 +100,7 @@ describe('Video flow (e2e)', () => {
 
     // Now ready with the result URL.
     const ready = await request(app).get(`/api/v1/videos/${id}`).set(auth(tokenA));
-    expect(ready.body).toMatchObject({
+    expect(ready.body.data).toMatchObject({
       status: 'ready',
       resultUrl: 'https://cdn.reelo.app/v.mp4',
     });

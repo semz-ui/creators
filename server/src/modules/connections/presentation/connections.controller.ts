@@ -1,12 +1,14 @@
 import type { Request, Response } from 'express';
 
 import { UnauthorizedError } from '@shared/domain/errors';
+import { respond } from '@shared/presentation/http/respond';
 
 import type { CompleteConnection } from '../application/complete-connection.usecase';
 import type { DisconnectConnection } from '../application/disconnect-connection.usecase';
 import type { ListConnections } from '../application/list-connections.usecase';
 import type { StartConnection } from '../application/start-connection.usecase';
 import { parsePlatform } from '../domain/platform';
+import { presentConnection, presentConnectionList, presentStart } from './connections.presenter';
 import { oauthCallbackQuerySchema } from './connections.validators';
 
 export interface ConnectionsUseCases {
@@ -31,12 +33,12 @@ export class ConnectionsController {
   start = async (req: Request, res: Response): Promise<void> => {
     const platform = parsePlatform(String(req.params.platform));
     const result = await this.useCases.start.execute(this.requireUserId(req), platform);
-    res.status(200).json(result);
+    respond(res, 200, presentStart(result));
   };
 
   list = async (req: Request, res: Response): Promise<void> => {
     const connections = await this.useCases.list.execute(this.requireUserId(req));
-    res.status(200).json({ items: connections });
+    respond(res, 200, presentConnectionList(connections));
   };
 
   disconnect = async (req: Request, res: Response): Promise<void> => {
@@ -53,7 +55,7 @@ export class ConnectionsController {
     if (!this.config.redirectUrl) {
       const { state, code } = oauthCallbackQuerySchema.parse(req.query);
       const connection = await this.useCases.complete.execute({ state, code });
-      res.status(200).json(connection);
+      respond(res, 200, presentConnection(connection));
       return;
     }
 

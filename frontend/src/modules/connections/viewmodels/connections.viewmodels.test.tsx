@@ -33,7 +33,9 @@ const conn = {
 describe('useConnections', () => {
   it('unwraps the items array', async () => {
     server.use(
-      http.get(`${env.apiUrl}/api/v1/connections`, () => HttpResponse.json({ items: [conn] })),
+      http.get(`${env.apiUrl}/api/v1/connections`, () =>
+        HttpResponse.json({ success: true, data: { items: [conn] } }),
+      ),
     );
     const { result } = renderHook(() => useConnections(), { wrapper });
     await waitFor(() => expect(result.current.data).toHaveLength(1));
@@ -52,7 +54,10 @@ describe('useConnectPlatform', () => {
   it('redirects to the provider authorization URL', async () => {
     server.use(
       http.post(`${env.apiUrl}/api/v1/connections/facebook/start`, () =>
-        HttpResponse.json({ authorizationUrl: 'https://oauth.stub.local/facebook/authorize?x=1' }),
+        HttpResponse.json({
+          success: true,
+          data: { authorizationUrl: 'https://oauth.stub.local/facebook/authorize?x=1' },
+        }),
       ),
     );
     const { result } = renderHook(() => useConnectPlatform(), { wrapper });

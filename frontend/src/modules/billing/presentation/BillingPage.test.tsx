@@ -10,32 +10,37 @@ import { BillingPage } from './BillingPage';
 
 function mockBilling() {
   server.use(
-    http.get(`${env.apiUrl}/api/v1/billing/balance`, () => HttpResponse.json({ balance: 90 })),
+    http.get(`${env.apiUrl}/api/v1/billing/balance`, () =>
+      HttpResponse.json({ success: true, data: { balance: 90 } }),
+    ),
     http.get(`${env.apiUrl}/api/v1/billing/ledger`, () =>
       HttpResponse.json({
-        items: [
-          {
-            id: 'l1',
-            type: 'debit',
-            amount: 10,
-            reason: 'generation',
-            referenceId: 'v1',
-            balanceAfter: 90,
-            createdAt: '2026-01-01T00:00:00.000Z',
-          },
-          {
-            id: 'l2',
-            type: 'credit',
-            amount: 100,
-            reason: 'topup',
-            referenceId: 'p1',
-            balanceAfter: 100,
-            createdAt: '2026-01-01T00:00:00.000Z',
-          },
-        ],
-        page: 1,
-        limit: 10,
-        total: 2,
+        success: true,
+        data: {
+          items: [
+            {
+              id: 'l1',
+              type: 'debit',
+              amount: 10,
+              reason: 'generation',
+              referenceId: 'v1',
+              balanceAfter: 90,
+              createdAt: '2026-01-01T00:00:00.000Z',
+            },
+            {
+              id: 'l2',
+              type: 'credit',
+              amount: 100,
+              reason: 'topup',
+              referenceId: 'p1',
+              balanceAfter: 100,
+              createdAt: '2026-01-01T00:00:00.000Z',
+            },
+          ],
+          page: 1,
+          limit: 10,
+          total: 2,
+        },
       }),
     ),
   );

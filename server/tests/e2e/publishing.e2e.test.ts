@@ -29,7 +29,7 @@ describe('Publishing flow (e2e)', () => {
     const res = await request(app)
       .post('/api/v1/auth/register')
       .send({ email, password: 'password123' });
-    return res.body.accessToken as string;
+    return res.body.data.accessToken as string;
   }
 
   async function createReadyVideo(): Promise<string> {
@@ -37,7 +37,7 @@ describe('Publishing flow (e2e)', () => {
       .post('/api/v1/videos')
       .set(bearer())
       .send({ prompt: 'a sunset', durationSeconds: 10 });
-    const id = created.body.id as string;
+    const id = created.body.data.id as string;
     const doc = await VideoModel.findById(id).lean();
     await request(app)
       .post('/api/v1/videos/callbacks/generation')
@@ -48,7 +48,7 @@ describe('Publishing flow (e2e)', () => {
 
   async function connect(platform: string): Promise<void> {
     const start = await request(app).post(`/api/v1/connections/${platform}/start`).set(bearer());
-    const state = new URL(start.body.authorizationUrl).searchParams.get('state');
+    const state = new URL(start.body.data.authorizationUrl).searchParams.get('state');
     await request(app).get('/api/v1/connections/callback').query({ state, code: 'c' });
   }
 
@@ -82,13 +82,13 @@ describe('Publishing flow (e2e)', () => {
       .send({ videoId, platforms: ['facebook'], caption: 'check this out' });
 
     expect(res.status).toBe(201);
-    expect(res.body.status).toBe('completed');
-    expect(res.body.targets).toHaveLength(1);
-    expect(res.body.targets[0]).toMatchObject({ platform: 'facebook', status: 'published' });
-    expect(res.body.targets[0].externalPostId).toEqual(expect.any(String));
+    expect(res.body.data.status).toBe('completed');
+    expect(res.body.data.targets).toHaveLength(1);
+    expect(res.body.data.targets[0]).toMatchObject({ platform: 'facebook', status: 'published' });
+    expect(res.body.data.targets[0].externalPostId).toEqual(expect.any(String));
 
     // Visible to the owner; not to others.
-    const id = res.body.id as string;
+    const id = res.body.data.id as string;
     expect((await request(app).get(`/api/v1/publications/${id}`).set(bearer())).status).toBe(200);
     const otherToken = await registerUser('intruder@reelo.app');
     expect(
@@ -117,7 +117,7 @@ describe('Publishing flow (e2e)', () => {
     const res = await request(app)
       .post('/api/v1/publications')
       .set(bearer())
-      .send({ videoId: created.body.id, platforms: ['facebook'] });
+      .send({ videoId: created.body.data.id, platforms: ['facebook'] });
     expect(res.status).toBe(422);
   });
 
@@ -130,7 +130,7 @@ describe('Publishing flow (e2e)', () => {
       .set(bearer())
       .send({ videoId, platforms: ['facebook'], scheduledAt });
     expect(scheduled.status).toBe(201);
-    expect(scheduled.body.status).toBe('scheduled');
+    expect(scheduled.body.data.status).toBe('scheduled');
 
     // Bad secret rejected.
     expect((await request(app).post('/api/v1/publications/process-due')).status).toBe(401);
@@ -141,6 +141,6 @@ describe('Publishing flow (e2e)', () => {
       .post('/api/v1/publications/process-due')
       .set('x-scheduler-secret', SCHEDULER_SECRET);
     expect(run.status).toBe(200);
-    expect(run.body).toMatchObject({ processed: 0 });
+    expect(run.body.data).toMatchObject({ processed: 0 });
   });
 });

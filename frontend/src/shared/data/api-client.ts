@@ -2,6 +2,12 @@ import { env } from '@/shared/config/env';
 
 import { HttpError, type ApiErrorBody } from './http-error';
 
+/** Envelope every successful API response arrives in. */
+interface ApiSuccessBody<T> {
+  success: true;
+  data: T;
+}
+
 export interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   body?: unknown;
@@ -79,7 +85,8 @@ export class ApiClient {
       );
     }
 
-    return data as T;
+    // Unwrap the { success, data } envelope; 204/empty bodies stay undefined.
+    return (data as ApiSuccessBody<T> | undefined)?.data as T;
   }
 
   get<T>(path: string, options?: RequestOptions): Promise<T> {

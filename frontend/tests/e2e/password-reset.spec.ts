@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { ok } from './support/envelope';
+
 const GENERIC_MESSAGE = 'If an account exists for that email, a password reset link has been sent.';
 
 async function mockForgotPassword(page: Page) {
@@ -7,7 +9,7 @@ async function mockForgotPassword(page: Page) {
     route.fulfill({
       status: 202,
       contentType: 'application/json',
-      body: JSON.stringify({ message: GENERIC_MESSAGE }),
+      body: ok({ message: GENERIC_MESSAGE }),
     }),
   );
 }
@@ -43,6 +45,7 @@ test('shows an invalid-link error for a rejected token', async ({ page }) => {
       status: 401,
       contentType: 'application/json',
       body: JSON.stringify({
+        success: false,
         error: { code: 'UNAUTHORIZED', message: 'Invalid or expired reset token' },
       }),
     }),

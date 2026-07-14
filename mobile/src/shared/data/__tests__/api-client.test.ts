@@ -21,7 +21,7 @@ afterEach(() => jest.restoreAllMocks());
 
 describe('ApiClient', () => {
   it('attaches the bearer token to authenticated requests', async () => {
-    const fetchMock = mockFetch(jsonResponse(200, { ok: true }));
+    const fetchMock = mockFetch(jsonResponse(200, { success: true, data: { ok: true } }));
     const client = new ApiClient('http://api.test');
     client.configure({ getToken: () => 'tok-1', refresh: async () => false });
 
@@ -33,7 +33,7 @@ describe('ApiClient', () => {
   });
 
   it('skips the token for auth:false requests', async () => {
-    const fetchMock = mockFetch(jsonResponse(200, {}));
+    const fetchMock = mockFetch(jsonResponse(200, { success: true, data: {} }));
     const client = new ApiClient('http://api.test');
     client.configure({ getToken: () => 'tok-1', refresh: async () => false });
 
@@ -44,8 +44,19 @@ describe('ApiClient', () => {
     expect(init.body).toBe(JSON.stringify({ email: 'a@b.co' }));
   });
 
+  it('unwraps the { success, data } envelope and resolves undefined for empty bodies', async () => {
+    mockFetch(jsonResponse(200, { success: true, data: { id: 'v1' } }), jsonResponse(204));
+    const client = new ApiClient('http://api.test');
+
+    await expect(client.get('/videos/v1')).resolves.toEqual({ id: 'v1' });
+    await expect(client.delete('/videos/v1')).resolves.toBeUndefined();
+  });
+
   it('refreshes once on a 401 and retries the request', async () => {
-    const fetchMock = mockFetch(jsonResponse(401), jsonResponse(200, { value: 42 }));
+    const fetchMock = mockFetch(
+      jsonResponse(401),
+      jsonResponse(200, { success: true, data: { value: 42 } }),
+    );
     let token = 'stale';
     const refresh = jest.fn(async () => {
       token = 'fresh';

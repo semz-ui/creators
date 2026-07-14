@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
+import { ok } from './support/envelope';
+
 const user = { id: 'u1', email: 'creator@reelo.app' };
 
 const overview = (views: number) => ({
@@ -13,31 +15,31 @@ async function login(page: Page) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ user, accessToken: 'a', refreshToken: 'r' }),
+      body: ok({ user, accessToken: 'a', refreshToken: 'r' }),
     }),
   );
   await page.route('**/api/v1/auth/me', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) }),
+    route.fulfill({ status: 200, contentType: 'application/json', body: ok(user) }),
   );
   await page.route('**/api/v1/auth/refresh', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ accessToken: 'a2', refreshToken: 'r2' }),
+      body: ok({ accessToken: 'a2', refreshToken: 'r2' }),
     }),
   );
   await page.route(/\/api\/v1\/videos(\?|$)/, (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ items: [], page: 1, limit: 6, total: 0 }),
+      body: ok({ items: [], page: 1, limit: 6, total: 0 }),
     }),
   );
   await page.route('**/api/v1/billing/balance', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ balance: 90 }),
+      body: ok({ balance: 90 }),
     }),
   );
   await page.goto('/login');
@@ -53,7 +55,7 @@ test('shows the overview and refreshes metrics', async ({ page }) => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(overview(refreshed ? 2000 : 1500)),
+      body: ok(overview(refreshed ? 2000 : 1500)),
     }),
   );
   await page.route('**/api/v1/analytics/refresh', (route) => {
@@ -62,7 +64,7 @@ test('shows the overview and refreshes metrics', async ({ page }) => {
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ synced: 1 }),
+      body: ok({ synced: 1 }),
     });
   });
 
@@ -83,7 +85,7 @@ test('shows per-video analytics', async ({ page }) => {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({
+      body: ok({
         videoId: 'vid-1',
         totals: { views: 800, likes: 50, comments: 10, shares: 5 },
         byPlatform: [

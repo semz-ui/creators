@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 
 import { UnauthorizedError } from '@shared/domain/errors';
+import { respond } from '@shared/presentation/http/respond';
 
 import type { GetCurrentUser } from '../application/get-current-user.usecase';
 import type { LoginUser } from '../application/login-user.usecase';
@@ -10,6 +11,12 @@ import type { RegisterUser } from '../application/register-user.usecase';
 import type { RequestPasswordReset } from '../application/request-password-reset.usecase';
 import type { ResetPassword } from '../application/reset-password.usecase';
 import type { SignInWithGoogle } from '../application/sign-in-with-google.usecase';
+import {
+  presentAuthResult,
+  presentPasswordResetRequest,
+  presentTokens,
+  presentUser,
+} from './auth.presenter';
 
 export interface AuthUseCases {
   register: RegisterUser;
@@ -29,30 +36,28 @@ export class AuthController {
 
   register = async (req: Request, res: Response): Promise<void> => {
     const result = await this.useCases.register.execute(req.body);
-    res.status(201).json(result);
+    respond(res, 201, presentAuthResult(result));
   };
 
   login = async (req: Request, res: Response): Promise<void> => {
     const result = await this.useCases.login.execute(req.body);
-    res.status(200).json(result);
+    respond(res, 200, presentAuthResult(result));
   };
 
   signInWithGoogle = async (req: Request, res: Response): Promise<void> => {
     const result = await this.useCases.signInWithGoogle.execute(req.body);
-    res.status(200).json(result);
+    respond(res, 200, presentAuthResult(result));
   };
 
   refresh = async (req: Request, res: Response): Promise<void> => {
     const tokens = await this.useCases.refresh.execute(req.body);
-    res.status(200).json(tokens);
+    respond(res, 200, presentTokens(tokens));
   };
 
   forgotPassword = async (req: Request, res: Response): Promise<void> => {
     await this.useCases.requestPasswordReset.execute(req.body);
     // Same response whether or not the account exists (anti-enumeration).
-    res.status(202).json({
-      message: 'If an account exists for that email, a password reset link has been sent.',
-    });
+    respond(res, 202, presentPasswordResetRequest());
   };
 
   resetPassword = async (req: Request, res: Response): Promise<void> => {
@@ -72,7 +77,7 @@ export class AuthController {
 
   me = async (req: Request, res: Response): Promise<void> => {
     const user = await this.useCases.getCurrentUser.execute(this.requireUserId(req));
-    res.status(200).json(user);
+    respond(res, 200, presentUser(user));
   };
 
   /** Guarded routes always set req.userId; this narrows the type defensively. */

@@ -14,7 +14,9 @@ describe('ApiClient', () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it('GETs and parses JSON', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ status: 'ok' }));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ success: true, data: { status: 'ok' } }));
     vi.stubGlobal('fetch', fetchMock);
 
     const client = new ApiClient('http://api.test');
@@ -26,7 +28,9 @@ describe('ApiClient', () => {
   });
 
   it('attaches the Bearer token from the configured getter', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ ok: true }));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(jsonResponse({ success: true, data: { ok: true } }));
     vi.stubGlobal('fetch', fetchMock);
 
     const client = new ApiClient('http://api.test');
@@ -56,14 +60,14 @@ describe('ApiClient', () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse({ error: { code: 'UNAUTHORIZED', message: 'x' } }, 401))
-      .mockResolvedValueOnce(jsonResponse({ data: 'after-refresh' }));
+      .mockResolvedValueOnce(jsonResponse({ success: true, data: { value: 'after-refresh' } }));
     vi.stubGlobal('fetch', fetchMock);
 
     const refresh = vi.fn().mockResolvedValue(true);
     const client = new ApiClient('http://api.test');
     client.configure({ getToken: () => 'tok', refresh });
 
-    await expect(client.get('/secure')).resolves.toEqual({ data: 'after-refresh' });
+    await expect(client.get('/secure')).resolves.toEqual({ value: 'after-refresh' });
     expect(refresh).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });

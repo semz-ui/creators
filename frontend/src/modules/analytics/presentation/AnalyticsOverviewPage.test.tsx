@@ -20,7 +20,9 @@ const overview = {
 describe('AnalyticsOverviewPage', () => {
   it('shows totals, video count, and per-platform breakdown', async () => {
     server.use(
-      http.get(`${env.apiUrl}/api/v1/analytics/overview`, () => HttpResponse.json(overview)),
+      http.get(`${env.apiUrl}/api/v1/analytics/overview`, () =>
+        HttpResponse.json({ success: true, data: overview }),
+      ),
     );
     renderWithProviders(<AnalyticsOverviewPage />, { route: '/analytics' });
 
@@ -32,7 +34,9 @@ describe('AnalyticsOverviewPage', () => {
 
   it('matches the snapshot', async () => {
     server.use(
-      http.get(`${env.apiUrl}/api/v1/analytics/overview`, () => HttpResponse.json(overview)),
+      http.get(`${env.apiUrl}/api/v1/analytics/overview`, () =>
+        HttpResponse.json({ success: true, data: overview }),
+      ),
     );
     const { container } = renderWithProviders(<AnalyticsOverviewPage />, { route: '/analytics' });
     await screen.findByText('1,500');

@@ -1,5 +1,6 @@
 /** Shape of the API's error envelope (mirrors the server's error handler). */
 export interface ApiErrorBody {
+  success: false;
   error: {
     code: string;
     message: string;

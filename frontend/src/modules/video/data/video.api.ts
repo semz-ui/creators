@@ -31,7 +31,7 @@ export const videoApi = {
         try {
           const data = JSON.parse(xhr.responseText) as unknown;
           if (xhr.status >= 200 && xhr.status < 300) {
-            resolve(data as Video);
+            resolve((data as { success: true; data: Video }).data);
           } else {
             const body = data as { error?: { code?: string; message?: string } };
             reject(

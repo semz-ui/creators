@@ -18,11 +18,14 @@ jest.mock('expo-router', () => ({
 }));
 
 function jsonResponse(status: number, body: unknown) {
+  const ok = status >= 200 && status < 300;
+  // Mirror the server: success bodies arrive in the { success, data } envelope.
+  const payload = ok ? { success: true, data: body } : body;
   return {
-    ok: status >= 200 && status < 300,
+    ok,
     status,
     statusText: 'STATUS',
-    text: async () => JSON.stringify(body),
+    text: async () => JSON.stringify(payload),
   };
 }
 

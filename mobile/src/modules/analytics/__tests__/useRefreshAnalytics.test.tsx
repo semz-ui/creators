@@ -27,7 +27,7 @@ describe('useRefreshAnalytics', () => {
       ok: true,
       status: 200,
       statusText: 'OK',
-      text: async () => JSON.stringify({ synced: 3 }),
+      text: async () => JSON.stringify({ success: true, data: { synced: 3 } }),
     }) as unknown as typeof fetch;
     const invalidate = jest.spyOn(client, 'invalidateQueries');
     const { result } = await renderHook(() => useRefreshAnalytics(), { wrapper });

@@ -66,13 +66,13 @@ describe('Password reset flow (e2e)', () => {
   it('resets the password end-to-end and revokes existing sessions', async () => {
     const login = await request(app).post(`${BASE}/login`).send(credentials);
     expect(login.status).toBe(200);
-    const preResetRefreshToken = login.body.refreshToken as string;
+    const preResetRefreshToken = login.body.data.refreshToken as string;
 
     const forgot = await request(app)
       .post(`${BASE}/forgot-password`)
       .send({ email: credentials.email });
     expect(forgot.status).toBe(202);
-    expect(forgot.body.message).toMatch(/if an account exists/i);
+    expect(forgot.body.data.message).toMatch(/if an account exists/i);
 
     const token = lastResetToken(infoSpy);
     const newPassword = 'brand-new-pass-456';

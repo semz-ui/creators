@@ -42,7 +42,10 @@ describe('useCreateVideoViewModel', () => {
     server.use(
       http.post(`${env.apiUrl}/api/v1/videos`, () =>
         HttpResponse.json(
-          { id: 'vid-1', prompt: 'a cat', durationSeconds: 15, status: 'processing' },
+          {
+            success: true,
+            data: { id: 'vid-1', prompt: 'a cat', durationSeconds: 15, status: 'processing' },
+          },
           { status: 201 },
         ),
       ),

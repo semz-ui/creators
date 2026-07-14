@@ -26,7 +26,7 @@ describe('Analytics flow (e2e)', () => {
       .post('/api/v1/videos')
       .set(bearer())
       .send({ prompt: 'a sunset', durationSeconds: 10 });
-    const id = created.body.id as string;
+    const id = created.body.data.id as string;
     const doc = await VideoModel.findById(id).lean();
     await request(app)
       .post('/api/v1/videos/callbacks/generation')
@@ -37,7 +37,7 @@ describe('Analytics flow (e2e)', () => {
 
   async function connect(platform: string): Promise<void> {
     const start = await request(app).post(`/api/v1/connections/${platform}/start`).set(bearer());
-    const state = new URL(start.body.authorizationUrl).searchParams.get('state');
+    const state = new URL(start.body.data.authorizationUrl).searchParams.get('state');
     await request(app).get('/api/v1/connections/callback').query({ state, code: 'c' });
   }
 
@@ -49,7 +49,7 @@ describe('Analytics flow (e2e)', () => {
     const reg = await request(app)
       .post('/api/v1/auth/register')
       .send({ email: 'analytics@reelo.app', password: 'password123' });
-    token = reg.body.accessToken;
+    token = reg.body.data.accessToken;
   });
 
   afterAll(async () => {
@@ -68,33 +68,32 @@ describe('Analytics flow (e2e)', () => {
       .post('/api/v1/publications')
       .set(bearer())
       .send({ videoId, platforms: ['facebook', 'youtube'] });
-    expect(published.body.status).toBe('completed');
+    expect(published.body.data.status).toBe('completed');
 
     // Empty before a refresh.
     const before = await request(app).get('/api/v1/analytics/overview').set(bearer());
-    expect(before.body.videoCount).toBe(0);
+    expect(before.body.data.videoCount).toBe(0);
 
     const refresh = await request(app).post('/api/v1/analytics/refresh').set(bearer());
     expect(refresh.status).toBe(200);
-    expect(refresh.body.synced).toBe(2);
+    expect(refresh.body.data.synced).toBe(2);
 
     const overview = await request(app).get('/api/v1/analytics/overview').set(bearer());
     expect(overview.status).toBe(200);
-    expect(overview.body.videoCount).toBe(1);
-    expect(overview.body.byPlatform.map((p: { platform: string }) => p.platform).sort()).toEqual([
-      'facebook',
-      'youtube',
-    ]);
+    expect(overview.body.data.videoCount).toBe(1);
+    expect(
+      overview.body.data.byPlatform.map((p: { platform: string }) => p.platform).sort(),
+    ).toEqual(['facebook', 'youtube']);
     // totals == sum of the two platforms' views
-    const sumViews = overview.body.byPlatform.reduce(
+    const sumViews = overview.body.data.byPlatform.reduce(
       (acc: number, p: { metrics: { views: number } }) => acc + p.metrics.views,
       0,
     );
-    expect(overview.body.totals.views).toBe(sumViews);
+    expect(overview.body.data.totals.views).toBe(sumViews);
 
     const perVideo = await request(app).get(`/api/v1/analytics/videos/${videoId}`).set(bearer());
     expect(perVideo.status).toBe(200);
-    expect(perVideo.body.byPlatform).toHaveLength(2);
+    expect(perVideo.body.data.byPlatform).toHaveLength(2);
   });
 
   it('requires authentication', async () => {
@@ -104,7 +103,7 @@ describe('Analytics flow (e2e)', () => {
   it('returns empty analytics for a video with no published posts', async () => {
     const res = await request(app).get('/api/v1/analytics/videos/unknown-video').set(bearer());
     expect(res.status).toBe(200);
-    expect(res.body.byPlatform).toEqual([]);
-    expect(res.body.totals).toEqual({ views: 0, likes: 0, comments: 0, shares: 0 });
+    expect(res.body.data.byPlatform).toEqual([]);
+    expect(res.body.data.totals).toEqual({ views: 0, likes: 0, comments: 0, shares: 0 });
   });
 });

@@ -41,15 +41,15 @@ describe('Google sign-in (e2e)', () => {
       .send({ idToken: stubToken('sub-new', 'new-google@reelo.app') });
 
     expect(res.status).toBe(200);
-    expect(res.body.user).toEqual({ id: expect.any(String), email: 'new-google@reelo.app' });
-    expect(res.body.accessToken).toEqual(expect.any(String));
-    expect(res.body.refreshToken).toEqual(expect.any(String));
+    expect(res.body.data.user).toEqual({ id: expect.any(String), email: 'new-google@reelo.app' });
+    expect(res.body.data.accessToken).toEqual(expect.any(String));
+    expect(res.body.data.refreshToken).toEqual(expect.any(String));
 
     const me = await request(app)
       .get(`${BASE}/me`)
-      .set('Authorization', `Bearer ${res.body.accessToken}`);
+      .set('Authorization', `Bearer ${res.body.data.accessToken}`);
     expect(me.status).toBe(200);
-    expect(me.body.email).toBe('new-google@reelo.app');
+    expect(me.body.data.email).toBe('new-google@reelo.app');
   });
 
   it('returns the same user on repeat sign-in with the same sub', async () => {
@@ -61,7 +61,7 @@ describe('Google sign-in (e2e)', () => {
       .send({ idToken: stubToken('sub-repeat', 'repeat@reelo.app') });
 
     expect(second.status).toBe(200);
-    expect(second.body.user.id).toBe(first.body.user.id);
+    expect(second.body.data.user.id).toBe(first.body.data.user.id);
   });
 
   it('auto-links a password account with the same email, keeping password login', async () => {
@@ -73,7 +73,7 @@ describe('Google sign-in (e2e)', () => {
       .post(`${BASE}/google`)
       .send({ idToken: stubToken('sub-hybrid', credentials.email) });
     expect(google.status).toBe(200);
-    expect(google.body.user.id).toBe(registered.body.user.id);
+    expect(google.body.data.user.id).toBe(registered.body.data.user.id);
 
     const passwordLogin = await request(app).post(`${BASE}/login`).send(credentials);
     expect(passwordLogin.status).toBe(200);
