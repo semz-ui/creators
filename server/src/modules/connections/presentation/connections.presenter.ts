@@ -1,12 +1,18 @@
 import type { PublicConnection } from '../application/dto';
 
+import type {
+  ConnectionListResponse,
+  ConnectionResponse,
+  StartConnectionResponse,
+} from './connections.dto';
+
 /**
- * Wire shapes for the connections module: every field this API returns is
- * enumerated here, so the presentation layer — not the use-case DTO — owns
- * the contract. Tokens must never appear in any of these shapes.
+ * Maps the connections application DTOs to the presentation DTOs sent on the
+ * wire. Every field is enumerated here, so the presentation layer owns its
+ * contract. Tokens must never appear in any of these shapes.
  */
 
-export function presentConnection(connection: PublicConnection) {
+export function presentConnection(connection: PublicConnection): ConnectionResponse {
   return {
     id: connection.id,
     platform: connection.platform,
@@ -20,13 +26,13 @@ export function presentConnection(connection: PublicConnection) {
   };
 }
 
-export function presentConnectionList(connections: PublicConnection[]) {
+export function presentConnectionList(connections: PublicConnection[]): ConnectionListResponse {
   return {
     items: connections.map(presentConnection),
   };
 }
 
-export function presentStart(result: { authorizationUrl: string }) {
+export function presentStart(result: { authorizationUrl: string }): StartConnectionResponse {
   return {
     authorizationUrl: result.authorizationUrl,
   };

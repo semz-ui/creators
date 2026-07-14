@@ -2,13 +2,20 @@ import type { MetricsValues } from '../domain/metrics';
 
 import type { OverviewResult, VideoAnalyticsResult } from '../application/dto';
 
+import type {
+  MetricsResponse,
+  OverviewResponse,
+  SyncResponse,
+  VideoAnalyticsResponse,
+} from './analytics.dto';
+
 /**
- * Wire shapes for the analytics module: every field this API returns is
- * enumerated here, so the presentation layer — not the use-case DTO — owns
- * the contract.
+ * Maps the analytics application DTOs to the presentation DTOs sent on the
+ * wire. Every field is enumerated here, so the presentation layer owns its
+ * contract.
  */
 
-export function presentMetrics(metrics: MetricsValues) {
+export function presentMetrics(metrics: MetricsValues): MetricsResponse {
   return {
     views: metrics.views,
     likes: metrics.likes,
@@ -17,7 +24,7 @@ export function presentMetrics(metrics: MetricsValues) {
   };
 }
 
-export function presentOverview(result: OverviewResult) {
+export function presentOverview(result: OverviewResult): OverviewResponse {
   return {
     totals: presentMetrics(result.totals),
     byPlatform: result.byPlatform.map((entry) => ({
@@ -28,7 +35,7 @@ export function presentOverview(result: OverviewResult) {
   };
 }
 
-export function presentVideoAnalytics(result: VideoAnalyticsResult) {
+export function presentVideoAnalytics(result: VideoAnalyticsResult): VideoAnalyticsResponse {
   return {
     videoId: result.videoId,
     totals: presentMetrics(result.totals),
@@ -41,7 +48,7 @@ export function presentVideoAnalytics(result: VideoAnalyticsResult) {
   };
 }
 
-export function presentSync(result: { synced: number }) {
+export function presentSync(result: { synced: number }): SyncResponse {
   return {
     synced: result.synced,
   };

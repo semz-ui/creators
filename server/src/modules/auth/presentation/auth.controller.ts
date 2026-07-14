@@ -11,7 +11,12 @@ import type { RegisterUser } from '../application/register-user.usecase';
 import type { RequestPasswordReset } from '../application/request-password-reset.usecase';
 import type { ResetPassword } from '../application/reset-password.usecase';
 import type { SignInWithGoogle } from '../application/sign-in-with-google.usecase';
-import { presentAuthResult, presentTokens, presentUser } from './auth.presenter';
+import {
+  presentAuthResult,
+  presentPasswordResetRequest,
+  presentTokens,
+  presentUser,
+} from './auth.presenter';
 
 export interface AuthUseCases {
   register: RegisterUser;
@@ -52,9 +57,7 @@ export class AuthController {
   forgotPassword = async (req: Request, res: Response): Promise<void> => {
     await this.useCases.requestPasswordReset.execute(req.body);
     // Same response whether or not the account exists (anti-enumeration).
-    respond(res, 202, {
-      message: 'If an account exists for that email, a password reset link has been sent.',
-    });
+    respond(res, 202, presentPasswordResetRequest());
   };
 
   resetPassword = async (req: Request, res: Response): Promise<void> => {

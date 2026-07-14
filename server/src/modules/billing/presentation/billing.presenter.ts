@@ -1,18 +1,24 @@
 import type { PagedResult, PublicLedgerEntry, TopUpResult } from '../application/dto';
 
+import type {
+  BalanceResponse,
+  LedgerEntryResponse,
+  LedgerPageResponse,
+  TopUpResponse,
+} from './billing.dto';
+
 /**
- * Wire shapes for the billing module: every field this API returns is
- * enumerated here, so the presentation layer — not the use-case DTO — owns
- * the contract.
+ * Maps the billing application DTOs to the presentation DTOs sent on the wire.
+ * Every field is enumerated here, so the presentation layer owns its contract.
  */
 
-export function presentBalance(result: { balance: number }) {
+export function presentBalance(result: { balance: number }): BalanceResponse {
   return {
     balance: result.balance,
   };
 }
 
-export function presentLedgerEntry(entry: PublicLedgerEntry) {
+export function presentLedgerEntry(entry: PublicLedgerEntry): LedgerEntryResponse {
   return {
     id: entry.id,
     type: entry.type,
@@ -24,7 +30,7 @@ export function presentLedgerEntry(entry: PublicLedgerEntry) {
   };
 }
 
-export function presentLedgerPage(page: PagedResult<PublicLedgerEntry>) {
+export function presentLedgerPage(page: PagedResult<PublicLedgerEntry>): LedgerPageResponse {
   return {
     items: page.items.map(presentLedgerEntry),
     page: page.page,
@@ -33,7 +39,7 @@ export function presentLedgerPage(page: PagedResult<PublicLedgerEntry>) {
   };
 }
 
-export function presentTopUp(result: TopUpResult) {
+export function presentTopUp(result: TopUpResult): TopUpResponse {
   return {
     paymentId: result.paymentId,
     checkoutUrl: result.checkoutUrl,
