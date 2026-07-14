@@ -14,10 +14,24 @@ export function GoogleSignInButton() {
         <span aria-hidden className="h-px flex-1 bg-white/10" />
       </div>
       {googleSignInViewModel.mode === 'google' ? (
-        <div
-          ref={googleSignInViewModel.mountGoogleButton}
-          className="flex min-h-[44px] justify-center"
-        />
+        <>
+          <div
+            ref={googleSignInViewModel.mountGoogleButton}
+            className="flex min-h-[44px] justify-center"
+          />
+          {googleSignInViewModel.loadError && (
+            <p className="text-center text-sm text-danger">
+              Google sign-in could not be loaded.{' '}
+              <button
+                type="button"
+                onClick={googleSignInViewModel.retryGoogleButton}
+                className="text-brand underline hover:no-underline"
+              >
+                Try again
+              </button>
+            </p>
+          )}
+        </>
       ) : (
         <Button
           variant="secondary"
