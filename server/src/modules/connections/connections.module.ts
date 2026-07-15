@@ -79,16 +79,20 @@ function buildProviders(): IOAuthProviderRegistry {
   if (env.INSTAGRAM_APP_ID && env.INSTAGRAM_APP_SECRET) {
     config.instagram = { appId: env.INSTAGRAM_APP_ID, appSecret: env.INSTAGRAM_APP_SECRET };
   }
+  if (env.TIKTOK_CLIENT_KEY && env.TIKTOK_CLIENT_SECRET) {
+    config.tiktok = { clientKey: env.TIKTOK_CLIENT_KEY, clientSecret: env.TIKTOK_CLIENT_SECRET };
+  }
 
   const real = [
     ...(config.google ? ['youtube (Google)'] : []),
     ...(config.instagram ? ['instagram'] : []),
+    ...(config.tiktok ? ['tiktok'] : []),
   ];
   if (real.length > 0) {
     logger.info(`Connections: real OAuth for ${real.join(', ')} (other platforms stubbed)`);
   } else {
     logger.info(
-      'Connections: stub OAuth providers (set GOOGLE_CLIENT_ID/SECRET for YouTube, INSTAGRAM_APP_ID/SECRET for Instagram)',
+      'Connections: stub OAuth providers (set GOOGLE_CLIENT_ID/SECRET for YouTube, INSTAGRAM_APP_ID/SECRET for Instagram, TIKTOK_CLIENT_KEY/SECRET for TikTok)',
     );
   }
   return buildProviderRegistry(config);

@@ -6,6 +6,7 @@ import {
   type InstagramPublisherConfig,
 } from './instagram-social-publisher';
 import { StaticSocialPublisherRegistry, StubSocialPublisher } from './stub-social-publisher';
+import { TikTokSocialPublisher, type TikTokPublisherConfig } from './tiktok-social-publisher';
 import { YouTubeSocialPublisher, type YouTubePublisherConfig } from './youtube-social-publisher';
 
 export interface PublisherRegistryConfig {
@@ -13,6 +14,8 @@ export interface PublisherRegistryConfig {
   youtube?: YouTubePublisherConfig;
   /** When set, the real Instagram publisher handles 'instagram'. */
   instagram?: InstagramPublisherConfig;
+  /** When set, the real TikTok publisher handles 'tiktok'. */
+  tiktok?: TikTokPublisherConfig;
 }
 
 /**
@@ -30,6 +33,9 @@ export function buildPublisherRegistry(
   }
   if (config.instagram) {
     publishers.set('instagram', new InstagramSocialPublisher(config.instagram));
+  }
+  if (config.tiktok) {
+    publishers.set('tiktok', new TikTokSocialPublisher(config.tiktok));
   }
   return new StaticSocialPublisherRegistry(publishers);
 }
