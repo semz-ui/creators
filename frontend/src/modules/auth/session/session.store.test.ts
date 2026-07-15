@@ -15,7 +15,7 @@ describe('session store', () => {
   });
 
   it('setSession stores user + tokens', () => {
-    useSessionStore.getState().setSession(result);
+    useSessionStore.getState().setSession(result.user, result);
     const state = useSessionStore.getState();
     expect(state.user).toEqual(result.user);
     expect(state.accessToken).toBe('access-1');
@@ -23,7 +23,7 @@ describe('session store', () => {
   });
 
   it('setTokens rotates without dropping the user', () => {
-    useSessionStore.getState().setSession(result);
+    useSessionStore.getState().setSession(result.user, result);
     useSessionStore.getState().setTokens({ accessToken: 'access-2', refreshToken: 'refresh-2' });
     const state = useSessionStore.getState();
     expect(state.accessToken).toBe('access-2');
@@ -32,7 +32,7 @@ describe('session store', () => {
   });
 
   it('persists only the refresh token + user (not the access token)', () => {
-    useSessionStore.getState().setSession(result);
+    useSessionStore.getState().setSession(result.user, result);
     const persisted = JSON.parse(localStorage.getItem('reelo.session') ?? '{}');
     expect(persisted.state.refreshToken).toBe('refresh-1');
     expect(persisted.state.user).toEqual(result.user);
@@ -40,7 +40,7 @@ describe('session store', () => {
   });
 
   it('clear wipes the session', () => {
-    useSessionStore.getState().setSession(result);
+    useSessionStore.getState().setSession(result.user, result);
     useSessionStore.getState().clear();
     const state = useSessionStore.getState();
     expect(state.user).toBeNull();
