@@ -62,6 +62,12 @@ export const envSchema = z
     // Caching (Phase 2) — default TTL in seconds for cache-aside reads.
     CACHE_DEFAULT_TTL: z.coerce.number().int().positive().default(300),
 
+    // Outbound HTTP timeouts (ms) for the social integration adapters, so a hung
+    // upstream can't block a request or the publishing scheduler indefinitely.
+    // API/metadata calls use the first; video download/upload uses the second.
+    HTTP_CLIENT_TIMEOUT_MS: z.coerce.number().int().positive().default(15000),
+    HTTP_MEDIA_TIMEOUT_MS: z.coerce.number().int().positive().default(120000),
+
     // Video module — shared secret the AI provider presents on the generation callback.
     GENERATION_CALLBACK_SECRET: z
       .string()

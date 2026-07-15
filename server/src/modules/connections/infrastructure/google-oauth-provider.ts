@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from '@shared/infrastructure/http/fetch-with-timeout';
+
 import type { IOAuthProvider, OAuthAccount, RefreshedTokens } from '../domain/ports/oauth-provider';
 
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -70,7 +72,7 @@ export class GoogleOAuthProvider implements IOAuthProvider {
   }
 
   async refreshAccessToken(refreshToken: string): Promise<RefreshedTokens> {
-    const res = await fetch(TOKEN_URL, {
+    const res = await fetchWithTimeout(TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -98,7 +100,7 @@ export class GoogleOAuthProvider implements IOAuthProvider {
     code: string,
     redirectUri: string,
   ): Promise<Pick<OAuthAccount, 'accessToken' | 'refreshToken' | 'scopes' | 'expiresAt'>> {
-    const res = await fetch(TOKEN_URL, {
+    const res = await fetchWithTimeout(TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -125,7 +127,7 @@ export class GoogleOAuthProvider implements IOAuthProvider {
   }
 
   private async fetchChannel(accessToken: string): Promise<{ id: string; title: string }> {
-    const res = await fetch(CHANNELS_URL, {
+    const res = await fetchWithTimeout(CHANNELS_URL, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const json = (await res.json().catch(() => ({}))) as GoogleChannelsResponse;

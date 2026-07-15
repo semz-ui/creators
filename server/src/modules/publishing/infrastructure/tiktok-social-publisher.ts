@@ -1,3 +1,9 @@
+import { env } from '@shared/infrastructure/config/env';
+import {
+  fetchBufferWithTimeout,
+  fetchWithTimeout,
+} from '@shared/infrastructure/http/fetch-with-timeout';
+
 import type {
   ISocialPublisher,
   PublishRequest,
@@ -101,11 +107,15 @@ export class TikTokSocialPublisher implements ISocialPublisher {
   }
 
   private async downloadVideo(videoUrl: string): Promise<Uint8Array> {
-    const res = await fetch(videoUrl);
+    const res = await fetchBufferWithTimeout(
+      videoUrl,
+      {},
+      { timeoutMs: env.HTTP_MEDIA_TIMEOUT_MS },
+    );
     if (!res.ok) {
       throw new Error(`Video download failed (HTTP ${res.status}): ${res.statusText}`);
     }
-    return new Uint8Array(await res.arrayBuffer());
+    return new Uint8Array(res.buffer);
   }
 
   private async initUpload(
@@ -142,15 +152,19 @@ export class TikTokSocialPublisher implements ISocialPublisher {
 
   private async uploadVideo(uploadUrl: string, video: Uint8Array): Promise<void> {
     const size = video.length;
-    const res = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'video/mp4',
-        'Content-Length': String(size),
-        'Content-Range': `bytes 0-${size - 1}/${size}`,
+    const res = await fetchWithTimeout(
+      uploadUrl,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'video/mp4',
+          'Content-Length': String(size),
+          'Content-Range': `bytes 0-${size - 1}/${size}`,
+        },
+        body: video,
       },
-      body: video,
-    });
+      { timeoutMs: env.HTTP_MEDIA_TIMEOUT_MS },
+    );
     if (!res.ok) {
       throw new Error(`TikTok video upload failed (HTTP ${res.status}): ${res.statusText}`);
     }
@@ -177,7 +191,7 @@ export class TikTokSocialPublisher implements ISocialPublisher {
 
   /** POST JSON to a Content Posting API endpoint and unwrap the { data, error } envelope. */
   private async post<T>(url: string, accessToken: string, body: unknown, step: string): Promise<T> {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,

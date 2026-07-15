@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from '@shared/infrastructure/http/fetch-with-timeout';
+
 import type {
   ISocialPublisher,
   PublishRequest,
@@ -55,7 +57,7 @@ export class InstagramSocialPublisher implements ISocialPublisher {
   }
 
   private async resolveUserId(accessToken: string): Promise<string> {
-    const res = await fetch(`${GRAPH_BASE}/me?fields=user_id`, {
+    const res = await fetchWithTimeout(`${GRAPH_BASE}/me?fields=user_id`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const json = (await res.json().catch(() => ({}))) as MeResponse;
@@ -68,7 +70,7 @@ export class InstagramSocialPublisher implements ISocialPublisher {
   }
 
   private async createContainer(igUserId: string, request: PublishRequest): Promise<string> {
-    const res = await fetch(`${GRAPH_BASE}/${igUserId}/media`, {
+    const res = await fetchWithTimeout(`${GRAPH_BASE}/${igUserId}/media`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${request.accessToken}`,
@@ -91,7 +93,7 @@ export class InstagramSocialPublisher implements ISocialPublisher {
 
   private async waitForContainer(containerId: string, accessToken: string): Promise<void> {
     for (let attempt = 0; attempt < this.maxPollAttempts; attempt++) {
-      const res = await fetch(`${GRAPH_BASE}/${containerId}?fields=status_code`, {
+      const res = await fetchWithTimeout(`${GRAPH_BASE}/${containerId}?fields=status_code`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       const json = (await res.json().catch(() => ({}))) as StatusResponse;
@@ -118,7 +120,7 @@ export class InstagramSocialPublisher implements ISocialPublisher {
     containerId: string,
     accessToken: string,
   ): Promise<string> {
-    const res = await fetch(`${GRAPH_BASE}/${igUserId}/media_publish`, {
+    const res = await fetchWithTimeout(`${GRAPH_BASE}/${igUserId}/media_publish`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ creation_id: containerId }),

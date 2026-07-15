@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from '@shared/infrastructure/http/fetch-with-timeout';
+
 import type { IOAuthProvider, OAuthAccount, RefreshedTokens } from '../domain/ports/oauth-provider';
 
 const AUTH_URL = 'https://www.instagram.com/oauth/authorize';
@@ -97,7 +99,7 @@ export class InstagramOAuthProvider implements IOAuthProvider {
       grant_type: 'ig_refresh_token',
       access_token: refreshToken,
     });
-    const res = await fetch(`${GRAPH_BASE}/refresh_access_token?${params.toString()}`);
+    const res = await fetchWithTimeout(`${GRAPH_BASE}/refresh_access_token?${params.toString()}`);
     const json = (await res.json().catch(() => ({}))) as LongLivedTokenResponse;
     if (!res.ok || !json.access_token) {
       throw new Error(
@@ -116,7 +118,7 @@ export class InstagramOAuthProvider implements IOAuthProvider {
     code: string,
     redirectUri: string,
   ): Promise<{ accessToken: string; userId: string | null; permissions: string[] | null }> {
-    const res = await fetch(SHORT_TOKEN_URL, {
+    const res = await fetchWithTimeout(SHORT_TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -150,7 +152,7 @@ export class InstagramOAuthProvider implements IOAuthProvider {
       client_secret: this.config.appSecret,
       access_token: shortLivedToken,
     });
-    const res = await fetch(`${GRAPH_BASE}/access_token?${params.toString()}`);
+    const res = await fetchWithTimeout(`${GRAPH_BASE}/access_token?${params.toString()}`);
     const json = (await res.json().catch(() => ({}))) as LongLivedTokenResponse;
     if (!res.ok || !json.access_token) {
       throw new Error(
@@ -166,7 +168,7 @@ export class InstagramOAuthProvider implements IOAuthProvider {
   private async fetchProfile(
     accessToken: string,
   ): Promise<{ userId: string | null; username: string }> {
-    const res = await fetch(`${GRAPH_BASE}/me?fields=user_id,username`, {
+    const res = await fetchWithTimeout(`${GRAPH_BASE}/me?fields=user_id,username`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const json = (await res.json().catch(() => ({}))) as MeResponse;

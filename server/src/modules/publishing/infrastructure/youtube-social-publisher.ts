@@ -1,3 +1,9 @@
+import { env } from '@shared/infrastructure/config/env';
+import {
+  fetchBufferWithTimeout,
+  fetchWithTimeout,
+} from '@shared/infrastructure/http/fetch-with-timeout';
+
 import type {
   ISocialPublisher,
   PublishRequest,
@@ -44,15 +50,19 @@ export class YouTubeSocialPublisher implements ISocialPublisher {
   }
 
   private async downloadVideo(videoUrl: string): Promise<Uint8Array> {
-    const res = await fetch(videoUrl);
+    const res = await fetchBufferWithTimeout(
+      videoUrl,
+      {},
+      { timeoutMs: env.HTTP_MEDIA_TIMEOUT_MS },
+    );
     if (!res.ok) {
       throw new Error(`Video download failed (HTTP ${res.status}): ${res.statusText}`);
     }
-    return new Uint8Array(await res.arrayBuffer());
+    return new Uint8Array(res.buffer);
   }
 
   private async initiateUpload(accessToken: string, caption: string | null): Promise<string> {
-    const res = await fetch(UPLOAD_INIT_URL, {
+    const res = await fetchWithTimeout(UPLOAD_INIT_URL, {
       method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -82,11 +92,15 @@ export class YouTubeSocialPublisher implements ISocialPublisher {
     accessToken: string,
     video: Uint8Array,
   ): Promise<string> {
-    const res = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'video/*' },
-      body: video,
-    });
+    const res = await fetchWithTimeout(
+      uploadUrl,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'video/*' },
+        body: video,
+      },
+      { timeoutMs: env.HTTP_MEDIA_TIMEOUT_MS },
+    );
     const json = (await res.json().catch(() => ({}))) as YouTubeVideoResponse;
     if (!res.ok || !json.id) {
       throw new Error(
