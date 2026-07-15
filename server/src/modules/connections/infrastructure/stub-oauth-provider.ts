@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto';
 
-import type { IOAuthProvider, OAuthAccount, RefreshedTokens } from '../domain/ports/oauth-provider';
+import type {
+  AuthorizationRequest,
+  IOAuthProvider,
+  OAuthAccount,
+  RefreshedTokens,
+} from '../domain/ports/oauth-provider';
 import type { Platform } from '../domain/platform';
 
 const SCOPES: Record<Platform, string[]> = {
@@ -18,12 +23,22 @@ const SCOPES: Record<Platform, string[]> = {
 export class StubOAuthProvider implements IOAuthProvider {
   constructor(private readonly platform: Platform) {}
 
-  getAuthorizationUrl({ state, redirectUri }: { state: string; redirectUri: string }): string {
+  getAuthorizationUrl({
+    state,
+    redirectUri,
+  }: {
+    state: string;
+    redirectUri: string;
+  }): AuthorizationRequest {
     const params = new URLSearchParams({ state, redirect_uri: redirectUri, response_type: 'code' });
-    return `https://oauth.stub.local/${this.platform}/authorize?${params.toString()}`;
+    return { url: `https://oauth.stub.local/${this.platform}/authorize?${params.toString()}` };
   }
 
-  async exchangeCode(_params: { code: string; redirectUri: string }): Promise<OAuthAccount> {
+  async exchangeCode(_params: {
+    code: string;
+    redirectUri: string;
+    codeVerifier?: string;
+  }): Promise<OAuthAccount> {
     return {
       externalAccountId: `${this.platform}_${randomUUID().slice(0, 8)}`,
       displayName: `Stub ${this.platform} account`,

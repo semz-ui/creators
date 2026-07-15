@@ -27,7 +27,7 @@ const account: OAuthAccount = {
 
 function providerMock(): jest.Mocked<IOAuthProvider> {
   return {
-    getAuthorizationUrl: jest.fn().mockReturnValue('https://auth.example/url'),
+    getAuthorizationUrl: jest.fn().mockReturnValue({ url: 'https://auth.example/url' }),
     exchangeCode: jest.fn().mockResolvedValue(account),
     refreshAccessToken: jest.fn().mockResolvedValue({
       accessToken: 'refreshed-tok',
@@ -81,6 +81,26 @@ describe('StartConnection', () => {
     });
     expect(result.authorizationUrl).toBe('https://auth.example/url');
   });
+
+  it('persists a PKCE verifier alongside the state when the provider returns one', async () => {
+    const provider = providerMock();
+    provider.getAuthorizationUrl.mockReturnValue({
+      url: 'https://auth.example/url',
+      codeVerifier: 'verifier-abc',
+    });
+    const stateStore = stateStoreMock();
+
+    await new StartConnection(registryWith(provider), stateStore, config).execute(
+      'user-1',
+      'tiktok',
+    );
+
+    expect(stateStore.issue).toHaveBeenCalledWith(
+      expect.any(String),
+      { userId: 'user-1', platform: 'tiktok', codeVerifier: 'verifier-abc' },
+      600,
+    );
+  });
 });
 
 describe('CompleteConnection', () => {
@@ -103,6 +123,25 @@ describe('CompleteConnection', () => {
     expect(result).toMatchObject({ platform: 'facebook', displayName: 'My Page' });
     expect(result).not.toHaveProperty('accessToken');
     expect(result).not.toHaveProperty('refreshToken');
+  });
+
+  it('forwards the stored PKCE verifier to the code exchange', async () => {
+    const provider = providerMock();
+    const stateStore = stateStoreMock();
+    stateStore.consume.mockResolvedValue({
+      userId: 'user-1',
+      platform: 'tiktok',
+      codeVerifier: 'verifier-abc',
+    });
+
+    await new CompleteConnection(registryWith(provider), stateStore, repoMock(), config).execute({
+      state: 's',
+      code: 'c',
+    });
+
+    expect(provider.exchangeCode).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'c', codeVerifier: 'verifier-abc' }),
+    );
   });
 
   it('reconnects an existing connection instead of creating a new one', async () => {

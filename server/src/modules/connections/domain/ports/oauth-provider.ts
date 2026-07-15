@@ -20,10 +20,24 @@ export interface RefreshedTokens {
   expiresAt: Date | null;
 }
 
+/**
+ * Result of building an authorization URL. `codeVerifier` is present only when
+ * the provider uses PKCE — the caller persists it with the OAuth state and
+ * replays it at {@link IOAuthProvider.exchangeCode}. It is opaque to the caller.
+ */
+export interface AuthorizationRequest {
+  url: string;
+  codeVerifier?: string;
+}
+
 /** A single platform's OAuth integration. */
 export interface IOAuthProvider {
-  getAuthorizationUrl(params: { state: string; redirectUri: string }): string;
-  exchangeCode(params: { code: string; redirectUri: string }): Promise<OAuthAccount>;
+  getAuthorizationUrl(params: { state: string; redirectUri: string }): AuthorizationRequest;
+  exchangeCode(params: {
+    code: string;
+    redirectUri: string;
+    codeVerifier?: string;
+  }): Promise<OAuthAccount>;
   refreshAccessToken(refreshToken: string): Promise<RefreshedTokens>;
 }
 

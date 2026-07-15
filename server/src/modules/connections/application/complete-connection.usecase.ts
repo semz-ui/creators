@@ -34,6 +34,7 @@ export class CompleteConnection {
       account = await provider.exchangeCode({
         code: input.code,
         redirectUri: callbackUri(this.config.publicBaseUrl),
+        ...(stateData.codeVerifier ? { codeVerifier: stateData.codeVerifier } : {}),
       });
     } catch (err) {
       // The client gets the generic error; keep the provider's reason

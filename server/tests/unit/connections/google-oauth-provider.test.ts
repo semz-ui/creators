@@ -43,7 +43,7 @@ describe('GoogleOAuthProvider.getAuthorizationUrl', () => {
       new GoogleOAuthProvider(CONFIG).getAuthorizationUrl({
         state: 'state-1',
         redirectUri: REDIRECT_URI,
-      }),
+      }).url,
     );
 
     expect(url.origin + url.pathname).toBe('https://accounts.google.com/o/oauth2/v2/auth');

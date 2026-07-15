@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import {
   TikTokOAuthProvider,
   TIKTOK_SCOPES,
@@ -35,16 +37,19 @@ function mockFetch(...responses: { ok?: boolean; status?: number; json: unknown 
 afterEach(() => jest.restoreAllMocks());
 
 const exchange = () =>
-  new TikTokOAuthProvider(CONFIG).exchangeCode({ code: 'code-1', redirectUri: REDIRECT_URI });
+  new TikTokOAuthProvider(CONFIG).exchangeCode({
+    code: 'code-1',
+    redirectUri: REDIRECT_URI,
+    codeVerifier: 'verifier-1',
+  });
 
 describe('TikTokOAuthProvider.getAuthorizationUrl', () => {
-  it('builds the consent URL with client_key and comma-separated scopes', () => {
-    const url = new URL(
-      new TikTokOAuthProvider(CONFIG).getAuthorizationUrl({
-        state: 'state-1',
-        redirectUri: REDIRECT_URI,
-      }),
-    );
+  it('builds the consent URL with client_key, comma-separated scopes, and PKCE', () => {
+    const { url: rawUrl, codeVerifier } = new TikTokOAuthProvider(CONFIG).getAuthorizationUrl({
+      state: 'state-1',
+      redirectUri: REDIRECT_URI,
+    });
+    const url = new URL(rawUrl);
 
     expect(url.origin + url.pathname).toBe('https://www.tiktok.com/v2/auth/authorize/');
     // TikTok uses client_key, not client_id.
@@ -54,6 +59,19 @@ describe('TikTokOAuthProvider.getAuthorizationUrl', () => {
     expect(url.searchParams.get('response_type')).toBe('code');
     expect(url.searchParams.get('state')).toBe('state-1');
     expect(url.searchParams.get('scope')).toBe('user.info.basic,video.publish');
+
+    // PKCE — required by TikTok. The verifier is returned (for storage); only
+    // its S256 challenge is in the URL.
+    expect(codeVerifier).toEqual(expect.any(String));
+    expect(url.searchParams.get('code_challenge_method')).toBe('S256');
+    const challenge = url.searchParams.get('code_challenge');
+    // TikTok's challenge is the HEX SHA-256 of the verifier (not base64url).
+    expect(challenge).toMatch(/^[0-9a-f]{64}$/);
+    expect(challenge).toBe(
+      createHash('sha256')
+        .update(codeVerifier ?? '')
+        .digest('hex'),
+    );
   });
 });
 
@@ -84,6 +102,8 @@ describe('TikTokOAuthProvider.exchangeCode', () => {
     expect(body.get('grant_type')).toBe('authorization_code');
     expect(body.get('redirect_uri')).toBe(REDIRECT_URI);
     expect(body.get('code')).toBe('code-1');
+    // PKCE verifier replayed at exchange.
+    expect(body.get('code_verifier')).toBe('verifier-1');
 
     const [infoUrl, infoInit] = fetchMock.mock.calls[1] as [string, RequestInit];
     expect(infoUrl).toBe('https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name');

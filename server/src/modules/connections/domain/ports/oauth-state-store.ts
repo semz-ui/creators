@@ -4,6 +4,8 @@ import type { Platform } from '../platform';
 export interface OAuthStateData {
   userId: string;
   platform: Platform;
+  /** PKCE verifier, when the platform's provider uses PKCE (e.g. TikTok). */
+  codeVerifier?: string;
 }
 
 /**

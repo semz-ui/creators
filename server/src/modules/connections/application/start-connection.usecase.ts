@@ -24,13 +24,18 @@ export class StartConnection {
     const provider = this.providers.get(platform);
     const state = randomUUID();
 
-    await this.stateStore.issue(state, { userId, platform }, this.config.stateTtlSeconds);
-
-    const authorizationUrl = provider.getAuthorizationUrl({
+    const { url, codeVerifier } = provider.getAuthorizationUrl({
       state,
       redirectUri: callbackUri(this.config.publicBaseUrl),
     });
-    return { authorizationUrl };
+
+    await this.stateStore.issue(
+      state,
+      { userId, platform, ...(codeVerifier ? { codeVerifier } : {}) },
+      this.config.stateTtlSeconds,
+    );
+
+    return { authorizationUrl: url };
   }
 }
 
