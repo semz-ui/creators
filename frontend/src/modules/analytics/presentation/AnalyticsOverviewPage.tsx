@@ -1,15 +1,10 @@
-import type { Platform } from '@/modules/connections/data/connections.types';
-import { PLATFORMS } from '@/modules/connections/viewmodels/platform.constants';
+import { platformLabel } from '@/modules/connections/viewmodels/platform.constants';
 import { formatNumber } from '@/shared/lib/format';
 import { Button, Card, Spinner } from '@/shared/ui';
 
 import { useOverview } from '../viewmodels/useOverview';
 import { useRefreshAnalytics } from '../viewmodels/useRefreshAnalytics';
 import { MetricsGrid } from './MetricsGrid';
-
-const LABEL: Record<Platform, string> = Object.fromEntries(
-  PLATFORMS.map((p) => [p.id, p.label]),
-) as Record<Platform, string>;
 
 export function AnalyticsOverviewPage() {
   const { data: overview, isPending, isError } = useOverview();
@@ -51,7 +46,7 @@ export function AnalyticsOverviewPage() {
               <div className="space-y-5">
                 {overview.byPlatform.map((row) => (
                   <div key={row.platform}>
-                    <p className="mb-2 font-medium text-content">{LABEL[row.platform]}</p>
+                    <p className="mb-2 font-medium text-content">{platformLabel(row.platform)}</p>
                     <MetricsGrid metrics={row.metrics} />
                   </div>
                 ))}

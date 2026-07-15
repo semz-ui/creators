@@ -20,7 +20,7 @@ export function useLoginViewModel() {
   const mutation = useMutation({
     mutationFn: authApi.login,
     onSuccess: (result) => {
-      setSession(result);
+      setSession(result.user, result);
       navigate('/dashboard', { replace: true });
     },
   });

@@ -1,10 +1,9 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Card, Spinner } from '@/shared/ui';
 
-import { connectionKeys } from '../data/query-keys';
+import { useRefreshConnections } from '../viewmodels/useRefreshConnections';
 
 /**
  * Landing page for the OAuth return (the backend redirects here with
@@ -13,14 +12,14 @@ import { connectionKeys } from '../data/query-keys';
 export function ConnectionCallbackPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const refreshConnections = useRefreshConnections();
   const failed = params.get('status') === 'error';
 
   useEffect(() => {
-    void queryClient.invalidateQueries({ queryKey: connectionKeys.all });
+    refreshConnections();
     const timer = setTimeout(() => navigate('/connections', { replace: true }), 1200);
     return () => clearTimeout(timer);
-  }, [navigate, queryClient]);
+  }, [navigate, refreshConnections]);
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center justify-center gap-4 py-20">

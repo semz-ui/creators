@@ -27,7 +27,7 @@ export function useGoogleSignInViewModel() {
   const mutation = useMutation({
     mutationFn: authApi.googleSignIn,
     onSuccess: (result) => {
-      setSession(result);
+      setSession(result.user, result);
       navigate('/dashboard', { replace: true });
     },
   });
