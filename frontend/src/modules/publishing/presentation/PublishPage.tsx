@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 
-import { PLATFORMS, type Platform } from '@/modules/connections/data/connections.types';
+import type { Platform } from '@/modules/connections/data/connections.types';
+import { PLATFORMS } from '@/modules/connections/viewmodels/platform.constants';
 import { useConnections } from '@/modules/connections/viewmodels/useConnections';
 import { useVideo } from '@/modules/video/viewmodels/useVideo';
 import { cn } from '@/shared/lib/cn';

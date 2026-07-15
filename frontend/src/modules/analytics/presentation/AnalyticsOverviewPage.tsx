@@ -1,4 +1,5 @@
-import { PLATFORMS, type Platform } from '@/modules/connections/data/connections.types';
+import type { Platform } from '@/modules/connections/data/connections.types';
+import { PLATFORMS } from '@/modules/connections/viewmodels/platform.constants';
 import { formatNumber } from '@/shared/lib/format';
 import { Button, Card, Spinner } from '@/shared/ui';
 

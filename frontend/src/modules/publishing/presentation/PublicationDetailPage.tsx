@@ -1,6 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 
-import { PLATFORMS, type Platform } from '@/modules/connections/data/connections.types';
+import type { Platform } from '@/modules/connections/data/connections.types';
+import { PLATFORMS } from '@/modules/connections/viewmodels/platform.constants';
 import { formatDateTime } from '@/shared/lib/format';
 import { Card, Spinner } from '@/shared/ui';
 

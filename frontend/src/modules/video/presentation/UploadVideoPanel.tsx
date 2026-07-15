@@ -5,7 +5,7 @@ import { useCallback, useRef, useState, type DragEvent } from 'react';
 import { cn } from '@/shared/lib/cn';
 import { Button, Card, Input } from '@/shared/ui';
 
-import { ALLOWED_VIDEO_TYPES } from '../data/video.types';
+import { ALLOWED_VIDEO_TYPES } from '../viewmodels/video.constants';
 import { useUploadVideoViewModel } from '../viewmodels/useUploadVideoViewModel';
 
 const ACCEPT = ALLOWED_VIDEO_TYPES.join(',');

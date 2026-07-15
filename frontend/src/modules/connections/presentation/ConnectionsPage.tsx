@@ -1,6 +1,7 @@
 import { Badge, Button, Card, Spinner } from '@/shared/ui';
 
-import { PLATFORMS, type Connection, type Platform } from '../data/connections.types';
+import type { Connection, Platform } from '../data/connections.types';
+import { PLATFORMS } from '../viewmodels/platform.constants';
 import { useConnections } from '../viewmodels/useConnections';
 import { useConnectPlatform } from '../viewmodels/useConnectPlatform';
 import { useDisconnect } from '../viewmodels/useDisconnect';

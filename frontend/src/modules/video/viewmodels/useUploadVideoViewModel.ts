@@ -6,7 +6,7 @@ import { HttpError } from '@/shared/data/http-error';
 
 import { videoApi } from '../data/video.api';
 import { videoKeys } from '../data/query-keys';
-import { ALLOWED_VIDEO_TYPES, MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from '../data/video.types';
+import { ALLOWED_VIDEO_TYPES, MAX_UPLOAD_BYTES, MAX_UPLOAD_MB } from './video.constants';
 
 const TITLE_MAX = 200;
 

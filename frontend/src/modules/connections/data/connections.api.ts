@@ -12,6 +12,8 @@ const BASE = '/api/v1/connections';
 export const connectionsApi = {
   start: (platform: Platform) => apiClient.post<StartConnectionResult>(`${BASE}/${platform}/start`),
 
+  // Narrowed to the items: unlike the paged endpoints, this collection envelope
+  // carries no other fields, so unwrapping it here discards nothing.
   list: async (): Promise<Connection[]> => {
     const { items } = await apiClient.get<ConnectionList>(BASE);
     return items;
