@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { env } from '@/shared/config/env';
+import { ok } from '@/test/msw/envelope';
 import { server } from '@/test/msw/server';
 
 import { analyticsKeys } from '../data/query-keys';
@@ -16,7 +17,7 @@ describe('useRefreshAnalytics', () => {
     server.use(
       http.post(`${env.apiUrl}/api/v1/analytics/refresh`, () => {
         refreshed = true;
-        return HttpResponse.json({ success: true, data: { synced: 2 } });
+        return HttpResponse.json(ok({ synced: 2 }));
       }),
     );
 

@@ -1,16 +1,12 @@
 import { Link, useParams } from 'react-router-dom';
 
-import { PLATFORMS, type Platform } from '@/modules/connections/data/connections.types';
+import { platformLabel } from '@/modules/connections/viewmodels/platform.constants';
 import { useConnections } from '@/modules/connections/viewmodels/useConnections';
 import { useVideo } from '@/modules/video/viewmodels/useVideo';
 import { cn } from '@/shared/lib/cn';
 import { Button, Card, Spinner, Textarea } from '@/shared/ui';
 
 import { useCreatePublication } from '../viewmodels/useCreatePublication';
-
-const LABEL: Record<Platform, string> = Object.fromEntries(
-  PLATFORMS.map((p) => [p.id, p.label]),
-) as Record<Platform, string>;
 
 export function PublishPage() {
   const { id = '' } = useParams();
@@ -76,7 +72,7 @@ export function PublishPage() {
                         : 'border-line bg-surface text-content hover:bg-sunken',
                     )}
                   >
-                    {LABEL[platform]}
+                    {platformLabel(platform)}
                   </button>
                 ))}
               </div>

@@ -6,6 +6,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
 import { env } from '@/shared/config/env';
+import { ok } from '@/test/msw/envelope';
 import { server } from '@/test/msw/server';
 
 import { useCreateVideoViewModel } from './useCreateVideoViewModel';
@@ -42,10 +43,7 @@ describe('useCreateVideoViewModel', () => {
     server.use(
       http.post(`${env.apiUrl}/api/v1/videos`, () =>
         HttpResponse.json(
-          {
-            success: true,
-            data: { id: 'vid-1', prompt: 'a cat', durationSeconds: 15, status: 'processing' },
-          },
+          ok({ id: 'vid-1', prompt: 'a cat', durationSeconds: 15, status: 'processing' }),
           { status: 201 },
         ),
       ),

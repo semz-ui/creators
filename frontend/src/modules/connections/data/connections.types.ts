@@ -20,10 +20,3 @@ export interface ConnectionList {
 export interface StartConnectionResult {
   authorizationUrl: string;
 }
-
-export const PLATFORMS: ReadonlyArray<{ id: Platform; label: string }> = [
-  { id: 'facebook', label: 'Facebook' },
-  { id: 'instagram', label: 'Instagram' },
-  { id: 'youtube', label: 'YouTube' },
-  { id: 'tiktok', label: 'TikTok' },
-];

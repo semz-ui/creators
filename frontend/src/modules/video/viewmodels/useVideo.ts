@@ -2,9 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 
 import { videoApi } from '../data/video.api';
 import { videoKeys } from '../data/query-keys';
-import { isVideoProcessing } from '../data/video.types';
+import type { VideoStatus } from '../data/video.types';
 
 const POLL_INTERVAL_MS = 2500;
+
+const isVideoProcessing = (status: VideoStatus): boolean =>
+  status === 'queued' || status === 'processing';
 
 /** A single video; polls while it is still generating. */
 export function useVideo(id: string) {

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { HttpError } from '@/shared/data/http-error';
 
 import { videoApi } from '../data/video.api';
-import { NARRATION_MAX, type Voice } from '../data/video.types';
+import { NARRATION_MAX, type Voice } from './video.constants';
 import { videoKeys } from '../data/query-keys';
 
 export const DURATION_PRESETS = [15, 30, 45, 60] as const;

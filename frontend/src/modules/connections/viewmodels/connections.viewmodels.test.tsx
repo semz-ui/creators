@@ -5,11 +5,13 @@ import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { env } from '@/shared/config/env';
+import { ok } from '@/test/msw/envelope';
 import { server } from '@/test/msw/server';
 
 import { useConnectPlatform } from './useConnectPlatform';
 import { useConnections } from './useConnections';
 import { useDisconnect } from './useDisconnect';
+import { usePlatformRows } from './usePlatformRows';
 
 function wrapper({ children }: { children: ReactNode }) {
   const client = new QueryClient({
@@ -33,13 +35,44 @@ const conn = {
 describe('useConnections', () => {
   it('unwraps the items array', async () => {
     server.use(
-      http.get(`${env.apiUrl}/api/v1/connections`, () =>
-        HttpResponse.json({ success: true, data: { items: [conn] } }),
-      ),
+      http.get(`${env.apiUrl}/api/v1/connections`, () => HttpResponse.json(ok({ items: [conn] }))),
     );
     const { result } = renderHook(() => useConnections(), { wrapper });
     await waitFor(() => expect(result.current.data).toHaveLength(1));
     expect(result.current.data?.[0]?.platform).toBe('facebook');
+  });
+});
+
+describe('usePlatformRows', () => {
+  it('lists every platform, joining the active connection onto its row', async () => {
+    server.use(
+      http.get(`${env.apiUrl}/api/v1/connections`, () => HttpResponse.json(ok({ items: [conn] }))),
+    );
+    const { result } = renderHook(() => usePlatformRows(), { wrapper });
+    await waitFor(() => expect(result.current.isPending).toBe(false));
+
+    expect(result.current.rows.map((r) => r.id)).toEqual([
+      'facebook',
+      'instagram',
+      'youtube',
+      'tiktok',
+    ]);
+    expect(result.current.rows[0]?.label).toBe('Facebook');
+    expect(result.current.rows[0]?.connection?.displayName).toBe('My Page');
+    // Unconnected platforms still get a row, with no connection.
+    expect(result.current.rows[1]?.connection).toBeNull();
+  });
+
+  it('ignores connections that are not active', async () => {
+    server.use(
+      http.get(`${env.apiUrl}/api/v1/connections`, () =>
+        HttpResponse.json(ok({ items: [{ ...conn, status: 'expired' }] })),
+      ),
+    );
+    const { result } = renderHook(() => usePlatformRows(), { wrapper });
+    await waitFor(() => expect(result.current.isPending).toBe(false));
+
+    expect(result.current.rows.every((r) => r.connection === null)).toBe(true);
   });
 });
 
@@ -54,10 +87,9 @@ describe('useConnectPlatform', () => {
   it('redirects to the provider authorization URL', async () => {
     server.use(
       http.post(`${env.apiUrl}/api/v1/connections/facebook/start`, () =>
-        HttpResponse.json({
-          success: true,
-          data: { authorizationUrl: 'https://oauth.stub.local/facebook/authorize?x=1' },
-        }),
+        HttpResponse.json(
+          ok({ authorizationUrl: 'https://oauth.stub.local/facebook/authorize?x=1' }),
+        ),
       ),
     );
     const { result } = renderHook(() => useConnectPlatform(), { wrapper });

@@ -1,15 +1,11 @@
 import { Link, useParams } from 'react-router-dom';
 
-import { PLATFORMS, type Platform } from '@/modules/connections/data/connections.types';
+import { platformLabel } from '@/modules/connections/viewmodels/platform.constants';
 import { formatDateTime } from '@/shared/lib/format';
 import { Card, Spinner } from '@/shared/ui';
 
 import { useVideoAnalytics } from '../viewmodels/useVideoAnalytics';
 import { MetricsGrid } from './MetricsGrid';
-
-const LABEL: Record<Platform, string> = Object.fromEntries(
-  PLATFORMS.map((p) => [p.id, p.label]),
-) as Record<Platform, string>;
 
 export function VideoAnalyticsPage() {
   const { id = '' } = useParams();
@@ -43,7 +39,7 @@ export function VideoAnalyticsPage() {
           {data.byPlatform.map((row) => (
             <Card key={row.platform}>
               <div className="mb-3 flex items-baseline justify-between">
-                <p className="font-medium text-content">{LABEL[row.platform]}</p>
+                <p className="font-medium text-content">{platformLabel(row.platform)}</p>
                 <p className="text-xs text-content-muted">Updated {formatDateTime(row.syncedAt)}</p>
               </div>
               <MetricsGrid metrics={row.metrics} />

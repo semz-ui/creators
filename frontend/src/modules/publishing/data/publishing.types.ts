@@ -40,5 +40,3 @@ export interface PublicationPage {
   limit: number;
   total: number;
 }
-
-export const isPublicationPending = (status: PublicationStatus): boolean => status === 'publishing';

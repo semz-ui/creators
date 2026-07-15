@@ -6,6 +6,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { env } from '@/shared/config/env';
+import { ok } from '@/test/msw/envelope';
 import { server } from '@/test/msw/server';
 
 import { renderGoogleButton } from '../data/google-identity';
@@ -63,14 +64,13 @@ describe('useGoogleSignInViewModel (google mode)', () => {
     server.use(
       http.post(`${env.apiUrl}/api/v1/auth/google`, async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({
-          success: true,
-          data: {
+        return HttpResponse.json(
+          ok({
             user: { id: 'u1', email: 'google.user@reelo.app' },
             accessToken: 'access-1',
             refreshToken: 'refresh-1',
-          },
-        });
+          }),
+        );
       }),
     );
     renderGoogleButtonMock.mockResolvedValue(undefined);

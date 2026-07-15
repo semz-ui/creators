@@ -20,7 +20,7 @@ export function useRegisterViewModel() {
   const mutation = useMutation({
     mutationFn: authApi.register,
     onSuccess: (result) => {
-      setSession(result);
+      setSession(result.user, result);
       navigate('/dashboard', { replace: true });
     },
   });

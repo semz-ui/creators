@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import type { AuthResult, AuthTokens, AuthUser } from '../data/auth.types';
+import type { AuthTokens, AuthUser } from '../data/auth.types';
 
 export interface SessionState {
   user: AuthUser | null;
@@ -9,7 +9,7 @@ export interface SessionState {
   accessToken: string | null;
   refreshToken: string | null;
 
-  setSession: (result: AuthResult) => void;
+  setSession: (user: AuthUser, tokens: AuthTokens) => void;
   setTokens: (tokens: AuthTokens) => void;
   setUser: (user: AuthUser) => void;
   clear: () => void;
@@ -27,11 +27,11 @@ export const useSessionStore = create<SessionState>()(
       accessToken: null,
       refreshToken: null,
 
-      setSession: (result) =>
+      setSession: (user, tokens) =>
         set({
-          user: result.user,
-          accessToken: result.accessToken,
-          refreshToken: result.refreshToken,
+          user,
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
         }),
       setTokens: (tokens) =>
         set({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken }),

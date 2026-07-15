@@ -2,9 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 
 import { publishingApi } from '../data/publishing.api';
 import { publicationKeys } from '../data/query-keys';
-import { isPublicationPending } from '../data/publishing.types';
+import type { PublicationStatus } from '../data/publishing.types';
 
 const POLL_INTERVAL_MS = 2500;
+
+const isPublicationPending = (status: PublicationStatus): boolean => status === 'publishing';
 
 /** A single publication; polls while distribution is in progress. */
 export function usePublication(id: string) {

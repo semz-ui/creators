@@ -1,5 +1,5 @@
-import { apiClient } from '@/shared/data/api-client';
-import { HttpError } from '@/shared/data/http-error';
+import { apiClient, type ApiSuccessBody } from '@/shared/data/api-client';
+import { HttpError, type ApiErrorBody } from '@/shared/data/http-error';
 import { env } from '@/shared/config/env';
 
 import type { CreateVideoInput, UploadVideoInput, Video, VideoPage } from './video.types';
@@ -9,6 +9,11 @@ const BASE = '/api/v1/videos';
 export const videoApi = {
   create: (input: CreateVideoInput) => apiClient.post<Video>(BASE, input),
 
+  /**
+   * Uses XHR rather than ApiClient because only XHR reports upload progress.
+   * Unlike ApiClient, this does NOT refresh-and-retry on a 401 — retrying would
+   * re-send the whole file — so an expired token surfaces as an upload failure.
+   */
   upload: (input: UploadVideoInput, onProgress?: (pct: number) => void): Promise<Video> =>
     new Promise((resolve, reject) => {
       const form = new FormData();
@@ -31,14 +36,14 @@ export const videoApi = {
         try {
           const data = JSON.parse(xhr.responseText) as unknown;
           if (xhr.status >= 200 && xhr.status < 300) {
-            resolve((data as { success: true; data: Video }).data);
+            resolve((data as ApiSuccessBody<Video>).data);
           } else {
-            const body = data as { error?: { code?: string; message?: string } };
+            const body = data as ApiErrorBody | undefined;
             reject(
               new HttpError(
                 xhr.status,
-                body.error?.code ?? 'ERROR',
-                body.error?.message ?? 'Upload failed',
+                body?.error?.code ?? 'ERROR',
+                body?.error?.message ?? 'Upload failed',
               ),
             );
           }

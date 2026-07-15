@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/shared/lib/cn';
 import { Button, Card, Textarea } from '@/shared/ui';
 
-import { MUSIC_TRACKS, VOICES, type Voice } from '../data/video.types';
+import { MUSIC_TRACKS, VOICES, type Voice } from '../viewmodels/video.constants';
 import { DURATION_PRESETS, useCreateVideoViewModel } from '../viewmodels/useCreateVideoViewModel';
 
 const SELECT_CLASS =

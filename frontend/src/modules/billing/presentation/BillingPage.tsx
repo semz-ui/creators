@@ -1,13 +1,12 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { cn } from '@/shared/lib/cn';
 import { Button, Card, Spinner } from '@/shared/ui';
 
-import { billingKeys } from '../data/query-keys';
 import { useBalance } from '../viewmodels/useBalance';
 import { useLedger } from '../viewmodels/useLedger';
+import { useRefreshBilling } from '../viewmodels/useRefreshBilling';
 import { CREDIT_PACKS, useTopUp } from '../viewmodels/useTopUp';
 import { LedgerList } from './LedgerList';
 
@@ -24,14 +23,14 @@ export function BillingPage() {
   // webhook credits asynchronously), then strip the param from the URL so a
   // manual refresh doesn't replay it.
   const [searchParams, setSearchParams] = useSearchParams();
-  const queryClient = useQueryClient();
+  const refreshBilling = useRefreshBilling();
   const [topupStatus, setTopupStatus] = useState<string | null>(null);
   useEffect(() => {
     const status = searchParams.get('topup');
     if (!status) return;
     setTopupStatus(status);
     if (status === 'success') {
-      void queryClient.invalidateQueries({ queryKey: billingKeys.all });
+      refreshBilling();
     }
     setSearchParams(
       (prev) => {
@@ -40,7 +39,7 @@ export function BillingPage() {
       },
       { replace: true },
     );
-  }, [searchParams, queryClient, setSearchParams]);
+  }, [searchParams, refreshBilling, setSearchParams]);
 
   const totalPages = ledger ? Math.max(1, Math.ceil(ledger.total / ledger.limit)) : 1;
 

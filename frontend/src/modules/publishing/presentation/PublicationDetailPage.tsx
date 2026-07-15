@@ -1,15 +1,11 @@
 import { Link, useParams } from 'react-router-dom';
 
-import { PLATFORMS, type Platform } from '@/modules/connections/data/connections.types';
+import { platformLabel } from '@/modules/connections/viewmodels/platform.constants';
 import { formatDateTime } from '@/shared/lib/format';
 import { Card, Spinner } from '@/shared/ui';
 
 import { usePublication } from '../viewmodels/usePublication';
 import { PublicationStatusBadge, TargetStatusBadge } from './PublicationStatusBadge';
-
-const LABEL: Record<Platform, string> = Object.fromEntries(
-  PLATFORMS.map((p) => [p.id, p.label]),
-) as Record<Platform, string>;
 
 export function PublicationDetailPage() {
   const { id = '' } = useParams();
@@ -55,7 +51,7 @@ export function PublicationDetailPage() {
           {publication.targets.map((target) => (
             <li key={target.platform} className="flex items-center justify-between py-3">
               <div>
-                <p className="font-medium text-content">{LABEL[target.platform]}</p>
+                <p className="font-medium text-content">{platformLabel(target.platform)}</p>
                 {target.error && <p className="text-sm text-danger">{target.error}</p>}
               </div>
               <TargetStatusBadge status={target.status} />

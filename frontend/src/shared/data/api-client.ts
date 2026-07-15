@@ -3,7 +3,7 @@ import { env } from '@/shared/config/env';
 import { HttpError, type ApiErrorBody } from './http-error';
 
 /** Envelope every successful API response arrives in. */
-interface ApiSuccessBody<T> {
+export interface ApiSuccessBody<T> {
   success: true;
   data: T;
 }

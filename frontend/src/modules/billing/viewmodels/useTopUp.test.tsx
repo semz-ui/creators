@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { env } from '@/shared/config/env';
+import { ok } from '@/test/msw/envelope';
 import { server } from '@/test/msw/server';
 
 import { useTopUp } from './useTopUp';
@@ -29,10 +30,9 @@ describe('useTopUp', () => {
     server.use(
       http.post(`${env.apiUrl}/api/v1/billing/topup`, async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({
-          success: true,
-          data: { paymentId: 'p1', checkoutUrl: 'https://pay.stub/checkout/p1' },
-        });
+        return HttpResponse.json(
+          ok({ paymentId: 'p1', checkoutUrl: 'https://pay.stub/checkout/p1' }),
+        );
       }),
     );
 

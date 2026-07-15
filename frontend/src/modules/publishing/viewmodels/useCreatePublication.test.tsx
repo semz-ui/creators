@@ -6,6 +6,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 
 import { env } from '@/shared/config/env';
+import { ok } from '@/test/msw/envelope';
 import { server } from '@/test/msw/server';
 
 import { useCreatePublication } from './useCreatePublication';
@@ -51,10 +52,9 @@ describe('useCreatePublication', () => {
     server.use(
       http.post(`${env.apiUrl}/api/v1/publications`, async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json(
-          { success: true, data: { id: 'pub-1', status: 'completed', targets: [] } },
-          { status: 201 },
-        );
+        return HttpResponse.json(ok({ id: 'pub-1', status: 'completed', targets: [] }), {
+          status: 201,
+        });
       }),
     );
 
