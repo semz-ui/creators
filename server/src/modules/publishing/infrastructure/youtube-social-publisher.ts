@@ -1,5 +1,8 @@
 import { env } from '@shared/infrastructure/config/env';
-import { fetchWithTimeout } from '@shared/infrastructure/http/fetch-with-timeout';
+import {
+  fetchBufferWithTimeout,
+  fetchWithTimeout,
+} from '@shared/infrastructure/http/fetch-with-timeout';
 
 import type {
   ISocialPublisher,
@@ -47,11 +50,15 @@ export class YouTubeSocialPublisher implements ISocialPublisher {
   }
 
   private async downloadVideo(videoUrl: string): Promise<Uint8Array> {
-    const res = await fetchWithTimeout(videoUrl, {}, { timeoutMs: env.HTTP_MEDIA_TIMEOUT_MS });
+    const res = await fetchBufferWithTimeout(
+      videoUrl,
+      {},
+      { timeoutMs: env.HTTP_MEDIA_TIMEOUT_MS },
+    );
     if (!res.ok) {
       throw new Error(`Video download failed (HTTP ${res.status}): ${res.statusText}`);
     }
-    return new Uint8Array(await res.arrayBuffer());
+    return new Uint8Array(res.buffer);
   }
 
   private async initiateUpload(accessToken: string, caption: string | null): Promise<string> {
