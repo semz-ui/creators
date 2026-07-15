@@ -1,6 +1,13 @@
+import { createHash, randomBytes } from 'node:crypto';
+
 import { fetchWithTimeout } from '@shared/infrastructure/http/fetch-with-timeout';
 
-import type { IOAuthProvider, OAuthAccount, RefreshedTokens } from '../domain/ports/oauth-provider';
+import type {
+  AuthorizationRequest,
+  IOAuthProvider,
+  OAuthAccount,
+  RefreshedTokens,
+} from '../domain/ports/oauth-provider';
 
 const AUTH_URL = 'https://www.tiktok.com/v2/auth/authorize/';
 const TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
@@ -46,7 +53,16 @@ interface UserInfoResponse extends TikTokErrorBody {
 export class TikTokOAuthProvider implements IOAuthProvider {
   constructor(private readonly config: TikTokOAuthConfig) {}
 
-  getAuthorizationUrl({ state, redirectUri }: { state: string; redirectUri: string }): string {
+  getAuthorizationUrl({
+    state,
+    redirectUri,
+  }: {
+    state: string;
+    redirectUri: string;
+  }): AuthorizationRequest {
+    // TikTok's Login Kit requires PKCE. The verifier is stored with the OAuth
+    // state and replayed at exchangeCode; only its challenge travels in the URL.
+    const { verifier, challenge } = createPkcePair();
     const params = new URLSearchParams({
       client_key: this.config.clientKey,
       redirect_uri: redirectUri,
@@ -54,21 +70,26 @@ export class TikTokOAuthProvider implements IOAuthProvider {
       // TikTok expects comma-separated scopes.
       scope: TIKTOK_SCOPES.join(','),
       state,
+      code_challenge: challenge,
+      code_challenge_method: 'S256',
     });
-    return `${AUTH_URL}?${params.toString()}`;
+    return { url: `${AUTH_URL}?${params.toString()}`, codeVerifier: verifier };
   }
 
   async exchangeCode({
     code,
     redirectUri,
+    codeVerifier,
   }: {
     code: string;
     redirectUri: string;
+    codeVerifier?: string;
   }): Promise<OAuthAccount> {
     const token = await this.requestToken({
       grant_type: 'authorization_code',
       code,
       redirect_uri: redirectUri,
+      ...(codeVerifier ? { code_verifier: codeVerifier } : {}),
     });
     if (!token.access_token || !token.open_id) {
       throw new Error('TikTok did not return an access token or open_id for the connected account');
@@ -132,6 +153,17 @@ export class TikTokOAuthProvider implements IOAuthProvider {
     }
     return json.data?.user?.display_name ?? 'TikTok account';
   }
+}
+
+/**
+ * PKCE pair for TikTok. The verifier is a 43-char base64url string (all
+ * unreserved chars, within TikTok's 43–128 range). TikTok's challenge is the
+ * **hex** SHA-256 of the verifier — note: not the base64url that RFC 7636 uses.
+ */
+export function createPkcePair(): { verifier: string; challenge: string } {
+  const verifier = randomBytes(32).toString('base64url');
+  const challenge = createHash('sha256').update(verifier).digest('hex');
+  return { verifier, challenge };
 }
 
 function errorDetail(json: TikTokErrorBody, statusText: string): string {

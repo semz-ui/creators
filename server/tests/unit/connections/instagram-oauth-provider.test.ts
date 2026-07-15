@@ -41,7 +41,7 @@ describe('InstagramOAuthProvider.getAuthorizationUrl', () => {
       new InstagramOAuthProvider(CONFIG).getAuthorizationUrl({
         state: 'state-1',
         redirectUri: REDIRECT_URI,
-      }),
+      }).url,
     );
 
     expect(url.origin + url.pathname).toBe('https://www.instagram.com/oauth/authorize');

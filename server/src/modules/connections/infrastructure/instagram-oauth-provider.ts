@@ -1,6 +1,11 @@
 import { fetchWithTimeout } from '@shared/infrastructure/http/fetch-with-timeout';
 
-import type { IOAuthProvider, OAuthAccount, RefreshedTokens } from '../domain/ports/oauth-provider';
+import type {
+  AuthorizationRequest,
+  IOAuthProvider,
+  OAuthAccount,
+  RefreshedTokens,
+} from '../domain/ports/oauth-provider';
 
 const AUTH_URL = 'https://www.instagram.com/oauth/authorize';
 const SHORT_TOKEN_URL = 'https://api.instagram.com/oauth/access_token';
@@ -53,7 +58,13 @@ interface MeResponse extends MetaErrorBody {
 export class InstagramOAuthProvider implements IOAuthProvider {
   constructor(private readonly config: InstagramOAuthConfig) {}
 
-  getAuthorizationUrl({ state, redirectUri }: { state: string; redirectUri: string }): string {
+  getAuthorizationUrl({
+    state,
+    redirectUri,
+  }: {
+    state: string;
+    redirectUri: string;
+  }): AuthorizationRequest {
     const params = new URLSearchParams({
       client_id: this.config.appId,
       redirect_uri: redirectUri,
@@ -62,7 +73,7 @@ export class InstagramOAuthProvider implements IOAuthProvider {
       scope: INSTAGRAM_SCOPES.join(','),
       state,
     });
-    return `${AUTH_URL}?${params.toString()}`;
+    return { url: `${AUTH_URL}?${params.toString()}` };
   }
 
   async exchangeCode({

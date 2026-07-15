@@ -1,6 +1,11 @@
 import { fetchWithTimeout } from '@shared/infrastructure/http/fetch-with-timeout';
 
-import type { IOAuthProvider, OAuthAccount, RefreshedTokens } from '../domain/ports/oauth-provider';
+import type {
+  AuthorizationRequest,
+  IOAuthProvider,
+  OAuthAccount,
+  RefreshedTokens,
+} from '../domain/ports/oauth-provider';
 
 const AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -39,7 +44,13 @@ interface GoogleChannelsResponse {
 export class GoogleOAuthProvider implements IOAuthProvider {
   constructor(private readonly config: GoogleOAuthConfig) {}
 
-  getAuthorizationUrl({ state, redirectUri }: { state: string; redirectUri: string }): string {
+  getAuthorizationUrl({
+    state,
+    redirectUri,
+  }: {
+    state: string;
+    redirectUri: string;
+  }): AuthorizationRequest {
     const params = new URLSearchParams({
       client_id: this.config.clientId,
       redirect_uri: redirectUri,
@@ -52,7 +63,7 @@ export class GoogleOAuthProvider implements IOAuthProvider {
       prompt: 'consent',
       include_granted_scopes: 'true',
     });
-    return `${AUTH_URL}?${params.toString()}`;
+    return { url: `${AUTH_URL}?${params.toString()}` };
   }
 
   async exchangeCode({
