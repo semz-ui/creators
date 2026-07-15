@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from '@shared/infrastructure/http/fetch-with-timeout';
+
 import type { IOAuthProvider, OAuthAccount, RefreshedTokens } from '../domain/ports/oauth-provider';
 
 const AUTH_URL = 'https://www.tiktok.com/v2/auth/authorize/';
@@ -100,7 +102,7 @@ export class TikTokOAuthProvider implements IOAuthProvider {
   }
 
   private async requestToken(fields: Record<string, string>): Promise<TokenResponse> {
-    const res = await fetch(TOKEN_URL, {
+    const res = await fetchWithTimeout(TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -119,7 +121,7 @@ export class TikTokOAuthProvider implements IOAuthProvider {
   }
 
   private async fetchDisplayName(accessToken: string): Promise<string> {
-    const res = await fetch(USER_INFO_URL, {
+    const res = await fetchWithTimeout(USER_INFO_URL, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     const json = (await res.json().catch(() => ({}))) as UserInfoResponse;
