@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import { env } from '@/shared/config/env';
+import { ok } from '@/test/msw/envelope';
 import { server } from '@/test/msw/server';
 import { renderWithProviders } from '@/test/render';
 
@@ -20,9 +21,7 @@ const overview = {
 describe('AnalyticsOverviewPage', () => {
   it('shows totals, video count, and per-platform breakdown', async () => {
     server.use(
-      http.get(`${env.apiUrl}/api/v1/analytics/overview`, () =>
-        HttpResponse.json({ success: true, data: overview }),
-      ),
+      http.get(`${env.apiUrl}/api/v1/analytics/overview`, () => HttpResponse.json(ok(overview))),
     );
     renderWithProviders(<AnalyticsOverviewPage />, { route: '/analytics' });
 
@@ -34,9 +33,7 @@ describe('AnalyticsOverviewPage', () => {
 
   it('matches the snapshot', async () => {
     server.use(
-      http.get(`${env.apiUrl}/api/v1/analytics/overview`, () =>
-        HttpResponse.json({ success: true, data: overview }),
-      ),
+      http.get(`${env.apiUrl}/api/v1/analytics/overview`, () => HttpResponse.json(ok(overview))),
     );
     const { container } = renderWithProviders(<AnalyticsOverviewPage />, { route: '/analytics' });
     await screen.findByText('1,500');

@@ -4,6 +4,7 @@ import { Route, Routes } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
 import { env } from '@/shared/config/env';
+import { ok } from '@/test/msw/envelope';
 import { server } from '@/test/msw/server';
 import { renderWithProviders } from '@/test/render';
 
@@ -32,9 +33,7 @@ const publication = {
 describe('PublicationDetailPage', () => {
   it('shows the overall status and per-platform targets', async () => {
     server.use(
-      http.get(`${env.apiUrl}/api/v1/publications/pub-1`, () =>
-        HttpResponse.json({ success: true, data: publication }),
-      ),
+      http.get(`${env.apiUrl}/api/v1/publications/pub-1`, () => HttpResponse.json(ok(publication))),
     );
     renderWithProviders(routed, { route: '/publications/pub-1' });
 
@@ -47,9 +46,7 @@ describe('PublicationDetailPage', () => {
 
   it('matches the snapshot', async () => {
     server.use(
-      http.get(`${env.apiUrl}/api/v1/publications/pub-1`, () =>
-        HttpResponse.json({ success: true, data: publication }),
-      ),
+      http.get(`${env.apiUrl}/api/v1/publications/pub-1`, () => HttpResponse.json(ok(publication))),
     );
     const { container } = renderWithProviders(routed, {
       route: '/publications/pub-1',

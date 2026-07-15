@@ -6,6 +6,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { env } from '@/shared/config/env';
+import { ok } from '@/test/msw/envelope';
 import { server } from '@/test/msw/server';
 
 import { useSessionStore } from '../session/session.store';
@@ -49,14 +50,11 @@ describe('useRegisterViewModel', () => {
     server.use(
       http.post(`${env.apiUrl}/api/v1/auth/register`, () =>
         HttpResponse.json(
-          {
-            success: true,
-            data: {
-              user: { id: 'u1', email: 'new@reelo.app' },
-              accessToken: 'access-1',
-              refreshToken: 'refresh-1',
-            },
-          },
+          ok({
+            user: { id: 'u1', email: 'new@reelo.app' },
+            accessToken: 'access-1',
+            refreshToken: 'refresh-1',
+          }),
           { status: 201 },
         ),
       ),

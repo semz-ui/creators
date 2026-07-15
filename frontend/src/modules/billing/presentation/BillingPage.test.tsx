@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 
 import { env } from '@/shared/config/env';
+import { ok } from '@/test/msw/envelope';
 import { server } from '@/test/msw/server';
 import { renderWithProviders } from '@/test/render';
 
@@ -10,13 +11,10 @@ import { BillingPage } from './BillingPage';
 
 function mockBilling() {
   server.use(
-    http.get(`${env.apiUrl}/api/v1/billing/balance`, () =>
-      HttpResponse.json({ success: true, data: { balance: 90 } }),
-    ),
+    http.get(`${env.apiUrl}/api/v1/billing/balance`, () => HttpResponse.json(ok({ balance: 90 }))),
     http.get(`${env.apiUrl}/api/v1/billing/ledger`, () =>
-      HttpResponse.json({
-        success: true,
-        data: {
+      HttpResponse.json(
+        ok({
           items: [
             {
               id: 'l1',
@@ -40,8 +38,8 @@ function mockBilling() {
           page: 1,
           limit: 10,
           total: 2,
-        },
-      }),
+        }),
+      ),
     ),
   );
 }
