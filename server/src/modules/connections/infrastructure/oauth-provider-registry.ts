@@ -4,6 +4,7 @@ import { PLATFORMS, type Platform } from '../domain/platform';
 import { GoogleOAuthProvider, type GoogleOAuthConfig } from './google-oauth-provider';
 import { InstagramOAuthProvider, type InstagramOAuthConfig } from './instagram-oauth-provider';
 import { StubOAuthProvider } from './stub-oauth-provider';
+import { TikTokOAuthProvider, type TikTokOAuthConfig } from './tiktok-oauth-provider';
 
 /** Looks up the OAuth provider for a platform from a fixed map. */
 export class StaticOAuthProviderRegistry implements IOAuthProviderRegistry {
@@ -23,6 +24,8 @@ export interface ProviderRegistryConfig {
   google?: GoogleOAuthConfig;
   /** When set, the real Instagram provider handles 'instagram'. */
   instagram?: InstagramOAuthConfig;
+  /** When set, the real TikTok provider handles 'tiktok'. */
+  tiktok?: TikTokOAuthConfig;
 }
 
 /**
@@ -40,6 +43,9 @@ export function buildProviderRegistry(
   }
   if (config.instagram) {
     providers.set('instagram', new InstagramOAuthProvider(config.instagram));
+  }
+  if (config.tiktok) {
+    providers.set('tiktok', new TikTokOAuthProvider(config.tiktok));
   }
   return new StaticOAuthProviderRegistry(providers);
 }

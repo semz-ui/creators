@@ -78,13 +78,20 @@ function buildPublishers(): ISocialPublisherRegistry {
   if (env.INSTAGRAM_APP_ID && env.INSTAGRAM_APP_SECRET) {
     config.instagram = {};
   }
+  if (env.TIKTOK_CLIENT_KEY && env.TIKTOK_CLIENT_SECRET) {
+    config.tiktok = { privacyLevel: env.TIKTOK_PRIVACY_LEVEL };
+  }
 
-  const real = [...(config.youtube ? ['youtube'] : []), ...(config.instagram ? ['instagram'] : [])];
+  const real = [
+    ...(config.youtube ? ['youtube'] : []),
+    ...(config.instagram ? ['instagram'] : []),
+    ...(config.tiktok ? ['tiktok'] : []),
+  ];
   if (real.length > 0) {
     logger.info(`Publishing: real publishing for ${real.join(', ')} (other platforms stubbed)`);
   } else {
     logger.info(
-      'Publishing: stub publishers (set GOOGLE_CLIENT_ID/SECRET for YouTube, INSTAGRAM_APP_ID/SECRET for Instagram)',
+      'Publishing: stub publishers (set GOOGLE_CLIENT_ID/SECRET for YouTube, INSTAGRAM_APP_ID/SECRET for Instagram, TIKTOK_CLIENT_KEY/SECRET for TikTok)',
     );
   }
   return buildPublisherRegistry(config);

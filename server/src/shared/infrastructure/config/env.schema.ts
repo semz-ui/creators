@@ -120,6 +120,17 @@ export const envSchema = z
     // NOT the parent Meta app id.
     INSTAGRAM_APP_ID: z.string().optional(),
     INSTAGRAM_APP_SECRET: z.string().optional(),
+    // TikTok Login Kit + Content Posting API for the 'tiktok' platform. When
+    // both are set the real provider + Direct Post publisher are wired in.
+    // TikTok calls these client_key/client_secret (not client_id).
+    TIKTOK_CLIENT_KEY: z.string().optional(),
+    TIKTOK_CLIENT_SECRET: z.string().optional(),
+    // Privacy of videos posted to TikTok. Until the app passes TikTok's audit,
+    // posts are forced to SELF_ONLY regardless; the publisher honors whatever
+    // the creator_info query allows, so keep the safe default.
+    TIKTOK_PRIVACY_LEVEL: z
+      .enum(['SELF_ONLY', 'MUTUAL_FOLLOW_FRIENDS', 'FOLLOWER_OF_CREATOR', 'PUBLIC_TO_EVERYONE'])
+      .default('SELF_ONLY'),
 
     // Publishing module — shared secret a scheduler presents to run due publications.
     PUBLISH_SCHEDULER_SECRET: z
@@ -190,6 +201,15 @@ export const envSchema = z
         code: z.ZodIssueCode.custom,
         path: ['INSTAGRAM_APP_SECRET'],
         message: 'INSTAGRAM_APP_ID and INSTAGRAM_APP_SECRET must be set together',
+      });
+    }
+
+    // TikTok credentials only work as a pair — catch half-configured deploys.
+    if (Boolean(env.TIKTOK_CLIENT_KEY) !== Boolean(env.TIKTOK_CLIENT_SECRET)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['TIKTOK_CLIENT_SECRET'],
+        message: 'TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET must be set together',
       });
     }
 

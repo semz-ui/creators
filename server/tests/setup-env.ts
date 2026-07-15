@@ -31,6 +31,9 @@ process.env.GOOGLE_CLIENT_SECRET = '';
 // Same for Instagram — force the stub provider/publisher so tests never hit Meta.
 process.env.INSTAGRAM_APP_ID = '';
 process.env.INSTAGRAM_APP_SECRET = '';
+// Same for TikTok — force the stub provider/publisher so tests never hit TikTok.
+process.env.TIKTOK_CLIENT_KEY = '';
+process.env.TIKTOK_CLIENT_SECRET = '';
 // Blank so the OAuth callback returns JSON (a developer's .env may set a
 // frontend redirect URL, which would flip the callback into 302 mode).
 process.env.CONNECTIONS_REDIRECT_URL = '';
