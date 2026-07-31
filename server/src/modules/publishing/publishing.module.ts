@@ -35,6 +35,8 @@ export interface PublishingModule {
   router: Router;
   /** Exposed so other modules (e.g. Analytics) can read publications via an adapter. */
   publicationRepository: IPublicationRepository;
+  /** Exposed so the Agent module can publish through the same use case. */
+  createPublication: CreatePublication;
 }
 
 /** Composition root for the publishing module. */
@@ -50,8 +52,15 @@ export function buildPublishingModule({
 
   const distribution = new DistributionService(videoLookup, connectionTokens, publishers);
 
+  const createPublication = new CreatePublication(
+    publications,
+    videoLookup,
+    connectionTokens,
+    distribution,
+  );
+
   const controller = new PublishingController({
-    create: new CreatePublication(publications, videoLookup, connectionTokens, distribution),
+    create: createPublication,
     get: new GetPublication(publications),
     list: new ListPublications(publications),
     runDue: new RunDuePublications(publications, distribution),
@@ -62,6 +71,7 @@ export function buildPublishingModule({
   return {
     router: createPublishingRouter(controller, authGuard, schedulerGuard),
     publicationRepository: publications,
+    createPublication,
   };
 }
 

@@ -5,6 +5,7 @@ import { redis } from '@shared/infrastructure/cache/redis';
 import { env } from '@shared/infrastructure/config/env';
 import { RedisRateLimiter } from '@shared/infrastructure/rate-limit/redis-rate-limiter';
 import { createRateLimit } from '@shared/presentation/middleware/rate-limit';
+import { buildAgentModule } from '@modules/agent/agent.module';
 import { buildAnalyticsModule } from '@modules/analytics/analytics.module';
 import { buildAuthModule } from '@modules/auth/auth.module';
 import { buildBillingModule } from '@modules/billing/billing.module';
@@ -24,6 +25,7 @@ export interface Container {
   publishingRouter: Router;
   billingRouter: Router;
   analyticsRouter: Router;
+  agentRouter: Router;
   /** Global per-IP rate limiter, mounted across the API surface. */
   globalRateLimit: RequestHandler;
 }
@@ -43,6 +45,10 @@ export function buildContainer(deps: ContainerDeps = {}): Container {
   const authRateLimit = createRateLimit(
     new RedisRateLimiter(redisClient, env.RATE_LIMIT_AUTH_MAX, env.RATE_LIMIT_AUTH_WINDOW),
     { name: 'auth' },
+  );
+  const agentRateLimit = createRateLimit(
+    new RedisRateLimiter(redisClient, env.RATE_LIMIT_AGENT_MAX, env.RATE_LIMIT_AGENT_WINDOW),
+    { name: 'agent' },
   );
 
   const auth = buildAuthModule({ redisClient, authRateLimit });
@@ -64,6 +70,20 @@ export function buildContainer(deps: ContainerDeps = {}): Container {
     publicationRepository: publishing.publicationRepository,
     connectionRepository: connections.connectionRepository,
   });
+  // Agent last — it drives video, publishing and connections through their
+  // existing use cases rather than reimplementing any of them.
+  const agent = buildAgentModule({
+    authGuard: auth.authGuard,
+    agentRateLimit,
+    video: {
+      createVideo: video.createVideo,
+      getVideo: video.getVideo,
+      listVideos: video.listVideos,
+      reconcileGeneration: video.reconcileGeneration,
+    },
+    publishing: { createPublication: publishing.createPublication },
+    connections: { listConnections: connections.listConnections },
+  });
 
   return {
     authRouter: auth.router,
@@ -72,6 +92,7 @@ export function buildContainer(deps: ContainerDeps = {}): Container {
     publishingRouter: publishing.router,
     billingRouter: billing.router,
     analyticsRouter: analytics.router,
+    agentRouter: agent.router,
     globalRateLimit,
   };
 }

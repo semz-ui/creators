@@ -86,7 +86,7 @@ src/
   server.ts          # bootstrap: connects Mongo+Redis, listens, graceful shutdown
 ```
 
-Modules: `auth`, `video`, `connections`, `publishing`, `analytics`, `billing`.
+Modules: `auth`, `video`, `connections`, `publishing`, `analytics`, `billing`, `agent`.
 
 #### Dependency injection / composition
 
@@ -177,6 +177,7 @@ src/
 - **Rate limiting** is Redis-backed (fixed-window) so limits hold across replicas, behind an `IRateLimiter` port. Global per-IP on `/api/v1/*`; stricter tier on `/auth/register` + `/auth/login`. When `TRUST_PROXY=true`, `req.ip` comes from `X-Forwarded-*`.
 - **Load balancing:** nginx is the single public entrypoint (`:8080`); API replicas are stateless (Redis-backed sessions and rate limits). Each response carries `X-Instance-Id` for tracing.
 - **OAuth tokens** for social connections are encrypted at rest (AES-256-GCM), auto-refreshed before use, and never returned to clients. Unrefreshable connections flip to `expired`.
+- **Agent confirmation handshake** (`agent` module): `AgentLoop` runs the model↔tool conversation, but a tool with `requiresConfirmation` (only `publish_video`) is *never* executed there — the loop records a `pendingAction` and returns, deliberately leaving that `tool_use` block unanswered until `ResolveAgentAction` supplies the matching `tool_result`. A new turn while one is pending is a 409. `disable_parallel_tool_use` keeps the model to one call per turn so a pause can't strand a sibling `tool_use`. Reasoning blocks are persisted verbatim (they must be replayed unedited) and dropped by the presenter. The agent calls the existing video/publishing/connections use cases through narrow ports — it reimplements nothing.
 
 ## Conventions
 

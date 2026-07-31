@@ -144,6 +144,22 @@ export const envSchema = z
       .min(16, 'PUBLISH_SCHEDULER_SECRET must be at least 16 characters')
       .default(DEV_DEFAULT_SECRETS.PUBLISH_SCHEDULER_SECRET),
 
+    // Agent module — the conversational assistant that drives generation and
+    // publishing through tool calls. Set ANTHROPIC_API_KEY to run on the real
+    // model; otherwise a deterministic stub model is wired in, so the whole
+    // chat flow works locally and on the public demo for free.
+    ANTHROPIC_API_KEY: z.string().optional(),
+    AGENT_MODEL: z.string().default('claude-sonnet-5'),
+    // Thinking depth / overall token spend. The main cost-latency lever.
+    AGENT_EFFORT: z.enum(['low', 'medium', 'high', 'xhigh', 'max']).default('medium'),
+    // Thinking and the visible reply share this budget on Claude Sonnet 5, so
+    // it needs headroom well beyond the length of the reply itself.
+    AGENT_MAX_TOKENS: z.coerce.number().int().positive().default(8192),
+    // Hard cap on model <-> tool round trips within a single turn.
+    AGENT_MAX_ITERATIONS: z.coerce.number().int().positive().default(8),
+    // Trailing slice of conversation history replayed to the model each turn.
+    AGENT_MAX_HISTORY_MESSAGES: z.coerce.number().int().positive().default(40),
+
     // Billing module
     // Free credits granted to a new account on first use.
     INITIAL_FREE_CREDITS: z.coerce.number().int().nonnegative().default(100),
@@ -168,6 +184,10 @@ export const envSchema = z
     // Stricter tier for auth-sensitive routes (login/register).
     RATE_LIMIT_AUTH_WINDOW: z.coerce.number().int().positive().default(900),
     RATE_LIMIT_AUTH_MAX: z.coerce.number().int().positive().default(10),
+    // Stricter tier for agent turns — each one can fan out into model calls,
+    // a paid generation, and a publish.
+    RATE_LIMIT_AGENT_WINDOW: z.coerce.number().int().positive().default(60),
+    RATE_LIMIT_AGENT_MAX: z.coerce.number().int().positive().default(20),
 
     LOG_LEVEL: z
       .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
