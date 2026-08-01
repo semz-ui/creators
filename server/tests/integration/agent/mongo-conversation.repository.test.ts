@@ -1,5 +1,6 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
+import { ConversationConflictError } from '@modules/agent/domain/agent.errors';
 import { Conversation } from '@modules/agent/domain/conversation.entity';
 import { ConversationModel } from '@modules/agent/infrastructure/conversation.model';
 import { MongoConversationRepository } from '@modules/agent/infrastructure/mongo-conversation.repository';
@@ -73,6 +74,39 @@ describe('MongoConversationRepository (integration)', () => {
     await repo.save(paused as Conversation);
 
     expect((await repo.findById(conversation.id))?.pendingAction).toBeNull();
+  });
+
+  it('rejects a write from a stale copy instead of clobbering the winner', async () => {
+    const conversation = Conversation.create({ ownerId: 'user-1' });
+    conversation.appendUser('first');
+    await repo.save(conversation);
+
+    // Two concurrent turns load the same revision.
+    const first = (await repo.findById(conversation.id)) as Conversation;
+    const second = (await repo.findById(conversation.id)) as Conversation;
+
+    first.appendAssistant([{ type: 'text', text: 'from the first turn' }]);
+    await repo.save(first);
+
+    second.appendAssistant([{ type: 'text', text: 'from the second turn' }]);
+    await expect(repo.save(second)).rejects.toBeInstanceOf(ConversationConflictError);
+
+    const stored = await repo.findById(conversation.id);
+    expect(stored?.messages).toHaveLength(2);
+    expect(stored?.messages[1]?.content[0]).toMatchObject({ text: 'from the first turn' });
+  });
+
+  it('allows consecutive saves from the same instance', async () => {
+    // ResolveAgentAction saves twice in one request — once to durably clear the
+    // pending action, once after the resumed turn.
+    const conversation = Conversation.create({ ownerId: 'user-1' });
+    conversation.appendUser('hello');
+    await repo.save(conversation);
+
+    conversation.appendAssistant([{ type: 'text', text: 'hi' }]);
+    await expect(repo.save(conversation)).resolves.toBeUndefined();
+
+    expect((await repo.findById(conversation.id))?.messages).toHaveLength(2);
   });
 
   it('lists an owner’s conversations most-recently-active first', async () => {

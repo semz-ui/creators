@@ -9,6 +9,8 @@ export interface ConversationDocument {
   title: string;
   messages: AgentMessage[];
   pendingAction: PendingAction | null;
+  /** Optimistic-concurrency revision; see `ConversationSnapshot.version`. */
+  version: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -46,6 +48,7 @@ const conversationSchema = new Schema<ConversationDocument>(
     title: { type: String, required: true },
     messages: { type: [messageSchema], default: [] },
     pendingAction: { type: pendingActionSchema, default: null },
+    version: { type: Number, required: true, default: 0 },
     createdAt: { type: Date, required: true },
     updatedAt: { type: Date, required: true },
   },

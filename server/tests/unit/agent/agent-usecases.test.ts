@@ -2,11 +2,13 @@ import { AgentLoop } from '@modules/agent/application/agent-loop.service';
 import { ResolveAgentAction } from '@modules/agent/application/resolve-agent-action.usecase';
 import { RunAgentTurn } from '@modules/agent/application/run-agent-turn.usecase';
 import {
+  AgentModelError,
   ConversationNotFoundError,
   PendingActionMismatchError,
   PendingActionRequiredError,
 } from '@modules/agent/domain/agent.errors';
-import type { Conversation } from '@modules/agent/domain/conversation.entity';
+import { Conversation, type ConversationSnapshot } from '@modules/agent/domain/conversation.entity';
+import type { IAgentModel } from '@modules/agent/domain/ports/agent-model';
 import type {
   ConversationPage,
   IConversationRepository,
@@ -14,19 +16,29 @@ import type {
 
 import { FakeAgentModel, FakeTool, FakeToolRegistry, textTurn, toolTurn } from './fakes';
 
+/**
+ * Stores detached snapshots rather than the live entity, the way a real
+ * repository does. Holding the reference would make every in-memory mutation
+ * appear "stored" whether or not `save` was ever called — which quietly
+ * defeats any test about what survives a failure.
+ */
 class InMemoryConversations implements IConversationRepository {
-  readonly store = new Map<string, Conversation>();
+  readonly store = new Map<string, ConversationSnapshot>();
 
   async save(conversation: Conversation): Promise<void> {
-    this.store.set(conversation.id, conversation);
+    this.store.set(conversation.id, structuredClone(conversation.toSnapshot()));
+    conversation.markPersisted();
   }
 
   async findById(id: string): Promise<Conversation | null> {
-    return this.store.get(id) ?? null;
+    const snapshot = this.store.get(id);
+    return snapshot ? Conversation.fromSnapshot(structuredClone(snapshot)) : null;
   }
 
   async findByOwner(ownerId: string): Promise<ConversationPage> {
-    const items = [...this.store.values()].filter((c) => c.ownerId === ownerId);
+    const items = [...this.store.values()]
+      .filter((snapshot) => snapshot.ownerId === ownerId)
+      .map((snapshot) => Conversation.fromSnapshot(structuredClone(snapshot)));
     return { items, total: items.length };
   }
 }
@@ -123,6 +135,44 @@ describe('ResolveAgentAction', () => {
     );
     expect(declined?.toolResults[0]).toMatchObject({ isError: true });
     expect(declined?.toolResults[0]?.content).toContain('declined');
+  });
+
+  it('persists the cleared action before resuming, so a failed resume cannot publish twice', async () => {
+    const publish = new FakeTool('publish_video', { requiresConfirmation: true });
+    const conversations = new InMemoryConversations();
+    const registry = new FakeToolRegistry([publish]);
+
+    // Pauses for confirmation on the first turn, then fails when it resumes —
+    // the shape of a 502/429 out of the model after the post already went out.
+    let turns = 0;
+    const model: IAgentModel = {
+      complete: async () => {
+        turns += 1;
+        if (turns === 1) return publishTurn;
+        throw new AgentModelError();
+      },
+    };
+    const loop = new AgentLoop(model, registry, { maxIterations: 8, maxHistoryMessages: 40 });
+    const runTurn = new RunAgentTurn(conversations, loop);
+    const resolve = new ResolveAgentAction(conversations, registry, loop);
+
+    const created = await runTurn.execute('user-1', { message: 'publish it' });
+    const approve = {
+      conversationId: created.id,
+      toolUseId: 'call-1',
+      decision: 'approve' as const,
+    };
+
+    await expect(resolve.execute('user-1', approve)).rejects.toBeInstanceOf(AgentModelError);
+    expect(publish.calls).toHaveLength(1);
+
+    // The stored conversation is already past the confirmation, so the client's
+    // retry is refused rather than posting a second time.
+    expect((await conversations.findById(created.id))?.pendingAction).toBeNull();
+    await expect(resolve.execute('user-1', approve)).rejects.toBeInstanceOf(
+      PendingActionMismatchError,
+    );
+    expect(publish.calls).toHaveLength(1);
   });
 
   it('rejects a decision that does not match the pending action', async () => {

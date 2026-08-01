@@ -36,7 +36,10 @@ export class AgentLoop {
   ) {}
 
   async run(conversation: Conversation, context: AgentToolContext): Promise<void> {
-    let generations = 0;
+    // Counted from the transcript, not from zero: a turn that paused for
+    // confirmation resumes in a *second* `run` call, and a local tally would
+    // hand it a fresh generation budget.
+    let generations = generationsThisTurn(conversation.messages);
 
     for (let iteration = 0; iteration < this.config.maxIterations; iteration += 1) {
       const response = await this.model.complete({
@@ -180,4 +183,41 @@ export function historyWindow(
 
 function isUserTurn(message: AgentMessage | undefined): boolean {
   return message?.role === 'user' && !message.content.some((block) => block.type === 'tool_result');
+}
+
+/**
+ * Messages belonging to the turn in progress — everything after the last thing
+ * the user actually typed.
+ */
+function currentTurn(messages: readonly AgentMessage[]): AgentMessage[] {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    if (isUserTurn(messages[index])) return messages.slice(index + 1);
+  }
+  return [...messages];
+}
+
+/**
+ * Generations already charged for in this turn. Calls that came back as errors
+ * don't count — a rejected call spent nothing, and refusing the model's retry
+ * would strand the turn.
+ */
+export function generationsThisTurn(messages: readonly AgentMessage[]): number {
+  const turn = currentTurn(messages);
+
+  const failed = new Set<string>();
+  for (const message of turn) {
+    for (const block of message.content) {
+      if (block.type === 'tool_result' && block.isError) failed.add(block.toolUseId);
+    }
+  }
+
+  let count = 0;
+  for (const message of turn) {
+    for (const block of message.content) {
+      if (block.type === 'tool_use' && block.name === GENERATE_TOOL && !failed.has(block.id)) {
+        count += 1;
+      }
+    }
+  }
+  return count;
 }

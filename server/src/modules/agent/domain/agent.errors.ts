@@ -33,6 +33,19 @@ export class PendingActionMismatchError extends AppError {
   }
 }
 
+/**
+ * Another turn wrote to this conversation while this one was running. The
+ * loser is rejected rather than silently overwriting the winner's messages.
+ */
+export class ConversationConflictError extends AppError {
+  readonly statusCode = 409;
+  readonly code = 'CONVERSATION_CONFLICT';
+
+  constructor() {
+    super('This conversation changed while you were sending. Reload and try again.');
+  }
+}
+
 /** The upstream model failed. Distinct from a 500 so clients can retry. */
 export class AgentModelError extends AppError {
   readonly statusCode = 502;

@@ -169,6 +169,79 @@ describe('AgentLoop', () => {
     });
   });
 
+  it('does not hand a resumed turn a fresh generation budget', async () => {
+    const generate = new FakeTool('generate_video');
+    const { loop } = buildLoop(
+      [toolTurn({ id: 'call-2', name: 'generate_video' }), textTurn('Asking first.')],
+      [generate],
+    );
+    // A turn that already generated, then paused for confirmation. Resuming it
+    // calls run() a second time — the cap has to see the earlier generation.
+    const conversation = startConversation('make one and post it');
+    conversation.appendAssistant([
+      { type: 'tool_use', id: 'call-1', name: 'generate_video', input: {} },
+    ]);
+    conversation.appendToolResults([
+      {
+        type: 'tool_result',
+        toolUseId: 'call-1',
+        content: '{"video":{"id":"v1"}}',
+        isError: false,
+      },
+    ]);
+
+    await loop.run(conversation, CONTEXT);
+
+    expect(generate.calls).toHaveLength(0);
+  });
+
+  it('lets the model retry a generation that failed without spending its budget', async () => {
+    const generate = new FakeTool('generate_video');
+    const { loop } = buildLoop(
+      [toolTurn({ id: 'call-2', name: 'generate_video' }), textTurn('Done.')],
+      [generate],
+    );
+    const conversation = startConversation('make one');
+    conversation.appendAssistant([
+      { type: 'tool_use', id: 'call-1', name: 'generate_video', input: {} },
+    ]);
+    conversation.appendToolResults([
+      { type: 'tool_result', toolUseId: 'call-1', content: 'Invalid duration', isError: true },
+    ]);
+
+    await loop.run(conversation, CONTEXT);
+
+    // The failed attempt charged nothing, so the retry is allowed through.
+    expect(generate.calls).toHaveLength(1);
+  });
+
+  it('counts generations per turn, not per conversation', async () => {
+    const generate = new FakeTool('generate_video');
+    const { loop } = buildLoop(
+      [toolTurn({ id: 'call-2', name: 'generate_video' }), textTurn('Done.')],
+      [generate],
+    );
+    // An earlier, completed turn generated a video; this is a new request.
+    const conversation = startConversation('make one');
+    conversation.appendAssistant([
+      { type: 'tool_use', id: 'call-1', name: 'generate_video', input: {} },
+    ]);
+    conversation.appendToolResults([
+      {
+        type: 'tool_result',
+        toolUseId: 'call-1',
+        content: '{"video":{"id":"v1"}}',
+        isError: false,
+      },
+    ]);
+    conversation.appendAssistant([{ type: 'text', text: 'Generating.' }]);
+    conversation.appendUser('now make another one');
+
+    await loop.run(conversation, CONTEXT);
+
+    expect(generate.calls).toHaveLength(1);
+  });
+
   it('stops with an explanatory message when it runs out of iterations', async () => {
     const tool = new FakeTool('list_videos');
     const { loop } = buildLoop([toolTurn({ id: 'call-1', name: 'list_videos' })], [tool], 2);

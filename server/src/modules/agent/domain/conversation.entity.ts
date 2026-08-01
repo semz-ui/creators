@@ -28,6 +28,12 @@ export interface ConversationSnapshot {
   title: string;
   messages: AgentMessage[];
   pendingAction: PendingAction | null;
+  /**
+   * Optimistic-concurrency counter: the revision this instance was loaded at.
+   * A write only lands if the stored document is still at this revision, so
+   * two concurrent turns can't silently clobber each other's messages.
+   */
+  version: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +50,7 @@ export class Conversation {
   private _title: string;
   private _messages: AgentMessage[];
   private _pendingAction: PendingAction | null;
+  private _version: number;
   private _updatedAt: Date;
 
   private constructor(snapshot: ConversationSnapshot) {
@@ -53,6 +60,7 @@ export class Conversation {
     this._title = snapshot.title;
     this._messages = snapshot.messages;
     this._pendingAction = snapshot.pendingAction;
+    this._version = snapshot.version;
     this._updatedAt = snapshot.updatedAt;
   }
 
@@ -66,6 +74,9 @@ export class Conversation {
   get pendingAction(): PendingAction | null {
     return this._pendingAction;
   }
+  get version(): number {
+    return this._version;
+  }
   get updatedAt(): Date {
     return this._updatedAt;
   }
@@ -78,6 +89,7 @@ export class Conversation {
       title: truncateTitle(params.title ?? 'New conversation'),
       messages: [],
       pendingAction: null,
+      version: 0,
       createdAt: now,
       updatedAt: now,
     });
@@ -136,6 +148,14 @@ export class Conversation {
     return pending;
   }
 
+  /**
+   * Called by the repository once a write has landed, so a second save from
+   * the same instance targets the revision it just created.
+   */
+  markPersisted(): void {
+    this._version += 1;
+  }
+
   toSnapshot(): ConversationSnapshot {
     return {
       id: this.id,
@@ -143,6 +163,7 @@ export class Conversation {
       title: this._title,
       messages: this._messages,
       pendingAction: this._pendingAction,
+      version: this._version,
       createdAt: this.createdAt,
       updatedAt: this._updatedAt,
     };

@@ -52,6 +52,12 @@ export class ResolveAgentAction {
       conversation.appendToolResults([result]);
     }
 
+    // Persist the decision BEFORE resuming the model. The tool's side effect
+    // has already happened and is not undoable — if the resumed turn then
+    // fails (a 502/429 out of the model), an unsaved `pendingAction` would let
+    // a retried approval publish a second time.
+    await this.conversations.save(conversation);
+
     await this.loop.run(conversation, context);
     await this.conversations.save(conversation);
 
