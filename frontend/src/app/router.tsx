@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 
+import { AgentPage } from '@/modules/agent/presentation/AgentPage';
 import { AnalyticsOverviewPage } from '@/modules/analytics/presentation/AnalyticsOverviewPage';
 import { VideoAnalyticsPage } from '@/modules/analytics/presentation/VideoAnalyticsPage';
 import { ForgotPasswordPage } from '@/modules/auth/presentation/ForgotPasswordPage';
@@ -20,6 +21,7 @@ import { VideoDetailPage } from '@/modules/video/presentation/VideoDetailPage';
 
 import { AppLayout } from './layout/AppLayout';
 import { LandingPage } from './pages/LandingPage';
+import { ModeChooserPage } from './pages/ModeChooserPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { RouteError } from './pages/RouteError';
 
@@ -30,6 +32,35 @@ export const router = createBrowserRouter(
     { path: '/login', element: <LoginPage /> },
     { path: '/forgot-password', element: <ForgotPasswordPage /> },
     { path: '/reset-password', element: <ResetPasswordPage /> },
+    // Authenticated but outside AppLayout: the chooser and the assistant own
+    // the whole viewport rather than sitting inside the studio shell.
+    {
+      path: '/choose',
+      element: (
+        <RequireAuth>
+          <ModeChooserPage />
+        </RequireAuth>
+      ),
+      errorElement: <RouteError />,
+    },
+    {
+      path: '/agent',
+      element: (
+        <RequireAuth>
+          <AgentPage />
+        </RequireAuth>
+      ),
+      errorElement: <RouteError />,
+    },
+    {
+      path: '/agent/:conversationId',
+      element: (
+        <RequireAuth>
+          <AgentPage />
+        </RequireAuth>
+      ),
+      errorElement: <RouteError />,
+    },
     {
       element: (
         <RequireAuth>

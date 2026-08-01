@@ -14,6 +14,7 @@ process.env.JWT_REFRESH_SECRET ??= 'test-refresh-secret-0123456789-abcdefghij';
 // tests construct their own limiters with small limits to verify throttling.
 process.env.RATE_LIMIT_MAX ??= '100000';
 process.env.RATE_LIMIT_AUTH_MAX ??= '100000';
+process.env.RATE_LIMIT_AGENT_MAX ??= '100000';
 // Never let a developer's real Kling keys leak into the test run — the video
 // module would call the live API. Force the stub generator everywhere. Use
 // empty strings (not delete) so a `.env` loaded later by dotenv can't refill
@@ -42,3 +43,6 @@ process.env.CONNECTIONS_REDIRECT_URL = '';
 process.env.VIDEO_PROVIDER = 'stub';
 process.env.OPENAI_API_KEY = '';
 process.env.CLOUDINARY_URL = '';
+// Same for Anthropic — force the stub agent model so tests are deterministic
+// and never call the live Messages API.
+process.env.ANTHROPIC_API_KEY = '';

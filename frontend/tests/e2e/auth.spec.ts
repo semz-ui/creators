@@ -1,11 +1,15 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import { ok } from './support/envelope';
+import { seedMode } from './support/session';
 
 const user = { id: 'u1', email: 'new@reelo.app' };
 const tokens = { accessToken: 'access-1', refreshToken: 'refresh-1' };
 
 async function mockAuth(page: Page, endpoint: 'register' | 'login' | 'google') {
+  // These tests assert the studio landing; the chooser a first-time user sees
+  // is covered by its own test below.
+  await seedMode(page, 'studio');
   await page.route(`**/api/v1/auth/${endpoint}`, (route) =>
     route.fulfill({
       status: endpoint === 'register' ? 201 : 200,
@@ -68,6 +72,39 @@ test('signs in with Google and lands on the dashboard', async ({ page }) => {
 
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByRole('heading', { name: /turn a prompt into a video/i })).toBeVisible();
+});
+
+test('a first login is asked to choose an experience', async ({ page }) => {
+  // No seeded preference: this is someone's very first sign-in.
+  await page.route('**/api/v1/auth/login', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: ok({ user, ...tokens }),
+    }),
+  );
+  await page.route('**/api/v1/auth/me', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: ok(user) }),
+  );
+  await page.route('**/api/v1/billing/balance', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: ok({ balance: 90 }) }),
+  );
+  await page.route(/\/api\/v1\/videos(\?|$)/, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: ok({ items: [], page: 1, limit: 6, total: 0 }),
+    }),
+  );
+
+  await page.goto('/login');
+  await page.getByLabel(/^email$/i).fill(user.email);
+  await page.getByLabel(/^password$/i).fill('password123');
+  await page.getByRole('button', { name: /^log in$/i }).click();
+
+  await expect(page).toHaveURL(/\/choose$/);
+  await page.getByRole('button', { name: /studio/i }).click();
+  await expect(page).toHaveURL(/\/dashboard$/);
 });
 
 test('protected route redirects unauthenticated users to login', async ({ page }) => {

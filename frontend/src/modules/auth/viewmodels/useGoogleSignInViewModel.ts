@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { env } from '@/shared/config/env';
 import { HttpError } from '@/shared/data/http-error';
+import { postLoginRoute } from '@/shared/preferences/mode.store';
 
 import { authApi } from '../data/auth.api';
 import { renderGoogleButton } from '../data/google-identity';
@@ -28,7 +29,7 @@ export function useGoogleSignInViewModel() {
     mutationFn: authApi.googleSignIn,
     onSuccess: (result) => {
       setSession(result.user, result);
-      navigate('/dashboard', { replace: true });
+      navigate(postLoginRoute(), { replace: true });
     },
   });
   const { mutate } = mutation;

@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { HttpError } from '@/shared/data/http-error';
+import { postLoginRoute } from '@/shared/preferences/mode.store';
 
 import { authApi } from '../data/auth.api';
 import { useSessionStore } from '../session/session.store';
@@ -21,7 +22,7 @@ export function useLoginViewModel() {
     mutationFn: authApi.login,
     onSuccess: (result) => {
       setSession(result.user, result);
-      navigate('/dashboard', { replace: true });
+      navigate(postLoginRoute(), { replace: true });
     },
   });
 

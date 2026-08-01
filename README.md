@@ -25,6 +25,13 @@ TikTok — immediately or on a schedule. Engagement metrics flow back into one d
    it. Each platform's result is tracked independently — one failing never blocks the rest.
 4. **Measure** — views, likes, comments, and shares roll up per video and per platform.
 
+**Or just ask.** The **agent** (`POST /api/v1/agent/conversations`) runs the same loop
+conversationally: say *"make a 30s neon city timelapse and post it to TikTok"* and it calls
+the same use cases the forms do. Generation runs on its own; **publishing always pauses for
+your approval** — the agent returns a `pendingAction` you approve or reject, because a post to
+a real account can't be undone. Powered by Claude (`ANTHROPIC_API_KEY`), with a deterministic
+stub model when no key is set.
+
 **How it makes money:** generation is **credit-gated**. New accounts get free starter
 credits; each video costs a flat credit price (refunded if generation fails), and users
 top up through Stripe Checkout. Every balance movement is recorded in an auditable ledger.
@@ -94,10 +101,12 @@ npm run dev
 > For transactional integrity, run MongoDB as a (single-node) replica set: start `mongod --replSet rs0`, run `rs.initiate()` once, and set `MONGO_URI=mongodb://localhost:27017/reelo?replicaSet=rs0&directConnection=true`. A standalone `mongod` also works — the app falls back to non-transactional writes.
 
 Everything works out of the box with stub providers (fake generation, fake social posts,
-fake payments). To go real, add credentials to `server/.env` — `OPENAI_API_KEY` +
-`CLOUDINARY_URL` (Sora) or `KLING_*` keys, `GOOGLE_CLIENT_ID/SECRET` (YouTube),
-`INSTAGRAM_APP_ID/SECRET` (Instagram Reels), `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`
-(payments). Each integration switches on independently.
+fake payments, a scripted agent). To go real, add credentials to `server/.env` —
+`OPENAI_API_KEY` + `CLOUDINARY_URL` (Sora) or `KLING_*` keys, `GOOGLE_CLIENT_ID/SECRET`
+(YouTube), `INSTAGRAM_APP_ID/SECRET` (Instagram Reels), `STRIPE_SECRET_KEY` +
+`STRIPE_WEBHOOK_SECRET` (payments), `ANTHROPIC_API_KEY` (the agent — tune it with
+`AGENT_MODEL`, `AGENT_EFFORT`, `AGENT_MAX_TOKENS`). Each integration switches on
+independently.
 
 ### Quality & testing
 
