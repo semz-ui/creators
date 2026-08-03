@@ -14,7 +14,7 @@ const TOKEN_RESPONSE = {
   open_id: 'open-id-123',
   refresh_token: 'tt-refresh',
   expires_in: 86400,
-  scope: 'user.info.basic,video.publish',
+  scope: 'user.info.basic,video.publish,video.list',
   token_type: 'Bearer',
 };
 const USER_INFO_RESPONSE = { data: { user: { open_id: 'open-id-123', display_name: 'reelo.tt' } } };
@@ -58,7 +58,7 @@ describe('TikTokOAuthProvider.getAuthorizationUrl', () => {
     expect(url.searchParams.get('redirect_uri')).toBe(REDIRECT_URI);
     expect(url.searchParams.get('response_type')).toBe('code');
     expect(url.searchParams.get('state')).toBe('state-1');
-    expect(url.searchParams.get('scope')).toBe('user.info.basic,video.publish');
+    expect(url.searchParams.get('scope')).toBe('user.info.basic,video.publish,video.list');
 
     // PKCE — required by TikTok. The verifier is returned (for storage); only
     // its S256 challenge is in the URL.
@@ -86,7 +86,7 @@ describe('TikTokOAuthProvider.exchangeCode', () => {
     expect(account.displayName).toBe('reelo.tt');
     expect(account.accessToken).toBe('tt-access');
     expect(account.refreshToken).toBe('tt-refresh');
-    expect(account.scopes).toEqual(['user.info.basic', 'video.publish']);
+    expect(account.scopes).toEqual(['user.info.basic', 'video.publish', 'video.list']);
     expect(account.expiresAt?.getTime()).toBeGreaterThanOrEqual(before + 86400 * 1000);
     expect(account.expiresAt?.getTime()).toBeLessThanOrEqual(Date.now() + 86400 * 1000);
 

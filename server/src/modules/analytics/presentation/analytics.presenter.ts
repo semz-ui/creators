@@ -1,6 +1,7 @@
 import type { MetricsValues } from '../domain/metrics';
 
 import type { OverviewResult, VideoAnalyticsResult } from '../application/dto';
+import type { SyncResult } from '../application/sync-user-metrics.usecase';
 
 import type {
   MetricsResponse,
@@ -48,8 +49,9 @@ export function presentVideoAnalytics(result: VideoAnalyticsResult): VideoAnalyt
   };
 }
 
-export function presentSync(result: { synced: number }): SyncResponse {
+export function presentSync(result: SyncResult): SyncResponse {
   return {
     synced: result.synced,
+    failed: result.failed,
   };
 }

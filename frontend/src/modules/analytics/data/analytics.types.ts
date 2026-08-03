@@ -33,4 +33,6 @@ export interface VideoAnalytics {
 
 export interface RefreshResult {
   synced: number;
+  /** Posts whose platform lookup failed; their stored metrics are unchanged. */
+  failed: number;
 }

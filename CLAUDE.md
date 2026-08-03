@@ -178,6 +178,10 @@ src/
 - **Load balancing:** nginx is the single public entrypoint (`:8080`); API replicas are stateless (Redis-backed sessions and rate limits). Each response carries `X-Instance-Id` for tracing.
 - **OAuth tokens** for social connections are encrypted at rest (AES-256-GCM), auto-refreshed before use, and never returned to clients. Unrefreshable connections flip to `expired`.
 
+- **Analytics metrics are per-post isolated:** `SyncUserMetrics` sweeps every published post, and each one is wrapped in its own try/catch — a revoked token, a deleted post, or a platform 429 fails that post alone and the sweep continues, returning `{ synced, failed }`. Without that a single bad post aborts the refresh partway and surfaces as a 500. Real providers exist for YouTube (Data API `videos.list`; **no share count**, so shares are always 0), Instagram (media `insights`), and TikTok (Display API `video/query`); Facebook stays stubbed because it has no publisher. Each activates when that platform's OAuth credentials are set — the providers authenticate with the connection's token and have no credentials of their own.
+- **The TikTok external post id is the published post id,** not the `publish_id`: the Display API rejects the upload-session handle, so `waitForPublish` reads `publicaly_available_post_id` from the final status check and falls back to the `publish_id` only when TikTok withholds it (SELF_ONLY posts). Publications written before this change store a `publish_id` and can never be synced — they fail per-post and are skipped.
+- **Metrics scopes require re-authorization:** `video.list` (TikTok) and `instagram_business_manage_insights` (Instagram) were added to the existing scope lists. Connections authorized earlier keep their old scopes and their metrics lookups fail until the user reconnects — adding a scope never upgrades a stored token.
+
 ## Conventions
 
 - TypeScript is **strict** with `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noUnusedLocals/Parameters`. Prefix intentionally-unused vars/args with `_`.

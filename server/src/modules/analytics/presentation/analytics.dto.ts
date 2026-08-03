@@ -40,4 +40,5 @@ export interface VideoAnalyticsResponse {
 
 export interface SyncResponse {
   synced: number;
+  failed: number;
 }

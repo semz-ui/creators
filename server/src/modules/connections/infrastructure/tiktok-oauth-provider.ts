@@ -13,8 +13,13 @@ const AUTH_URL = 'https://www.tiktok.com/v2/auth/authorize/';
 const TOKEN_URL = 'https://open.tiktokapis.com/v2/oauth/token/';
 const USER_INFO_URL = 'https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name';
 
-/** user.info.basic resolves the account identity; video.publish posts videos. */
-export const TIKTOK_SCOPES = ['user.info.basic', 'video.publish'];
+/**
+ * user.info.basic resolves the account identity; video.publish posts videos;
+ * video.list reads engagement counts for analytics. Connections authorized
+ * before video.list was requested keep their old scopes — their metrics
+ * lookups fail until the user reconnects.
+ */
+export const TIKTOK_SCOPES = ['user.info.basic', 'video.publish', 'video.list'];
 
 export interface TikTokOAuthConfig {
   clientKey: string;
