@@ -14,6 +14,7 @@ const baseVideo: Video = {
   prompt: 'a neon city skyline',
   durationSeconds: 15,
   status: 'ready',
+  provider: 'sora',
   resultUrl: 'https://cdn/v.mp4',
   error: null,
   musicTrackId: null,

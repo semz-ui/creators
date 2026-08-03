@@ -1,3 +1,4 @@
+import type { VideoProvider } from '../domain/provider';
 import type { Video, VideoSource, VideoStatus } from '../domain/video.entity';
 
 /** Video fields safe to return to the owning client. */
@@ -8,6 +9,8 @@ export interface PublicVideo {
   prompt: string;
   durationSeconds: number;
   status: VideoStatus;
+  /** Generator that produced it; null for uploads and pre-selection rows. */
+  provider: VideoProvider | null;
   resultUrl: string | null;
   error: string | null;
   musicTrackId: string | null;
@@ -20,6 +23,8 @@ export interface PublicVideo {
 export interface CreateVideoInput {
   prompt: string;
   durationSeconds: number;
+  /** Generator to use; falls back to the registry's default when absent. */
+  provider?: string | null;
   musicTrackId?: string | null;
   narrationText?: string | null;
   narrationVoice?: string | null;
@@ -56,6 +61,7 @@ export function toPublicVideo(video: Video): PublicVideo {
     prompt: video.prompt,
     durationSeconds: video.durationSeconds,
     status: video.status,
+    provider: video.provider,
     resultUrl: video.resultUrl,
     error: video.error,
     musicTrackId: video.musicTrackId,

@@ -91,13 +91,21 @@ export const envSchema = z
     SORA_SIZE: z.string().default('1280x720'),
     // OpenAI TTS model used to synthesize optional video narration.
     TTS_MODEL: z.string().default('gpt-4o-mini-tts'),
+
+    // Pika via fal.ai. FAL_KEY alone makes Pika available (fal's own var name).
+    // Output stays on fal's CDN, so Pika videos can't take added audio.
+    FAL_KEY: z.string().optional(),
+    PIKA_MODEL: z.string().default('fal-ai/pika/v2.2/text-to-video'),
+    PIKA_ASPECT_RATIO: z.enum(['16:9', '9:16', '1:1', '4:5', '5:4', '3:2', '2:3']).default('16:9'),
+    PIKA_RESOLUTION: z.enum(['720p', '1080p']).default('720p'),
     CLOUDINARY_URL: z.string().optional(),
-    // Explicit generator selection; when unset (or blank, e.g. an empty
-    // docker-compose passthrough) the provider is auto-detected from configured
-    // credentials (sora → kling → stub).
+    // Default generator when a request doesn't name one; when unset (or blank,
+    // e.g. an empty docker-compose passthrough) it's auto-detected from
+    // configured credentials (sora → kling → pika → stub). 'stub' is special:
+    // it pins the stub and registers no real generator at all.
     VIDEO_PROVIDER: z.preprocess(
       (v) => (v === '' ? undefined : v),
-      z.enum(['sora', 'kling', 'stub']).optional(),
+      z.enum(['sora', 'kling', 'pika', 'stub']).optional(),
     ),
 
     // Connections module

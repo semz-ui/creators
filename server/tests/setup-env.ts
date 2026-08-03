@@ -40,5 +40,7 @@ process.env.CONNECTIONS_REDIRECT_URL = '';
 // Same for Sora/Cloudinary — pin the stub generator (VIDEO_PROVIDER='stub' is a
 // valid enum, so dotenv won't override it) and blank the credentials.
 process.env.VIDEO_PROVIDER = 'stub';
+// Same for fal/Pika — blank the key so no test can reach the fal queue API.
+process.env.FAL_KEY = '';
 process.env.OPENAI_API_KEY = '';
 process.env.CLOUDINARY_URL = '';

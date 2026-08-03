@@ -1,12 +1,16 @@
 import { z } from 'zod';
 
 import { NARRATION_MAX_LENGTH, VOICES, isMusicTrack } from '../domain/audio';
+import { SELECTABLE_PROVIDERS } from '../domain/provider';
 import { DURATION_MAX_SECONDS, DURATION_MIN_SECONDS } from '../domain/value-objects/duration';
 import { PROMPT_MAX_LENGTH } from '../domain/value-objects/prompt';
 
 export const createVideoSchema = z.object({
   prompt: z.string().min(1).max(PROMPT_MAX_LENGTH),
   durationSeconds: z.number().int().min(DURATION_MIN_SECONDS).max(DURATION_MAX_SECONDS),
+  // Generator to use; omitted means the server's default. An unconfigured one
+  // is rejected by the use case before any credits are charged.
+  provider: z.enum(SELECTABLE_PROVIDERS).nullish(),
   // Optional audio (Sora+Cloudinary only; ignored by other generators).
   musicTrackId: z.string().refine(isMusicTrack, { message: 'Unknown music track' }).nullish(),
   narrationText: z.string().trim().min(1).max(NARRATION_MAX_LENGTH).nullish(),

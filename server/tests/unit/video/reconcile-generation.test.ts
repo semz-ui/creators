@@ -3,7 +3,9 @@ import { ReconcileGeneration } from '@modules/video/application/reconcile-genera
 import type {
   GenerationStatus,
   IVideoGenerator,
+  IVideoGeneratorRegistry,
 } from '@modules/video/domain/ports/video-generator';
+import type { VideoProvider } from '@modules/video/domain/provider';
 import type { IVideoRepository } from '@modules/video/domain/ports/video-repository';
 import { Video } from '@modules/video/domain/video.entity';
 import { Duration } from '@modules/video/domain/value-objects/duration';
@@ -26,6 +28,21 @@ function generatorMock(status: GenerationStatus) {
   } satisfies Record<keyof IVideoGenerator, jest.Mock>;
 }
 
+/**
+ * Wrap a single generator as a registry — the shape the use cases now take.
+ * `available: false` simulates a provider with no credentials configured.
+ */
+function registryOf(
+  generator: IVideoGenerator,
+  options: { available?: boolean; defaultProvider?: VideoProvider } = {},
+) {
+  return {
+    get: jest.fn().mockReturnValue(generator),
+    isAvailable: jest.fn().mockReturnValue(options.available ?? true),
+    defaultProvider: jest.fn().mockReturnValue(options.defaultProvider ?? 'sora'),
+  } satisfies Record<keyof IVideoGeneratorRegistry, jest.Mock>;
+}
+
 function applyResultMock() {
   return { execute: jest.fn().mockResolvedValue(undefined) };
 }
@@ -43,6 +60,7 @@ function processingVideo(
     ownerId,
     prompt: Prompt.create('a cat'),
     duration: Duration.create(10),
+    provider: 'sora',
     musicTrackId: audio.musicTrackId ?? null,
     narrationText: audio.narrationText ?? null,
     narrationVoice: audio.narrationVoice ?? null,
@@ -55,6 +73,47 @@ function compositorMock(url = 'https://cdn/composed.mp4') {
   return { compose: jest.fn().mockResolvedValue(url) };
 }
 
+describe('ReconcileGeneration provider resolution', () => {
+  it('polls the generator that accepted the job, not the current default', async () => {
+    const video = Video.create({
+      ownerId: 'user-1',
+      prompt: Prompt.create('a cat'),
+      duration: Duration.create(10),
+      provider: 'pika',
+    });
+    video.markProcessing('job-1');
+    const videos = repoMock();
+    videos.findById.mockResolvedValue(video);
+    const generator = generatorMock({ state: 'processing' });
+    const registry = registryOf(generator, { defaultProvider: 'sora' });
+
+    await new ReconcileGeneration(videos, registry, asApply(applyResultMock())).execute(
+      'user-1',
+      video.id,
+    );
+
+    expect(registry.get).toHaveBeenCalledWith('pika');
+  });
+
+  it('falls back to the default for rows written before providers were selectable', async () => {
+    const video = Video.fromSnapshot({
+      ...processingVideo().toSnapshot(),
+      provider: null,
+    });
+    const videos = repoMock();
+    videos.findById.mockResolvedValue(video);
+    const generator = generatorMock({ state: 'processing' });
+    const registry = registryOf(generator, { defaultProvider: 'kling' });
+
+    await new ReconcileGeneration(videos, registry, asApply(applyResultMock())).execute(
+      'user-1',
+      video.id,
+    );
+
+    expect(registry.get).toHaveBeenCalledWith('kling');
+  });
+});
+
 describe('ReconcileGeneration', () => {
   it('applies a ready result when the generator reports success', async () => {
     const videos = repoMock();
@@ -62,7 +121,10 @@ describe('ReconcileGeneration', () => {
     const generator = generatorMock({ state: 'ready', resultUrl: 'https://cdn/v.mp4' });
     const apply = applyResultMock();
 
-    await new ReconcileGeneration(videos, generator, asApply(apply)).execute('user-1', 'vid-1');
+    await new ReconcileGeneration(videos, registryOf(generator), asApply(apply)).execute(
+      'user-1',
+      'vid-1',
+    );
 
     expect(generator.poll).toHaveBeenCalledWith('job-1');
     expect(apply.execute).toHaveBeenCalledWith({
@@ -85,10 +147,12 @@ describe('ReconcileGeneration', () => {
     const apply = applyResultMock();
     const compositor = compositorMock('https://cdn/composed.mp4');
 
-    await new ReconcileGeneration(videos, generator, asApply(apply), compositor).execute(
-      'user-1',
-      'vid-1',
-    );
+    await new ReconcileGeneration(
+      videos,
+      registryOf(generator),
+      asApply(apply),
+      compositor,
+    ).execute('user-1', 'vid-1');
 
     expect(compositor.compose).toHaveBeenCalledWith({
       baseAssetId: 'asset-1',
@@ -113,10 +177,12 @@ describe('ReconcileGeneration', () => {
     const apply = applyResultMock();
     const compositor = compositorMock();
 
-    await new ReconcileGeneration(videos, generator, asApply(apply), compositor).execute(
-      'user-1',
-      'vid-1',
-    );
+    await new ReconcileGeneration(
+      videos,
+      registryOf(generator),
+      asApply(apply),
+      compositor,
+    ).execute('user-1', 'vid-1');
 
     expect(compositor.compose).not.toHaveBeenCalled();
     expect(apply.execute).toHaveBeenCalledWith({
@@ -135,10 +201,12 @@ describe('ReconcileGeneration', () => {
     const apply = applyResultMock();
     const compositor = compositorMock();
 
-    await new ReconcileGeneration(videos, generator, asApply(apply), compositor).execute(
-      'user-1',
-      'vid-1',
-    );
+    await new ReconcileGeneration(
+      videos,
+      registryOf(generator),
+      asApply(apply),
+      compositor,
+    ).execute('user-1', 'vid-1');
 
     expect(compositor.compose).not.toHaveBeenCalled();
     expect(apply.execute).toHaveBeenCalledWith({
@@ -154,7 +222,10 @@ describe('ReconcileGeneration', () => {
     const generator = generatorMock({ state: 'failed', error: 'nsfw blocked' });
     const apply = applyResultMock();
 
-    await new ReconcileGeneration(videos, generator, asApply(apply)).execute('user-1', 'vid-1');
+    await new ReconcileGeneration(videos, registryOf(generator), asApply(apply)).execute(
+      'user-1',
+      'vid-1',
+    );
 
     expect(apply.execute).toHaveBeenCalledWith({
       jobRef: 'job-1',
@@ -169,7 +240,10 @@ describe('ReconcileGeneration', () => {
     const generator = generatorMock({ state: 'processing' });
     const apply = applyResultMock();
 
-    await new ReconcileGeneration(videos, generator, asApply(apply)).execute('user-1', 'vid-1');
+    await new ReconcileGeneration(videos, registryOf(generator), asApply(apply)).execute(
+      'user-1',
+      'vid-1',
+    );
 
     expect(apply.execute).not.toHaveBeenCalled();
   });
@@ -180,7 +254,10 @@ describe('ReconcileGeneration', () => {
     const generator = generatorMock({ state: 'ready', resultUrl: 'x' });
     const apply = applyResultMock();
 
-    await new ReconcileGeneration(videos, generator, asApply(apply)).execute('user-1', 'vid-1');
+    await new ReconcileGeneration(videos, registryOf(generator), asApply(apply)).execute(
+      'user-1',
+      'vid-1',
+    );
 
     expect(generator.poll).not.toHaveBeenCalled();
     expect(apply.execute).not.toHaveBeenCalled();
@@ -194,7 +271,10 @@ describe('ReconcileGeneration', () => {
     const generator = generatorMock({ state: 'ready', resultUrl: 'x' });
     const apply = applyResultMock();
 
-    await new ReconcileGeneration(videos, generator, asApply(apply)).execute('user-1', 'vid-1');
+    await new ReconcileGeneration(videos, registryOf(generator), asApply(apply)).execute(
+      'user-1',
+      'vid-1',
+    );
 
     expect(generator.poll).not.toHaveBeenCalled();
   });
@@ -207,7 +287,10 @@ describe('ReconcileGeneration', () => {
     const apply = applyResultMock();
 
     await expect(
-      new ReconcileGeneration(videos, generator, asApply(apply)).execute('user-1', 'vid-1'),
+      new ReconcileGeneration(videos, registryOf(generator), asApply(apply)).execute(
+        'user-1',
+        'vid-1',
+      ),
     ).resolves.toBeUndefined();
     expect(apply.execute).not.toHaveBeenCalled();
   });
