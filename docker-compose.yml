@@ -66,14 +66,16 @@ services:
       CONNECTIONS_ENC_KEY: dev-connections-encryption-key-compose
       PUBLISH_SCHEDULER_SECRET: dev-publish-scheduler-secret-compose
       PAYMENT_WEBHOOK_SECRET: dev-payment-webhook-secret-compose
-      # Video generator — passed through from your shell / repo-root .env
+      # Video generators — passed through from your shell / repo-root .env
       # (blank = use the stub; nothing is committed). Sora needs OPENAI_API_KEY
-      # + CLOUDINARY_URL; VIDEO_PROVIDER can force sora|kling|stub.
+      # + CLOUDINARY_URL; Pika needs FAL_KEY. Every configured provider is
+      # selectable per video; VIDEO_PROVIDER sets the default (sora|kling|pika|stub).
       VIDEO_PROVIDER: ${VIDEO_PROVIDER:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       CLOUDINARY_URL: ${CLOUDINARY_URL:-}
       KLING_ACCESS_KEY: ${KLING_ACCESS_KEY:-}
       KLING_SECRET_KEY: ${KLING_SECRET_KEY:-}
+      FAL_KEY: ${FAL_KEY:-}
       # Stripe payments — same passthrough (blank = stub provider).
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}

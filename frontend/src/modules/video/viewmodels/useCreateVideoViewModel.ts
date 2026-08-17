@@ -5,8 +5,10 @@ import { useNavigate } from 'react-router-dom';
 import { HttpError } from '@/shared/data/http-error';
 
 import { videoApi } from '../data/video.api';
+import type { VideoProvider } from '../data/video.types';
 import { NARRATION_MAX, type Voice } from './video.constants';
 import { videoKeys } from '../data/query-keys';
+import { useVideoProviders } from './useVideoProviders';
 
 export const DURATION_PRESETS = [15, 30, 45, 60] as const;
 const PROMPT_MAX = 1000;
@@ -20,11 +22,35 @@ export function useCreateVideoViewModel() {
   const [durationSeconds, setDurationSeconds] = useState<number>(15);
   const [promptError, setPromptError] = useState<string | undefined>();
 
+  // Generator selection. `null` until the providers query resolves; the first
+  // available provider is then used, so the form never submits an unavailable
+  // one (which the API would reject with a 422).
+  const providersQuery = useVideoProviders();
+  const providers = providersQuery.data ?? [];
+  const [chosenProvider, setChosenProvider] = useState<VideoProvider | null>(null);
+  const provider = chosenProvider ?? providers.find((candidate) => candidate.available)?.id ?? null;
+  const supportsAudio = providers.find((entry) => entry.id === provider)?.supportsAudio ?? true;
+
   // Optional audio.
   const [musicTrackId, setMusicTrackId] = useState<string>(''); // '' = none
   const [narrationText, setNarrationText] = useState('');
   const [narrationVoice, setNarrationVoice] = useState<Voice>('alloy');
   const [narrationError, setNarrationError] = useState<string | undefined>();
+
+  /**
+   * Switching generators clears any audio the new one can't apply, so a control
+   * that's disabled in the UI can never submit a stale value the server would
+   * silently drop.
+   */
+  const selectProvider = (next: VideoProvider) => {
+    setChosenProvider(next);
+    const nextSupportsAudio = providers.find((entry) => entry.id === next)?.supportsAudio ?? true;
+    if (!nextSupportsAudio) {
+      setMusicTrackId('');
+      setNarrationText('');
+      setNarrationError(undefined);
+    }
+  };
 
   const mutation = useMutation({
     mutationFn: videoApi.create,
@@ -57,6 +83,7 @@ export function useCreateVideoViewModel() {
     mutation.mutate({
       prompt: trimmed,
       durationSeconds,
+      provider,
       musicTrackId: musicTrackId || null,
       narrationText: narration || null,
       narrationVoice: narration ? narrationVoice : null,
@@ -69,6 +96,10 @@ export function useCreateVideoViewModel() {
     durationSeconds,
     setDurationSeconds,
     promptError,
+    providers,
+    provider,
+    selectProvider,
+    supportsAudio,
     musicTrackId,
     setMusicTrackId,
     narrationText,

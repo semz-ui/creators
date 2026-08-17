@@ -14,6 +14,23 @@ export class InvalidVideoTransitionError extends ConflictError {
   }
 }
 
+/** Raised for a video provider this app doesn't support. */
+export class UnsupportedProviderError extends ValidationError {
+  constructor(provider: string) {
+    super(`Unsupported video provider: "${provider}"`);
+  }
+}
+
+/**
+ * Raised when a supported provider has no credentials configured on this
+ * deployment. Thrown before any credits are charged.
+ */
+export class ProviderUnavailableError extends ValidationError {
+  constructor(provider: string) {
+    super(`Video provider "${provider}" is not configured on this server`);
+  }
+}
+
 /** Raised by the Prompt value object. */
 export class InvalidPromptError extends ValidationError {
   constructor(reason: string) {

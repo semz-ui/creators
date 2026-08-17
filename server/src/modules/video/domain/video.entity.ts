@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
+import type { VideoProvider } from './provider';
 import { InvalidVideoTransitionError } from './video.errors';
 import type { Duration } from './value-objects/duration';
 import type { Prompt } from './value-objects/prompt';
@@ -18,6 +19,11 @@ export interface VideoSnapshot {
   prompt: string;
   durationSeconds: number;
   status: VideoStatus;
+  /**
+   * Generator that accepted this job. Null for uploads and for rows written
+   * before providers became selectable — readers fall back to the default.
+   */
+  provider: VideoProvider | null;
   jobRef: string | null;
   resultUrl: string | null;
   error: string | null;
@@ -41,6 +47,7 @@ export class Video {
   readonly title: string | null;
   readonly prompt: string;
   readonly durationSeconds: number;
+  readonly provider: VideoProvider | null;
   readonly musicTrackId: string | null;
   readonly narrationText: string | null;
   readonly narrationVoice: string | null;
@@ -59,6 +66,7 @@ export class Video {
     this.title = snapshot.title;
     this.prompt = snapshot.prompt;
     this.durationSeconds = snapshot.durationSeconds;
+    this.provider = snapshot.provider;
     this.musicTrackId = snapshot.musicTrackId;
     this.narrationText = snapshot.narrationText;
     this.narrationVoice = snapshot.narrationVoice;
@@ -90,6 +98,7 @@ export class Video {
     ownerId: string;
     prompt: Prompt;
     duration: Duration;
+    provider: VideoProvider;
     musicTrackId?: string | null;
     narrationText?: string | null;
     narrationVoice?: string | null;
@@ -103,6 +112,7 @@ export class Video {
       prompt: params.prompt.value,
       durationSeconds: params.duration.seconds,
       status: 'queued',
+      provider: params.provider,
       jobRef: null,
       resultUrl: null,
       error: null,
@@ -129,6 +139,7 @@ export class Video {
       prompt: '',
       durationSeconds: params.durationSeconds,
       status: 'ready',
+      provider: null,
       jobRef: null,
       resultUrl: params.resultUrl,
       error: null,
@@ -188,6 +199,7 @@ export class Video {
       prompt: this.prompt,
       durationSeconds: this.durationSeconds,
       status: this._status,
+      provider: this.provider,
       jobRef: this._jobRef,
       resultUrl: this._resultUrl,
       error: this._error,

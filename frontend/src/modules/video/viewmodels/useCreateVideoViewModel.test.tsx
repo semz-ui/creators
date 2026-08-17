@@ -73,3 +73,62 @@ describe('useCreateVideoViewModel', () => {
     await waitFor(() => expect(result.current.formError).toMatch(/out of credits/i));
   });
 });
+
+/**
+ * The default MSW handler reports sora available (audio), kling unavailable,
+ * and pika available (no audio).
+ */
+describe('useCreateVideoViewModel provider selection', () => {
+  it('defaults to the first available provider once they load', async () => {
+    const { result } = renderHook(() => useCreateVideoViewModel(), { wrapper });
+
+    await waitFor(() => expect(result.current.provider).toBe('sora'));
+    expect(result.current.supportsAudio).toBe(true);
+  });
+
+  it('reports when the selected provider cannot take added audio', async () => {
+    const { result } = renderHook(() => useCreateVideoViewModel(), { wrapper });
+    await waitFor(() => expect(result.current.providers).toHaveLength(3));
+
+    act(() => result.current.selectProvider('pika'));
+
+    expect(result.current.provider).toBe('pika');
+    expect(result.current.supportsAudio).toBe(false);
+  });
+
+  it('clears audio settings when switching to a provider that ignores them', async () => {
+    const { result } = renderHook(() => useCreateVideoViewModel(), { wrapper });
+    await waitFor(() => expect(result.current.providers).toHaveLength(3));
+
+    act(() => {
+      result.current.setMusicTrackId('lofi');
+      result.current.setNarrationText('hello there');
+    });
+    expect(result.current.musicTrackId).toBe('lofi');
+
+    act(() => result.current.selectProvider('pika'));
+
+    // Otherwise a disabled control would still submit a value the server drops.
+    expect(result.current.musicTrackId).toBe('');
+    expect(result.current.narrationText).toBe('');
+  });
+
+  it('submits the selected provider', async () => {
+    let body: { provider?: string } = {};
+    server.use(
+      http.post(`${env.apiUrl}/api/v1/videos`, async ({ request }) => {
+        body = (await request.json()) as { provider?: string };
+        return HttpResponse.json(ok({ id: 'vid-2', status: 'processing' }), { status: 201 });
+      }),
+    );
+
+    const { result } = renderHook(() => useCreateVideoViewModel(), { wrapper });
+    await waitFor(() => expect(result.current.providers).toHaveLength(3));
+
+    act(() => result.current.selectProvider('pika'));
+    act(() => result.current.setPrompt('a neon skyline'));
+    act(() => result.current.onSubmit(submit));
+
+    await waitFor(() => expect(body.provider).toBe('pika'));
+  });
+});
