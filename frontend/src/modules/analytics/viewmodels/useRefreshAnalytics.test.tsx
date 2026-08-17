@@ -17,7 +17,7 @@ describe('useRefreshAnalytics', () => {
     server.use(
       http.post(`${env.apiUrl}/api/v1/analytics/refresh`, () => {
         refreshed = true;
-        return HttpResponse.json(ok({ synced: 2 }));
+        return HttpResponse.json(ok({ synced: 2, failed: 0 }));
       }),
     );
 

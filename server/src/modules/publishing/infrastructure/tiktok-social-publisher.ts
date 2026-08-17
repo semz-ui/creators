@@ -52,13 +52,19 @@ interface InitData {
 interface StatusData {
   status?: string;
   fail_reason?: string;
+  /** TikTok's own spelling. Present once the post is live. */
+  publicaly_available_post_id?: (string | number)[];
 }
 
 /**
  * Publishes videos to TikTok via the Content Posting API's Direct Post flow:
  * query the creator's allowed privacy levels, initialize a FILE_UPLOAD, PUT the
- * downloaded bytes, then poll until publishing completes. The publish_id is the
- * external post id.
+ * downloaded bytes, then poll until publishing completes. The published post id
+ * reported by the final status check is the external post id — analytics needs
+ * a real post id, and the publish_id is only an upload-session handle that the
+ * Display API rejects. It falls back to the publish_id when TikTok withholds
+ * the post id (it is absent for SELF_ONLY posts), which keeps publishing
+ * working at the cost of that post being unsyncable.
  *
  * FILE_UPLOAD (not PULL_FROM_URL) is deliberate: PULL_FROM_URL requires TikTok
  * domain-ownership verification, which the Cloudinary host can't satisfy.
@@ -83,8 +89,8 @@ export class TikTokSocialPublisher implements ISocialPublisher {
     const video = await this.downloadVideo(request.videoUrl);
     const { publishId, uploadUrl } = await this.initUpload(request, privacyLevel, video.length);
     await this.uploadVideo(uploadUrl, video);
-    await this.waitForPublish(publishId, request.accessToken);
-    return { externalPostId: publishId };
+    const postId = await this.waitForPublish(publishId, request.accessToken);
+    return { externalPostId: postId ?? publishId };
   }
 
   /** Query the creator's allowed privacy levels and pick the configured one if permitted. */
@@ -170,7 +176,8 @@ export class TikTokSocialPublisher implements ISocialPublisher {
     }
   }
 
-  private async waitForPublish(publishId: string, accessToken: string): Promise<void> {
+  /** Polls to completion and returns the published post id when TikTok reports one. */
+  private async waitForPublish(publishId: string, accessToken: string): Promise<string | null> {
     for (let attempt = 0; attempt < this.maxPollAttempts; attempt++) {
       const data = await this.post<StatusData>(
         STATUS_URL,
@@ -179,7 +186,8 @@ export class TikTokSocialPublisher implements ISocialPublisher {
         'status check',
       );
       if (data.status === 'PUBLISH_COMPLETE') {
-        return;
+        const postId = data.publicaly_available_post_id?.[0];
+        return postId == null ? null : String(postId);
       }
       if (data.status === 'FAILED') {
         throw new Error(`TikTok publishing failed: ${data.fail_reason ?? 'unknown reason'}`);

@@ -67,7 +67,7 @@ test('shows the overview and refreshes metrics', async ({ page }) => {
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: ok({ synced: 1 }),
+      body: ok({ synced: 1, failed: 0 }),
     });
   });
 

@@ -76,7 +76,7 @@ describe('Analytics flow (e2e)', () => {
 
     const refresh = await request(app).post('/api/v1/analytics/refresh').set(bearer());
     expect(refresh.status).toBe(200);
-    expect(refresh.body.data.synced).toBe(2);
+    expect(refresh.body.data).toEqual({ synced: 2, failed: 0 });
 
     const overview = await request(app).get('/api/v1/analytics/overview').set(bearer());
     expect(overview.status).toBe(200);
