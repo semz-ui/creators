@@ -1,6 +1,8 @@
 import type { ICreditGuard } from '../domain/ports/credit-guard';
-import type { IVideoGenerator } from '../domain/ports/video-generator';
+import type { IVideoGeneratorRegistry } from '../domain/ports/video-generator';
 import type { IVideoRepository } from '../domain/ports/video-repository';
+import { parseVideoProvider } from '../domain/provider';
+import { ProviderUnavailableError } from '../domain/video.errors';
 import { Video } from '../domain/video.entity';
 import { Duration } from '../domain/value-objects/duration';
 import { Prompt } from '../domain/value-objects/prompt';
@@ -12,11 +14,15 @@ import { toPublicVideo, type CreateVideoInput, type PublicVideo } from './dto';
  * charge is refunded and the video is not persisted (no orphan). The generator
  * runs asynchronously, so the returned video is `processing`; the result arrives
  * later via {@link ApplyGenerationResult}.
+ *
+ * The chosen provider is validated *before* any credits are authorized, so
+ * naming an unknown or unconfigured generator is a plain 422 that never costs
+ * the user anything and leaves no refund to reconcile.
  */
 export class CreateVideo {
   constructor(
     private readonly videos: IVideoRepository,
-    private readonly generator: IVideoGenerator,
+    private readonly generators: IVideoGeneratorRegistry,
     private readonly credits: ICreditGuard,
   ) {}
 
@@ -24,10 +30,18 @@ export class CreateVideo {
     const prompt = Prompt.create(input.prompt);
     const duration = Duration.create(input.durationSeconds);
 
+    const provider = input.provider
+      ? parseVideoProvider(input.provider)
+      : this.generators.defaultProvider();
+    if (!this.generators.isAvailable(provider)) {
+      throw new ProviderUnavailableError(provider);
+    }
+
     const video = Video.create({
       ownerId,
       prompt,
       duration,
+      provider,
       musicTrackId: input.musicTrackId ?? null,
       narrationText: input.narrationText ?? null,
       narrationVoice: input.narrationVoice ?? null,
@@ -39,7 +53,7 @@ export class CreateVideo {
 
     let jobRef: string;
     try {
-      ({ jobRef } = await this.generator.submit({
+      ({ jobRef } = await this.generators.get(provider).submit({
         videoId: video.id,
         prompt: prompt.value,
         durationSeconds: duration.seconds,

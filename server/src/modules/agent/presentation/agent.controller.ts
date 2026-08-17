@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import { UnauthorizedError } from '@shared/domain/errors';
 import { respond } from '@shared/presentation/http/respond';
 
+import type { DeleteConversation } from '../application/delete-conversation.usecase';
 import type { GetConversation } from '../application/get-conversation.usecase';
 import type { ListConversations } from '../application/list-conversations.usecase';
 import type { ResolveAgentAction } from '../application/resolve-agent-action.usecase';
@@ -16,6 +17,7 @@ export interface AgentUseCases {
   resolveAction: ResolveAgentAction;
   get: GetConversation;
   list: ListConversations;
+  remove: DeleteConversation;
 }
 
 /** HTTP adapter mapping requests to the agent use cases. */
@@ -55,6 +57,13 @@ export class AgentController {
     const id = req.params.id as string;
     const conversation = await this.useCases.get.execute(this.requireUserId(req), id);
     respond(res, 200, presentConversation(conversation));
+  };
+
+  /** 204: there is nothing left to present once the conversation is gone. */
+  remove = async (req: Request, res: Response): Promise<void> => {
+    const id = req.params.id as string;
+    await this.useCases.remove.execute(this.requireUserId(req), id);
+    res.status(204).send();
   };
 
   list = async (req: Request, res: Response): Promise<void> => {

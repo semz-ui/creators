@@ -18,6 +18,40 @@ describe('parseToolResult', () => {
     expect(parsed.detail).toBe('Video processing');
   });
 
+  it('lifts a video out so it can be rendered inline', () => {
+    const parsed = parseToolResult(
+      result(
+        '{"video":{"id":"vid-1","status":"ready","prompt":"neon city","durationSeconds":15,"resultUrl":"https://cdn/v.mp4","error":null}}',
+      ),
+    );
+    expect(parsed.videos).toEqual([
+      {
+        id: 'vid-1',
+        status: 'ready',
+        prompt: 'neon city',
+        durationSeconds: 15,
+        resultUrl: 'https://cdn/v.mp4',
+        error: null,
+      },
+    ]);
+  });
+
+  it('lifts out every video in a list', () => {
+    const parsed = parseToolResult(
+      result('{"videos":[{"id":"a","status":"ready"},{"id":"b","status":"queued"}]}'),
+    );
+    expect(parsed.detail).toBe('2 videos');
+    expect(parsed.videos.map((video) => video.id)).toEqual(['a', 'b']);
+  });
+
+  it('skips a video it cannot identify or whose status it does not know', () => {
+    const parsed = parseToolResult(
+      result('{"videos":[{"status":"ready"},{"id":"b","status":"transcoding"},{"id":"c"}]}'),
+    );
+    expect(parsed.detail).toBe('3 videos');
+    expect(parsed.videos).toEqual([]);
+  });
+
   it('surfaces a publication', () => {
     const parsed = parseToolResult(
       result('{"publication":{"id":"pub-1","videoId":"vid-1","status":"completed"}}'),
@@ -45,6 +79,7 @@ describe('parseToolResult', () => {
       detail: null,
       videoId: null,
       publicationId: null,
+      videos: [],
     });
   });
 });

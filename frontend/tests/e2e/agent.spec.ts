@@ -98,12 +98,39 @@ async function routeHistory(page: Page, items: unknown[] = []) {
   );
 }
 
+/**
+ * The transcript says vid-1 was still generating, so the card in the chat
+ * chases it. Answering with the finished video is what makes it play inline.
+ */
+async function routeGeneratedVideo(page: Page) {
+  await page.route(/\/api\/v1\/videos\/vid-1$/, (route) =>
+    route.fulfill(
+      json({
+        id: 'vid-1',
+        source: 'generated',
+        title: null,
+        prompt: 'neon city clip',
+        durationSeconds: 15,
+        status: 'ready',
+        resultUrl: 'https://cdn.example/vid-1.mp4',
+        error: null,
+        musicTrackId: null,
+        narrationText: null,
+        narrationVoice: null,
+        createdAt: '2026-07-31T10:00:00.000Z',
+        updatedAt: '2026-07-31T10:01:00.000Z',
+      }),
+    ),
+  );
+}
+
 /** Signs in without a stored preference, so the chooser is shown. */
 async function loginFresh(page: Page) {
   await routeSession(page);
   await page.route(/\/api\/v1\/videos(\?|$)/, (route) =>
     route.fulfill(json({ items: [], page: 1, limit: 6, total: 0 })),
   );
+  await routeGeneratedVideo(page);
 
   await page.goto('/login');
   await page.getByLabel(/^email$/i).fill(user.email);
@@ -135,9 +162,15 @@ test('chooses the assistant, generates a video, and approves the post', async ({
   await expect(page).toHaveURL(/\/agent\/conv-1$/);
   await expect(page.getByText('Started generating a video')).toBeVisible();
   await expect(page.getByText('Your video is generating now.')).toBeVisible();
-  await expect(page.getByRole('link', { name: /view video/i })).toHaveAttribute(
+
+  // The video plays in the chat itself — the card polled until it was ready.
+  // Exact: the rail's per-chat menu button is labelled with the chat's title,
+  // which contains this prompt.
+  const player = page.getByLabel('neon city clip', { exact: true });
+  await expect(player).toHaveAttribute('src', 'https://cdn.example/vid-1.mp4');
+  await expect(page.getByRole('link', { name: /publish/i })).toHaveAttribute(
     'href',
-    '/videos/vid-1',
+    '/videos/vid-1/publish',
   );
 
   // Second turn — publishing pauses for confirmation.
@@ -215,6 +248,44 @@ test('resumes an earlier conversation from the history rail', async ({ page }) =
     'aria-current',
     'page',
   );
+});
+
+test('deletes the open conversation from the rail and leaves it', async ({ page }) => {
+  const earlier = { ...afterGenerate, id: 'conv-2', title: 'sunset promo' };
+  let items: unknown[] = [afterGenerate, earlier];
+  let deleted: string | null = null;
+
+  await page.route(`${BASE}/conv-1`, (route) => {
+    if (route.request().method() !== 'DELETE') return route.fulfill(json(afterGenerate));
+    deleted = 'conv-1';
+    items = [earlier];
+    return route.fulfill({ status: 204, body: '' });
+  });
+  await page.route(`${BASE}/conv-2`, (route) => route.fulfill(json(earlier)));
+  // Served from `items` so the rail reflects the delete when it refetches.
+  await page.route(/\/api\/v1\/agent\/conversations\?/, (route) =>
+    route.fulfill(json({ items, page: 1, limit: 30, total: items.length })),
+  );
+
+  await loginFresh(page);
+  await page.getByRole('button', { name: /assistant/i }).click();
+
+  const rail = page.getByRole('navigation', { name: /conversations/i });
+  await rail.getByRole('link', { name: 'make a neon city clip' }).click();
+  await expect(page).toHaveURL(/\/agent\/conv-1$/);
+
+  await page.getByRole('button', { name: /options for make a neon city clip/i }).click();
+  await page.getByRole('menuitem', { name: /^delete chat$/i }).click();
+
+  // Asking is not doing — the request only goes out after the confirm.
+  expect(deleted).toBeNull();
+  await page.getByRole('menuitem', { name: /yes, delete it/i }).click();
+
+  await expect.poll(() => deleted).toBe('conv-1');
+  // The chat it was showing is gone, so the page cannot stay on it.
+  await expect(page).toHaveURL(/\/agent$/);
+  await expect(rail.getByRole('link', { name: 'make a neon city clip' })).toBeHidden();
+  await expect(rail.getByRole('link', { name: 'sunset promo' })).toBeVisible();
 });
 
 test('the mode switch moves between experiences and is remembered', async ({ page }) => {

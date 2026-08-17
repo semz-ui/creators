@@ -43,6 +43,8 @@ process.env.CONNECTIONS_REDIRECT_URL = '';
 process.env.VIDEO_PROVIDER = 'stub';
 process.env.OPENAI_API_KEY = '';
 process.env.CLOUDINARY_URL = '';
+// Same for fal/Pika — blank the key so no test can reach the fal queue API.
+process.env.FAL_KEY = '';
 // Same for Anthropic — force the stub agent model so tests are deterministic
 // and never call the live Messages API.
 process.env.ANTHROPIC_API_KEY = '';

@@ -31,6 +31,8 @@ export function createVideoRouter(
   router.post('/', validateBody(createVideoSchema), asyncHandler(controller.create));
   router.post('/upload', uploadMiddleware, asyncHandler(controller.upload));
   router.get('/', asyncHandler(controller.list));
+  // Must precede '/:id', or Express matches 'providers' as a video id.
+  router.get('/providers', asyncHandler(controller.providers));
   router.get('/:id', asyncHandler(controller.get));
 
   return router;

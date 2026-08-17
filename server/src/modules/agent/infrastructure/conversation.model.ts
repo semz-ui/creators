@@ -9,6 +9,8 @@ export interface ConversationDocument {
   title: string;
   messages: AgentMessage[];
   pendingAction: PendingAction | null;
+  /** Soft-delete flag; see `ConversationSnapshot.isDeleted`. */
+  isDeleted: boolean;
   /** Optimistic-concurrency revision; see `ConversationSnapshot.version`. */
   version: number;
   createdAt: Date;
@@ -48,6 +50,7 @@ const conversationSchema = new Schema<ConversationDocument>(
     title: { type: String, required: true },
     messages: { type: [messageSchema], default: [] },
     pendingAction: { type: pendingActionSchema, default: null },
+    isDeleted: { type: Boolean, required: true, default: false },
     version: { type: Number, required: true, default: 0 },
     createdAt: { type: Date, required: true },
     updatedAt: { type: Date, required: true },
@@ -55,7 +58,8 @@ const conversationSchema = new Schema<ConversationDocument>(
   { versionKey: false, minimize: false },
 );
 
-// List a user's conversations most-recently-active first.
-conversationSchema.index({ ownerId: 1, updatedAt: -1 });
+// List a user's live conversations most-recently-active first. `isDeleted` is
+// part of the key because every list query now filters on it.
+conversationSchema.index({ ownerId: 1, isDeleted: 1, updatedAt: -1 });
 
 export const ConversationModel = model<ConversationDocument>('Conversation', conversationSchema);

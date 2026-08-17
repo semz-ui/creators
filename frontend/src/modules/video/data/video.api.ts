@@ -2,12 +2,21 @@ import { apiClient, type ApiSuccessBody } from '@/shared/data/api-client';
 import { HttpError, type ApiErrorBody } from '@/shared/data/http-error';
 import { env } from '@/shared/config/env';
 
-import type { CreateVideoInput, UploadVideoInput, Video, VideoPage } from './video.types';
+import type {
+  CreateVideoInput,
+  UploadVideoInput,
+  Video,
+  VideoPage,
+  VideoProviderInfo,
+} from './video.types';
 
 const BASE = '/api/v1/videos';
 
 export const videoApi = {
   create: (input: CreateVideoInput) => apiClient.post<Video>(BASE, input),
+
+  /** Which generators this deployment can use, and what each supports. */
+  providers: () => apiClient.get<{ providers: VideoProviderInfo[] }>(`${BASE}/providers`),
 
   /**
    * Uses XHR rather than ApiClient because only XHR reports upload progress.
