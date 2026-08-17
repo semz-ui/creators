@@ -21,4 +21,7 @@ export const agentApi = {
     apiClient.post<Conversation>(`${BASE}/${id}/actions/${toolUseId}`, { decision }),
 
   get: (id: string) => apiClient.get<Conversation>(`${BASE}/${id}`),
+
+  /** Removes a conversation from the history. Soft on the server; 204 here. */
+  remove: (id: string) => apiClient.delete<void>(`${BASE}/${id}`),
 };

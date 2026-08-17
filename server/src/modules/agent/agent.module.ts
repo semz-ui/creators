@@ -12,6 +12,7 @@ import type { ReconcileGeneration } from '@modules/video/application/reconcile-g
 
 import type { IAgentModel } from './domain/ports/agent-model';
 import { AgentLoop } from './application/agent-loop.service';
+import { DeleteConversation } from './application/delete-conversation.usecase';
 import { GetConversation } from './application/get-conversation.usecase';
 import { ListConversations } from './application/list-conversations.usecase';
 import { ResolveAgentAction } from './application/resolve-agent-action.usecase';
@@ -90,6 +91,7 @@ export function buildAgentModule({
     resolveAction: new ResolveAgentAction(conversations, tools, loop),
     get: new GetConversation(conversations),
     list: new ListConversations(conversations),
+    remove: new DeleteConversation(conversations),
   });
 
   return { router: createAgentRouter(controller, authGuard, agentRateLimit) };

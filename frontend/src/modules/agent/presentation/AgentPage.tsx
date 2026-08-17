@@ -1,5 +1,5 @@
-import { MessageSquare } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { MessageSquare, PanelLeft } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { ModeSwitch } from '@/app/layout/ModeSwitch';
@@ -10,6 +10,7 @@ import { Composer } from './Composer';
 import { ConversationRail } from './ConversationRail';
 import { MessageList } from './MessageList';
 import { PendingActionCard } from './PendingActionCard';
+import { ThinkingIndicator } from './ThinkingIndicator';
 
 const SUGGESTIONS = [
   'Make a 15 second neon city timelapse',
@@ -22,35 +23,58 @@ export function AgentPage() {
   const { conversationId } = useParams();
   const agentChatViewModel = useAgentChatViewModel(conversationId);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLTextAreaElement>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  const { messages, pendingAction } = agentChatViewModel;
+  const { messages, pendingAction, isSending } = agentChatViewModel;
+
+  // Jumping to the bottom of a conversation you just opened should be instant;
+  // only movement you caused — a new message — is worth animating.
+  const isFirstPaintRef = useRef(true);
+  useEffect(() => {
+    isFirstPaintRef.current = true;
+    setIsDrawerOpen(false);
+  }, [conversationId]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages.length, pendingAction]);
+    bottomRef.current?.scrollIntoView({
+      behavior: isFirstPaintRef.current ? 'auto' : 'smooth',
+      block: 'end',
+    });
+    isFirstPaintRef.current = false;
+  }, [messages.length, pendingAction, isSending]);
+
+  const applySuggestion = (suggestion: string) => {
+    agentChatViewModel.setDraft(suggestion);
+    composerRef.current?.focus();
+  };
 
   return (
     <div className="flex h-screen bg-canvas">
-      <ConversationRail onNewChat={agentChatViewModel.startNewChat} />
+      <ConversationRail
+        onNewChat={agentChatViewModel.startNewChat}
+        isDrawerOpen={isDrawerOpen}
+        onCloseDrawer={() => setIsDrawerOpen(false)}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex shrink-0 items-center justify-between border-b border-line-subtle px-4 py-3 sm:px-6">
-          <span className="font-display text-lg font-bold">
-            <span className="text-gradient-brand">Reelo</span>{' '}
-            <span className="text-content-secondary">Assistant</span>
-          </span>
-          <div className="flex items-center gap-2">
-            {/* The rail owns this on wider screens, where it is visible. */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="md:hidden"
-              onClick={agentChatViewModel.startNewChat}
+        <header className="flex shrink-0 items-center justify-between gap-2 border-b border-line-subtle px-4 py-3 sm:px-6">
+          <div className="flex min-w-0 items-center gap-2">
+            {/* The rail is always visible on wider screens; here it's a drawer. */}
+            <button
+              type="button"
+              aria-label="Open conversations"
+              onClick={() => setIsDrawerOpen(true)}
+              className="-ml-1 rounded-lg p-1.5 text-content-secondary transition-colors hover:bg-white/5 hover:text-content md:hidden"
             >
-              New chat
-            </Button>
-            <ModeSwitch />
+              <PanelLeft className="h-5 w-5" />
+            </button>
+            <span className="truncate font-display text-lg font-bold">
+              <span className="text-gradient-brand">Reelo</span>{' '}
+              <span className="text-content-secondary">Assistant</span>
+            </span>
           </div>
+          <ModeSwitch />
         </header>
 
         <main className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6">
@@ -76,7 +100,7 @@ export function AgentPage() {
                           key={suggestion}
                           variant="secondary"
                           size="sm"
-                          onClick={() => agentChatViewModel.setDraft(suggestion)}
+                          onClick={() => applySuggestion(suggestion)}
                         >
                           {suggestion}
                         </Button>
@@ -87,7 +111,7 @@ export function AgentPage() {
               </div>
             ) : (
               <>
-                <MessageList messages={messages} isSending={agentChatViewModel.isSending} />
+                <MessageList messages={messages} isSending={isSending} />
                 {pendingAction && (
                   <PendingActionCard
                     action={pendingAction}
@@ -96,12 +120,7 @@ export function AgentPage() {
                     onReject={agentChatViewModel.reject}
                   />
                 )}
-                {agentChatViewModel.isSending && (
-                  <div className="mt-4 flex items-center gap-2 text-sm text-content-muted">
-                    <Spinner />
-                    Thinking…
-                  </div>
-                )}
+                {isSending && <ThinkingIndicator />}
               </>
             )}
             <div ref={bottomRef} />
@@ -115,6 +134,7 @@ export function AgentPage() {
               onChange={agentChatViewModel.setDraft}
               onSubmit={agentChatViewModel.onSubmit}
               canSend={agentChatViewModel.canSend}
+              textareaRef={composerRef}
               blockedReason={
                 pendingAction ? 'Approve or reject the request above to keep going.' : undefined
               }

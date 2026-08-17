@@ -179,4 +179,85 @@ describe('useAgentChatViewModel', () => {
     // The optimistic bubble is rolled back so the transcript stays truthful.
     expect(result.current.messages).toHaveLength(2);
   });
+
+  it('surfaces the action a 409 refers to instead of dead-ending on the error', async () => {
+    // The client's copy is behind: it has no pending action, but the server is
+    // paused on one — so the send is refused and there is nothing to approve.
+    let conversationState = conversation();
+    server.use(
+      http.get(`${env.apiUrl}/api/v1/agent/conversations/conv-1`, () =>
+        HttpResponse.json(ok(conversationState)),
+      ),
+      http.post(`${env.apiUrl}/api/v1/agent/conversations/conv-1/messages`, () => {
+        conversationState = paused;
+        return HttpResponse.json(
+          { error: { code: 'PENDING_ACTION_REQUIRED', message: 'raw server text' } },
+          { status: 409 },
+        );
+      }),
+    );
+
+    const { result } = renderHook(() => useAgentChatViewModel('conv-1'), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.pendingAction).toBeNull();
+
+    act(() => result.current.setDraft('hello'));
+    act(() => result.current.onSubmit(submit));
+
+    // The refetch the conflict triggered brings back the action to approve, so
+    // the error now points at something the user can actually see.
+    await waitFor(() => expect(result.current.pendingAction).not.toBeNull());
+    expect(result.current.canSend).toBe(false);
+  });
+
+  it('tells the user a resolved action was already handled, not to redo it', async () => {
+    server.use(
+      http.get(`${env.apiUrl}/api/v1/agent/conversations/conv-1`, () =>
+        HttpResponse.json(ok(paused)),
+      ),
+      http.post(`${env.apiUrl}/api/v1/agent/conversations/conv-1/actions/call-9`, () =>
+        HttpResponse.json(
+          { error: { code: 'PENDING_ACTION_MISMATCH', message: 'raw server text' } },
+          { status: 409 },
+        ),
+      ),
+    );
+
+    const { result } = renderHook(() => useAgentChatViewModel('conv-1'), { wrapper });
+    await waitFor(() => expect(result.current.pendingAction).not.toBeNull());
+
+    act(() => result.current.approve());
+
+    await waitFor(() => expect(result.current.formError).toMatch(/already handled/i));
+  });
+
+  it('drops a conflict warning once a later turn succeeds', async () => {
+    let messagesCalls = 0;
+    server.use(
+      http.get(`${env.apiUrl}/api/v1/agent/conversations/conv-1`, () =>
+        HttpResponse.json(ok(conversation())),
+      ),
+      http.post(`${env.apiUrl}/api/v1/agent/conversations/conv-1/messages`, () => {
+        messagesCalls += 1;
+        return messagesCalls === 1
+          ? HttpResponse.json(
+              { error: { code: 'PENDING_ACTION_REQUIRED', message: 'raw server text' } },
+              { status: 409 },
+            )
+          : HttpResponse.json(ok(conversation()));
+      }),
+    );
+
+    const { result } = renderHook(() => useAgentChatViewModel('conv-1'), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    act(() => result.current.setDraft('hello'));
+    act(() => result.current.onSubmit(submit));
+    await waitFor(() => expect(result.current.formError).not.toBeNull());
+
+    act(() => result.current.setDraft('hello again'));
+    act(() => result.current.onSubmit(submit));
+
+    await waitFor(() => expect(result.current.formError).toBeNull());
+  });
 });

@@ -127,4 +127,40 @@ describe('MongoConversationRepository (integration)', () => {
     expect(page.total).toBe(2);
     expect(page.items.map((item) => item.id)).toEqual([newer.id, older.id]);
   });
+
+  it('keeps a soft-deleted conversation on disk but out of every read', async () => {
+    const kept = Conversation.create({ ownerId: 'user-1' });
+    kept.appendUser('keep me');
+    const removed = Conversation.create({ ownerId: 'user-1' });
+    removed.appendUser('delete me');
+    await Promise.all([repo.save(kept), repo.save(removed)]);
+
+    removed.softDelete();
+    await repo.save(removed);
+
+    expect(await repo.findById(removed.id)).toBeNull();
+    const page = await repo.findByOwner('user-1', { limit: 10, skip: 0 });
+    expect(page.total).toBe(1);
+    expect(page.items.map((item) => item.id)).toEqual([kept.id]);
+
+    // The row itself survives — the transcript is evidence of real side effects.
+    const raw = await ConversationModel.findById(removed.id).lean().exec();
+    expect(raw).not.toBeNull();
+    expect(raw?.isDeleted).toBe(true);
+    expect(raw?.messages).toHaveLength(1);
+  });
+
+  it('treats a document written before the flag existed as live', async () => {
+    const conversation = Conversation.create({ ownerId: 'user-1' });
+    conversation.appendUser('legacy row');
+    await repo.save(conversation);
+    // Simulate a document that predates the soft-delete field.
+    await ConversationModel.updateOne(
+      { _id: conversation.id },
+      { $unset: { isDeleted: '' } },
+    ).exec();
+
+    expect(await repo.findById(conversation.id)).not.toBeNull();
+    expect((await repo.findByOwner('user-1', { limit: 10, skip: 0 })).total).toBe(1);
+  });
 });
