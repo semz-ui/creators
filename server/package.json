@@ -26,6 +26,7 @@
     "test:cov": "jest --coverage"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
     "bcryptjs": "^2.4.3",
     "busboy": "^1.6.0",
     "cloudinary": "^2.10.0",

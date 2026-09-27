@@ -40,7 +40,9 @@ const CREATOR_INFO = {
   json: { data: { privacy_level_options: ['SELF_ONLY', 'PUBLIC_TO_EVERYONE'] } },
 };
 const INIT_OK = { json: { data: { publish_id: 'pub-1', upload_url: UPLOAD_URL } } };
-const STATUS_COMPLETE = { json: { data: { status: 'PUBLISH_COMPLETE' } } };
+const STATUS_COMPLETE = {
+  json: { data: { status: 'PUBLISH_COMPLETE', publicaly_available_post_id: [7412345] } },
+};
 
 const publish = (caption: string | null = 'launch day') =>
   publisher.publish({
@@ -61,7 +63,8 @@ describe('TikTokSocialPublisher.publish', () => {
     );
 
     const result = await publish();
-    expect(result).toEqual({ externalPostId: 'pub-1' });
+    // The published post id, not the publish_id — analytics can only query the former.
+    expect(result).toEqual({ externalPostId: '7412345' });
 
     const [creatorUrl, creatorInit] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(creatorUrl).toBe('https://open.tiktokapis.com/v2/post/publish/creator_info/query/');
@@ -111,6 +114,23 @@ describe('TikTokSocialPublisher.publish', () => {
     );
     // PUBLIC_TO_EVERYONE requires audit approval; pre-audit only SELF_ONLY is allowed.
     expect(initBody.post_info.privacy_level).toBe('SELF_ONLY');
+  });
+
+  it('falls back to the publish_id when TikTok withholds the post id', async () => {
+    // SELF_ONLY posts are not publicly available, so no post id comes back.
+    mockFetch(
+      CREATOR_INFO,
+      { arrayBuffer: VIDEO_BYTES },
+      INIT_OK,
+      {},
+      {
+        json: { data: { status: 'PUBLISH_COMPLETE' } },
+      },
+    );
+
+    const result = await publish();
+
+    expect(result).toEqual({ externalPostId: 'pub-1' });
   });
 
   it('throws when creator info returns no privacy options', async () => {

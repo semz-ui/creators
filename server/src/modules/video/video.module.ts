@@ -41,6 +41,15 @@ export interface VideoModule {
   router: Router;
   /** Exposed so other modules (e.g. Publishing) can read videos via an adapter. */
   videoRepository: IVideoRepository;
+  /**
+   * Exposed so the Agent module can drive generation through the same use
+   * cases the HTTP routes use. The generator/compositor wiring below is
+   * expensive to build and must not be duplicated.
+   */
+  createVideo: CreateVideo;
+  getVideo: GetVideo;
+  listVideos: ListVideos;
+  reconcileGeneration: ReconcileGeneration;
 }
 
 /** Composition root for the video module. */
@@ -51,13 +60,18 @@ export function buildVideoModule({ authGuard, creditGuard }: VideoModuleDeps): V
 
   const upload = storage ? new UploadVideo(videos, storage) : undefined;
 
+  const createVideo = new CreateVideo(videos, registry, creditGuard);
+  const getVideo = new GetVideo(videos);
+  const listVideos = new ListVideos(videos);
+  const reconcileGeneration = new ReconcileGeneration(videos, registry, applyResult, compositor);
+
   const controller = new VideoController({
-    create: new CreateVideo(videos, registry, creditGuard),
+    create: createVideo,
     upload,
-    get: new GetVideo(videos),
-    list: new ListVideos(videos),
+    get: getVideo,
+    list: listVideos,
     applyResult,
-    reconcile: new ReconcileGeneration(videos, registry, applyResult, compositor),
+    reconcile: reconcileGeneration,
     providers: new ListVideoProviders(registry),
   });
 
@@ -66,6 +80,10 @@ export function buildVideoModule({ authGuard, creditGuard }: VideoModuleDeps): V
   return {
     router: createVideoRouter(controller, authGuard, generationGuard),
     videoRepository: videos,
+    createVideo,
+    getVideo,
+    listVideos,
+    reconcileGeneration,
   };
 }
 

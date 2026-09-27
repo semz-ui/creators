@@ -32,6 +32,8 @@ export interface ConnectionsModule {
   connectionRepository: IConnectionRepository;
   /** Hands out fresh access tokens (refreshing expiring ones) for other modules. */
   connectionAccess: ConnectionAccessService;
+  /** Exposed so the Agent module can read connections through the same use case. */
+  listConnections: ListConnections;
 }
 
 /** Composition root for the connections module. */
@@ -43,6 +45,7 @@ export function buildConnectionsModule({
   const connections = new MongoConnectionRepository(cipher);
   const stateStore = new RedisOAuthStateStore(redisClient);
   const providers = buildProviders();
+  const listConnections = new ListConnections(connections);
 
   const controller = new ConnectionsController(
     {
@@ -53,7 +56,7 @@ export function buildConnectionsModule({
       complete: new CompleteConnection(providers, stateStore, connections, {
         publicBaseUrl: env.PUBLIC_BASE_URL,
       }),
-      list: new ListConnections(connections),
+      list: listConnections,
       disconnect: new DisconnectConnection(connections),
     },
     { redirectUrl: env.CONNECTIONS_REDIRECT_URL },
@@ -63,6 +66,7 @@ export function buildConnectionsModule({
     router: createConnectionsRouter(controller, authGuard),
     connectionRepository: connections,
     connectionAccess: new ConnectionAccessService(connections, providers),
+    listConnections,
   };
 }
 

@@ -16,6 +16,8 @@ import { useSession } from '@/modules/auth/viewmodels/useSession';
 import { BalanceChip } from '@/modules/billing/presentation/BalanceChip';
 import { cn } from '@/shared/lib/cn';
 
+import { ModeSwitch } from './ModeSwitch';
+
 const NAV = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/create', label: 'Create', icon: Sparkles },
@@ -115,6 +117,7 @@ export function AppLayout() {
         <header className="flex items-center justify-between border-b border-line-subtle bg-canvas px-6 py-3">
           <span className="text-sm text-content-muted">{user?.email}</span>
           <div className="flex items-center gap-3">
+            <ModeSwitch />
             {user?.email && (
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-brand text-xs font-bold text-white">
                 {initials(user.email)}

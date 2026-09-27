@@ -50,7 +50,7 @@ describe('InstagramOAuthProvider.getAuthorizationUrl', () => {
     expect(url.searchParams.get('response_type')).toBe('code');
     expect(url.searchParams.get('state')).toBe('state-1');
     expect(url.searchParams.get('scope')).toBe(
-      'instagram_business_basic,instagram_business_content_publish',
+      'instagram_business_basic,instagram_business_content_publish,instagram_business_manage_insights',
     );
   });
 });

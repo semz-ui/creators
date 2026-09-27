@@ -55,8 +55,40 @@ describe('SyncUserMetrics', () => {
       'u1',
     );
 
-    expect(result.synced).toBe(1);
+    expect(result).toEqual({ synced: 1, failed: 0 });
     expect(repo.upsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('isolates a failing post so the rest of the sweep still syncs', async () => {
+    const publishedPosts: IPublishedPostsProvider = {
+      getPublishedPosts: jest.fn().mockResolvedValue([
+        { videoId: 'v1', platform: 'facebook', externalPostId: 'fb-1' },
+        { videoId: 'v2', platform: 'facebook', externalPostId: 'fb-2' },
+        { videoId: 'v3', platform: 'facebook', externalPostId: 'fb-3' },
+      ]),
+    };
+    const connections: IConnectionTokenProvider = {
+      getActiveConnection: jest.fn().mockResolvedValue({ accessToken: 'tok' }),
+    };
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValueOnce(Metrics.of({ views: 1, likes: 1, comments: 1, shares: 1 }))
+      // A revoked token, a deleted post, or a platform 429 lands here.
+      .mockRejectedValueOnce(new Error('HTTP 401: token revoked'))
+      .mockResolvedValueOnce(Metrics.of({ views: 2, likes: 2, comments: 2, shares: 2 }));
+    const providers: IMetricsProviderRegistry = {
+      get: jest.fn().mockReturnValue({ fetch: fetchMock }),
+    };
+    const repo = metricRepoMock();
+
+    const result = await new SyncUserMetrics(publishedPosts, connections, providers, repo).execute(
+      'u1',
+    );
+
+    expect(result).toEqual({ synced: 2, failed: 1 });
+    // The post after the failure was still fetched and stored.
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(repo.upsert).toHaveBeenCalledTimes(2);
   });
 });
 

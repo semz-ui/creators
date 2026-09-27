@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import { ok } from './support/envelope';
+import { seedMode } from './support/session';
 
 const user = { id: 'u1', email: 'creator@reelo.app' };
 
@@ -11,6 +12,8 @@ const overview = (views: number) => ({
 });
 
 async function login(page: Page) {
+  // Without a stored preference a fresh login lands on the mode chooser.
+  await seedMode(page, 'studio');
   await page.route('**/api/v1/auth/login', (route) =>
     route.fulfill({
       status: 200,
@@ -64,7 +67,7 @@ test('shows the overview and refreshes metrics', async ({ page }) => {
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: ok({ synced: 1 }),
+      body: ok({ synced: 1, failed: 0 }),
     });
   });
 

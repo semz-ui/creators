@@ -1,0 +1,69 @@
+import { Plus } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+
+import { cn } from '@/shared/lib/cn';
+import { Skeleton } from '@/shared/ui';
+
+import { useConversations } from '../viewmodels/useConversations';
+
+interface ConversationRailProps {
+  onNewChat: () => void;
+}
+
+/** Past conversations, most recently active first. Resume one by clicking it. */
+export function ConversationRail({ onNewChat }: ConversationRailProps) {
+  const { data, isPending, isError } = useConversations();
+  const conversations = data?.items ?? [];
+
+  return (
+    <aside className="hidden w-64 shrink-0 flex-col border-r border-line-subtle bg-surface md:flex">
+      <div className="p-3">
+        <button
+          type="button"
+          onClick={onNewChat}
+          className="flex w-full items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-medium text-content transition-colors hover:border-brand/30 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+        >
+          <Plus className="h-4 w-4 text-brand-accent" />
+          New chat
+        </button>
+      </div>
+
+      <nav
+        aria-label="Conversations"
+        className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-3"
+      >
+        {isPending ? (
+          <div className="flex flex-col gap-1.5 px-1" role="status" aria-label="Loading">
+            {Array.from({ length: 5 }, (_, index) => (
+              <Skeleton key={index} className="h-9 w-full" />
+            ))}
+          </div>
+        ) : isError ? (
+          <p className="px-2 py-1.5 text-xs text-content-muted">Couldn&apos;t load your chats.</p>
+        ) : conversations.length === 0 ? (
+          <p className="px-2 py-1.5 text-xs text-content-muted">
+            Your past chats will appear here.
+          </p>
+        ) : (
+          conversations.map((conversation) => (
+            <NavLink
+              key={conversation.id}
+              to={`/agent/${conversation.id}`}
+              title={conversation.title}
+              className={({ isActive }) =>
+                cn(
+                  'truncate rounded-lg px-3 py-2 text-sm transition-colors',
+                  isActive
+                    ? 'bg-white/8 text-content'
+                    : 'text-content-secondary hover:bg-white/5 hover:text-content',
+                )
+              }
+            >
+              {conversation.title}
+            </NavLink>
+          ))
+        )}
+      </nav>
+    </aside>
+  );
+}

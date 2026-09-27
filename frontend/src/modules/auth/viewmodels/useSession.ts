@@ -1,6 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 
+import { useModeStore } from '@/shared/preferences/mode.store';
+
 import { authApi } from '../data/auth.api';
 import { useSessionStore } from '../session/session.store';
 
@@ -19,6 +21,9 @@ export function useSession() {
     }
     clear();
     queryClient.clear();
+    // The mode preference is not user-scoped, so it must not outlive the
+    // session — otherwise the next person to sign in inherits this choice.
+    useModeStore.getState().clear();
   }, [clear, queryClient]);
 
   return {
