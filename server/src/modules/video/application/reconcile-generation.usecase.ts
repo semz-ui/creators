@@ -2,7 +2,7 @@ import { logger } from '@shared/infrastructure/logging/logger';
 
 import { DEFAULT_VOICE } from '../domain/audio';
 import type { IAudioCompositor } from '../domain/ports/audio-compositor';
-import type { IVideoGenerator } from '../domain/ports/video-generator';
+import type { IVideoGeneratorRegistry } from '../domain/ports/video-generator';
 import type { IVideoRepository } from '../domain/ports/video-repository';
 import type { ApplyGenerationResult } from './apply-generation-result.usecase';
 
@@ -16,14 +16,21 @@ import type { ApplyGenerationResult } from './apply-generation-result.usecase';
  * generator returns an `assetId`), the optional {@link IAudioCompositor} mixes
  * the chosen music + narration in before the video is marked ready.
  *
+ * The job is polled with the generator that accepted it — the video's own
+ * `provider` — never the current default, which may since have changed. Rows
+ * written before providers were selectable have no provider and fall back to
+ * the default, which is what the single generator used to be.
+ *
  * Best-effort and side-channel: a provider/network hiccup must not break the
  * read, so any error is logged and swallowed — the next read just tries again.
+ * That also covers a provider whose credentials were removed after the job
+ * started: it stays `processing` instead of breaking the read.
  * No-op when the video is missing, not the owner's, not processing, or unlinked.
  */
 export class ReconcileGeneration {
   constructor(
     private readonly videos: IVideoRepository,
-    private readonly generator: IVideoGenerator,
+    private readonly generators: IVideoGeneratorRegistry,
     private readonly applyResult: ApplyGenerationResult,
     private readonly compositor?: IAudioCompositor,
   ) {}
@@ -34,7 +41,8 @@ export class ReconcileGeneration {
       if (!video || video.ownerId !== ownerId) return;
       if (video.status !== 'processing' || !video.jobRef) return;
 
-      const result = await this.generator.poll(video.jobRef);
+      const provider = video.provider ?? this.generators.defaultProvider();
+      const result = await this.generators.get(provider).poll(video.jobRef);
       if (result.state === 'processing') return;
 
       if (result.state === 'failed') {

@@ -8,10 +8,11 @@ import { respond } from '@shared/presentation/http/respond';
 import type { ApplyGenerationResult } from '../application/apply-generation-result.usecase';
 import type { CreateVideo } from '../application/create-video.usecase';
 import type { GetVideo } from '../application/get-video.usecase';
+import type { ListVideoProviders } from '../application/list-video-providers.usecase';
 import type { ListVideos } from '../application/list-videos.usecase';
 import type { ReconcileGeneration } from '../application/reconcile-generation.usecase';
 import type { UploadVideo } from '../application/upload-video.usecase';
-import { presentVideo, presentVideoPage } from './video.presenter';
+import { presentProviders, presentVideo, presentVideoPage } from './video.presenter';
 import { listVideosQuerySchema, uploadVideoSchema } from './video.validators';
 
 export interface VideoUseCases {
@@ -21,6 +22,7 @@ export interface VideoUseCases {
   list: ListVideos;
   applyResult: ApplyGenerationResult;
   reconcile: ReconcileGeneration;
+  providers: ListVideoProviders;
 }
 
 /** HTTP adapter mapping requests to the video use cases. */
@@ -44,6 +46,11 @@ export class VideoController {
     const input = uploadVideoSchema.parse({ title: (res.locals.uploadTitle as string) ?? '' });
     const video = await this.useCases.upload.execute(userId, input, file);
     respond(res, 201, presentVideo(video));
+  };
+
+  /** Which generators this deployment can use — drives the client's picker. */
+  providers = async (_req: Request, res: Response): Promise<void> => {
+    respond(res, 200, presentProviders(this.useCases.providers.execute()));
   };
 
   list = async (req: Request, res: Response): Promise<void> => {

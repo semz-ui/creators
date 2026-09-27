@@ -62,6 +62,33 @@ describe('Video flow (e2e)', () => {
     expect(res.status).toBe(422);
   });
 
+  it('lists the selectable providers with their availability', async () => {
+    const res = await request(app).get('/api/v1/videos/providers').set(auth(tokenA));
+
+    expect(res.status).toBe(200);
+    // The test env configures no credentials, so every real provider is red.
+    expect(res.body.data.providers).toEqual([
+      { id: 'sora', label: 'Sora', available: false, supportsAudio: true },
+      { id: 'kling', label: 'Kling', available: false, supportsAudio: false },
+      { id: 'pika', label: 'Pika', available: false, supportsAudio: false },
+    ]);
+  });
+
+  it('rejects an unconfigured provider without spending credits', async () => {
+    const before = await request(app).get('/api/v1/billing/balance').set(auth(tokenA));
+
+    const res = await request(app)
+      .post('/api/v1/videos')
+      .set(auth(tokenA))
+      .send({ prompt: 'a cat', durationSeconds: 10, provider: 'pika' });
+
+    expect(res.status).toBe(422);
+    expect(res.body.error.message).toMatch(/not configured/);
+
+    const after = await request(app).get('/api/v1/billing/balance').set(auth(tokenA));
+    expect(after.body.data.balance).toBe(before.body.data.balance);
+  });
+
   it('runs the full create → callback → ready lifecycle', async () => {
     // Create — starts processing.
     const created = await request(app)

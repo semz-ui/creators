@@ -5,6 +5,9 @@ import { Button, Card, Textarea } from '@/shared/ui';
 
 import { MUSIC_TRACKS, VOICES, type Voice } from '../viewmodels/video.constants';
 import { DURATION_PRESETS, useCreateVideoViewModel } from '../viewmodels/useCreateVideoViewModel';
+import { ProviderPicker } from './ProviderPicker';
+
+const DISABLED_CLASS = 'cursor-not-allowed opacity-50';
 
 const SELECT_CLASS =
   'h-10 rounded-lg border border-line bg-surface-raised px-3 text-sm text-content transition-all focus-visible:outline-none focus-visible:border-brand focus-visible:ring-1 focus-visible:ring-brand/50';
@@ -22,6 +25,12 @@ export function GenerateVideoPanel() {
           onChange={(e) => createVideoViewModel.setPrompt(e.target.value)}
           error={createVideoViewModel.promptError}
           rows={5}
+        />
+
+        <ProviderPicker
+          providers={createVideoViewModel.providers}
+          value={createVideoViewModel.provider}
+          onChange={createVideoViewModel.selectProvider}
         />
 
         <div className="flex flex-col gap-1.5">
@@ -48,13 +57,21 @@ export function GenerateVideoPanel() {
           </div>
         </div>
 
+        {!createVideoViewModel.supportsAudio && (
+          <p className="text-xs text-content-muted">
+            {providerLabel(createVideoViewModel)} hosts its own output, so added music and narration
+            aren&apos;t available for it.
+          </p>
+        )}
+
         <div className="flex flex-col gap-1.5">
           <label htmlFor="music" className="text-sm font-medium text-content-secondary">
             Background music
           </label>
           <select
             id="music"
-            className={SELECT_CLASS}
+            className={cn(SELECT_CLASS, !createVideoViewModel.supportsAudio && DISABLED_CLASS)}
+            disabled={!createVideoViewModel.supportsAudio}
             value={createVideoViewModel.musicTrackId}
             onChange={(e) => createVideoViewModel.setMusicTrackId(e.target.value)}
           >
@@ -74,9 +91,10 @@ export function GenerateVideoPanel() {
             value={createVideoViewModel.narrationText}
             onChange={(e) => createVideoViewModel.setNarrationText(e.target.value)}
             error={createVideoViewModel.narrationError}
+            disabled={!createVideoViewModel.supportsAudio}
             rows={3}
           />
-          {createVideoViewModel.narrationText.trim() && (
+          {createVideoViewModel.narrationText.trim() && createVideoViewModel.supportsAudio && (
             <div className="flex items-center gap-2">
               <label htmlFor="voice" className="text-sm text-content-secondary">
                 Voice
@@ -106,5 +124,12 @@ export function GenerateVideoPanel() {
         </Button>
       </form>
     </Card>
+  );
+}
+
+/** Name of the currently selected generator, for the audio-unsupported note. */
+function providerLabel(viewModel: ReturnType<typeof useCreateVideoViewModel>): string {
+  return (
+    viewModel.providers.find((entry) => entry.id === viewModel.provider)?.label ?? 'This generator'
   );
 }

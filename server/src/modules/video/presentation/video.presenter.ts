@@ -1,6 +1,7 @@
 import type { PagedResult, PublicVideo } from '../application/dto';
+import type { ProviderInfo } from '../application/list-video-providers.usecase';
 
-import type { VideoPageResponse, VideoResponse } from './video.dto';
+import type { VideoPageResponse, VideoProvidersResponse, VideoResponse } from './video.dto';
 
 /**
  * Maps the video application DTOs to the presentation DTOs sent on the wire.
@@ -15,6 +16,7 @@ export function presentVideo(video: PublicVideo): VideoResponse {
     prompt: video.prompt,
     durationSeconds: video.durationSeconds,
     status: video.status,
+    provider: video.provider,
     resultUrl: video.resultUrl,
     error: video.error,
     musicTrackId: video.musicTrackId,
@@ -31,5 +33,16 @@ export function presentVideoPage(page: PagedResult<PublicVideo>): VideoPageRespo
     page: page.page,
     limit: page.limit,
     total: page.total,
+  };
+}
+
+export function presentProviders(providers: ProviderInfo[]): VideoProvidersResponse {
+  return {
+    providers: providers.map((provider) => ({
+      id: provider.id,
+      label: provider.label,
+      available: provider.available,
+      supportsAudio: provider.supportsAudio,
+    })),
   };
 }

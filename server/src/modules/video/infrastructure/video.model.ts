@@ -1,5 +1,6 @@
 import { Schema, model } from 'mongoose';
 
+import type { VideoProvider } from '../domain/provider';
 import type { VideoSource, VideoStatus } from '../domain/video.entity';
 
 export interface VideoDocument {
@@ -10,6 +11,7 @@ export interface VideoDocument {
   prompt: string;
   durationSeconds: number;
   status: VideoStatus;
+  provider: VideoProvider | null;
   jobRef: string | null;
   resultUrl: string | null;
   error: string | null;
@@ -29,6 +31,8 @@ const videoSchema = new Schema<VideoDocument>(
     prompt: { type: String, required: true },
     durationSeconds: { type: Number, required: true },
     status: { type: String, required: true },
+    // Null for uploads and pre-selection rows; readers fall back to the default.
+    provider: { type: String, default: null },
     jobRef: { type: String, default: null },
     resultUrl: { type: String, default: null },
     error: { type: String, default: null },

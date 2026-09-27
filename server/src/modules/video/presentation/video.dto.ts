@@ -1,3 +1,4 @@
+import type { VideoProvider } from '../domain/provider';
 import type { VideoSource, VideoStatus } from '../domain/video.entity';
 
 /**
@@ -14,6 +15,7 @@ export interface VideoResponse {
   prompt: string;
   durationSeconds: number;
   status: VideoStatus;
+  provider: VideoProvider | null;
   resultUrl: string | null;
   error: string | null;
   musicTrackId: string | null;
@@ -21,6 +23,20 @@ export interface VideoResponse {
   narrationVoice: string | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/** One entry in the provider picker: what it is and whether it can be used. */
+export interface VideoProviderResponse {
+  id: VideoProvider;
+  label: string;
+  /** False when this deployment has no credentials for it — not selectable. */
+  available: boolean;
+  /** False when added music/narration can't be applied to its output. */
+  supportsAudio: boolean;
+}
+
+export interface VideoProvidersResponse {
+  providers: VideoProviderResponse[];
 }
 
 export interface VideoPageResponse {

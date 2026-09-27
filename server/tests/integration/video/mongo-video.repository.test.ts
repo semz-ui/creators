@@ -12,6 +12,7 @@ function makeVideo(ownerId: string, jobRef = 'job-1') {
     ownerId,
     prompt: Prompt.create('a cat'),
     duration: Duration.create(10),
+    provider: 'sora',
   });
   v.markProcessing(jobRef);
   return v;

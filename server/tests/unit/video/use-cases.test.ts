@@ -3,7 +3,11 @@ import { CreateVideo } from '@modules/video/application/create-video.usecase';
 import { GetVideo } from '@modules/video/application/get-video.usecase';
 import { ListVideos } from '@modules/video/application/list-videos.usecase';
 import type { ICreditGuard } from '@modules/video/domain/ports/credit-guard';
-import type { IVideoGenerator } from '@modules/video/domain/ports/video-generator';
+import type {
+  IVideoGenerator,
+  IVideoGeneratorRegistry,
+} from '@modules/video/domain/ports/video-generator';
+import type { VideoProvider } from '@modules/video/domain/provider';
 import type { IVideoRepository } from '@modules/video/domain/ports/video-repository';
 import { Video } from '@modules/video/domain/video.entity';
 import { VideoNotFoundError } from '@modules/video/domain/video.errors';
@@ -32,9 +36,25 @@ function processingVideo(ownerId = 'user-1') {
     ownerId,
     prompt: Prompt.create('a cat'),
     duration: Duration.create(10),
+    provider: 'sora',
   });
   v.markProcessing('job-1');
   return v;
+}
+
+/**
+ * Wrap a single generator as a registry — the shape the use cases now take.
+ * `available: false` simulates a provider with no credentials configured.
+ */
+function registryOf(
+  generator: IVideoGenerator,
+  options: { available?: boolean; defaultProvider?: VideoProvider } = {},
+) {
+  return {
+    get: jest.fn().mockReturnValue(generator),
+    isAvailable: jest.fn().mockReturnValue(options.available ?? true),
+    defaultProvider: jest.fn().mockReturnValue(options.defaultProvider ?? 'sora'),
+  } satisfies Record<keyof IVideoGeneratorRegistry, jest.Mock>;
 }
 
 describe('CreateVideo', () => {
@@ -46,7 +66,7 @@ describe('CreateVideo', () => {
       poll: jest.fn().mockResolvedValue({ state: 'processing' }),
     };
 
-    const result = await new CreateVideo(videos, generator, credits).execute('user-1', {
+    const result = await new CreateVideo(videos, registryOf(generator), credits).execute('user-1', {
       prompt: 'a cat',
       durationSeconds: 10,
     });
@@ -71,7 +91,7 @@ describe('CreateVideo', () => {
     };
 
     await expect(
-      new CreateVideo(videos, generator, credits).execute('user-1', {
+      new CreateVideo(videos, registryOf(generator), credits).execute('user-1', {
         prompt: 'a cat',
         durationSeconds: 10,
       }),
@@ -80,13 +100,86 @@ describe('CreateVideo', () => {
     expect(videos.save).not.toHaveBeenCalled();
   });
 
+  it('records the chosen provider and submits through it', async () => {
+    const videos = repoMock();
+    const credits = creditGuardMock();
+    const generator: IVideoGenerator = {
+      submit: jest.fn().mockResolvedValue({ jobRef: 'job-xyz' }),
+      poll: jest.fn(),
+    };
+    const registry = registryOf(generator, { defaultProvider: 'sora' });
+
+    const result = await new CreateVideo(videos, registry, credits).execute('user-1', {
+      prompt: 'a cat',
+      durationSeconds: 10,
+      provider: 'pika',
+    });
+
+    expect(registry.get).toHaveBeenCalledWith('pika');
+    expect(result.provider).toBe('pika');
+  });
+
+  it('falls back to the registry default when no provider is named', async () => {
+    const videos = repoMock();
+    const credits = creditGuardMock();
+    const generator: IVideoGenerator = {
+      submit: jest.fn().mockResolvedValue({ jobRef: 'job-xyz' }),
+      poll: jest.fn(),
+    };
+    const registry = registryOf(generator, { defaultProvider: 'kling' });
+
+    const result = await new CreateVideo(videos, registry, credits).execute('user-1', {
+      prompt: 'a cat',
+      durationSeconds: 10,
+    });
+
+    expect(result.provider).toBe('kling');
+  });
+
+  it('rejects an unconfigured provider without charging credits', async () => {
+    const videos = repoMock();
+    const credits = creditGuardMock();
+    const generator: IVideoGenerator = { submit: jest.fn(), poll: jest.fn() };
+    const registry = registryOf(generator, { available: false });
+
+    await expect(
+      new CreateVideo(videos, registry, credits).execute('user-1', {
+        prompt: 'a cat',
+        durationSeconds: 10,
+        provider: 'kling',
+      }),
+    ).rejects.toThrow(/not configured/);
+
+    // The whole point of checking availability first: no charge, so no refund
+    // to reconcile and no way for a bad pick to cost the user anything.
+    expect(credits.authorizeGeneration).not.toHaveBeenCalled();
+    expect(credits.refundGeneration).not.toHaveBeenCalled();
+    expect(generator.submit).not.toHaveBeenCalled();
+    expect(videos.save).not.toHaveBeenCalled();
+  });
+
+  it('rejects an unknown provider name', async () => {
+    const videos = repoMock();
+    const credits = creditGuardMock();
+    const generator: IVideoGenerator = { submit: jest.fn(), poll: jest.fn() };
+
+    await expect(
+      new CreateVideo(videos, registryOf(generator), credits).execute('user-1', {
+        prompt: 'a cat',
+        durationSeconds: 10,
+        provider: 'runway',
+      }),
+    ).rejects.toThrow(/Unsupported video provider/);
+    expect(credits.authorizeGeneration).not.toHaveBeenCalled();
+  });
+
   it('rejects an invalid duration before charging or submitting', async () => {
     const videos = repoMock();
     const credits = creditGuardMock();
     const generator: IVideoGenerator = { submit: jest.fn(), poll: jest.fn() };
 
     await expect(
-      new CreateVideo(videos, generator, credits).execute('user-1', {
+      new CreateVideo(videos, registryOf(generator), credits).execute('user-1', {
         prompt: 'a cat',
         durationSeconds: 999,
       }),

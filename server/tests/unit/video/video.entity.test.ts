@@ -8,6 +8,7 @@ function newVideo() {
     ownerId: 'user-1',
     prompt: Prompt.create('a cat'),
     duration: Duration.create(10),
+    provider: 'sora',
   });
 }
 
