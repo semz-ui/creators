@@ -35,6 +35,7 @@ describe('createAgentRouter', () => {
       resolve: async (_req: unknown, res: express.Response) => res.status(200).json({ ok: true }),
       get: async (_req: unknown, res: express.Response) => res.status(200).json({ ok: true }),
       list: async (_req: unknown, res: express.Response) => res.status(200).json({ ok: true }),
+      remove: async (_req: unknown, res: express.Response) => res.status(204).send(),
     } as unknown as AgentController;
 
     app = express();
@@ -65,6 +66,13 @@ describe('createAgentRouter', () => {
 
     expect(rateLimited).toEqual([]);
     expect(authGuarded).toHaveLength(2);
+  });
+
+  it('guards deleting a conversation without putting it on the turn tier', async () => {
+    await request(app).delete('/agent/conversations/c1').expect(204);
+
+    expect(authGuarded).toEqual(['DELETE /conversations/c1']);
+    expect(rateLimited).toEqual([]);
   });
 
   it('rejects a body that fails validation before running anything', async () => {

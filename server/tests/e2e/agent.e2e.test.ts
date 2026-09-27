@@ -241,4 +241,34 @@ describe('Agent flow (e2e)', () => {
       .set({ Authorization: `Bearer ${other.body.data.accessToken}` })
       .expect(404);
   });
+
+  it('deletes a conversation without erasing it, and only for its owner', async () => {
+    const created = await request(app)
+      .post('/api/v1/agent/conversations')
+      .set(bearer())
+      .send({ message: 'a chat to throw away' })
+      .expect(201);
+    const id = created.body.data.id as string;
+
+    const other = await request(app)
+      .post('/api/v1/auth/register')
+      .send({ email: 'stranger@reelo.app', password: 'password123' });
+    await request(app)
+      .delete(`/api/v1/agent/conversations/${id}`)
+      .set({ Authorization: `Bearer ${other.body.data.accessToken}` })
+      .expect(404);
+
+    await request(app).delete(`/api/v1/agent/conversations/${id}`).set(bearer()).expect(204);
+
+    // Gone from the API…
+    await request(app).get(`/api/v1/agent/conversations/${id}`).set(bearer()).expect(404);
+    const listed = await request(app).get('/api/v1/agent/conversations').set(bearer()).expect(200);
+    expect(listed.body.data.total).toBe(0);
+    await request(app).delete(`/api/v1/agent/conversations/${id}`).set(bearer()).expect(404);
+
+    // …but still on disk, flagged rather than removed.
+    const stored = await ConversationModel.findById(id).lean();
+    expect(stored?.isDeleted).toBe(true);
+    expect(stored?.messages.length).toBeGreaterThan(0);
+  });
 });

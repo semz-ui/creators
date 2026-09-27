@@ -44,7 +44,7 @@ credentials are configured, stubs otherwise so the whole product runs locally fo
 | YouTube | ✅ real (Google OAuth) | ✅ real (resumable upload) | Tokens auto-refresh; private uploads until the Google app is verified |
 | Instagram | ✅ real (Instagram Business Login) | ✅ real (Reels container flow) | Requires a Professional account; 60-day self-refreshing tokens |
 | Facebook | stub | stub | Planned |
-| TikTok | stub | stub | Planned |
+| TikTok | ✅ real (Login Kit, PKCE) | ✅ real (Content Posting Direct Post) | Refresh tokens rotate on every refresh; posts stay SELF_ONLY until the app passes TikTok's audit |
 
 **Clients:** a responsive web app and a native mobile app (iOS + Android via Expo) with
 full feature parity — same flows, same design tokens, same validation rules.

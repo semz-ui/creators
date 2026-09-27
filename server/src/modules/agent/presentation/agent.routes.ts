@@ -41,6 +41,8 @@ export function createAgentRouter(
 
   router.get('/conversations', asyncHandler(controller.list));
   router.get('/conversations/:id', asyncHandler(controller.get));
+  // Not on the stricter tier: a delete is a single guarded write, not a turn.
+  router.delete('/conversations/:id', asyncHandler(controller.remove));
 
   return router;
 }

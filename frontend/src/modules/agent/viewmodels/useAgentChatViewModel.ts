@@ -40,8 +40,27 @@ export function useAgentChatViewModel(conversationId?: string) {
     // stale — but only the list, never the detail we just seeded.
     void queryClient.invalidateQueries({ queryKey: agentKeys.lists });
     setOptimisticMessage(null);
+    // A conflict the other mutation reported is settled once a turn lands, so
+    // its warning must not outlive it — otherwise the user is told to approve
+    // something they just approved.
+    sendMutation.reset();
+    resolveMutation.reset();
     if (conversation.id !== conversationId) {
       navigate(`/agent/${conversation.id}`, { replace: true });
+    }
+  };
+
+  /**
+   * Every 409 means this client's copy of the conversation is behind the
+   * server's. The pending action lives in that copy, so a stale one leaves the
+   * user with an error telling them to approve something the UI isn't showing
+   * and no way out but a reload. Refetching turns that dead end into a state
+   * they can act on.
+   */
+  const resyncAfterConflict = (error: unknown) => {
+    if (!conversationId) return;
+    if (error instanceof HttpError && error.status === 409) {
+      void queryClient.invalidateQueries({ queryKey: agentKeys.detail(conversationId) });
     }
   };
 
@@ -49,13 +68,17 @@ export function useAgentChatViewModel(conversationId?: string) {
     mutationFn: (message: string) =>
       conversationId ? agentApi.send(conversationId, message) : agentApi.start(message),
     onSuccess: applyConversation,
-    onError: () => setOptimisticMessage(null),
+    onError: (error) => {
+      setOptimisticMessage(null);
+      resyncAfterConflict(error);
+    },
   });
 
   const resolveMutation = useMutation({
     mutationFn: (input: ResolveInput) =>
       agentApi.resolve(input.conversationId, input.toolUseId, input.decision),
     onSuccess: applyConversation,
+    onError: resyncAfterConflict,
   });
 
   const conversation = query.data;
@@ -109,10 +132,21 @@ export function useAgentChatViewModel(conversationId?: string) {
   };
 }
 
+/**
+ * The server has three distinct 409s and they need different things from the
+ * user, so they can't share one sentence. Each is paired with a refetch, so by
+ * the time one of these is read the UI already shows the true state.
+ */
+const CONFLICT_MESSAGES: Record<string, string> = {
+  PENDING_ACTION_REQUIRED: 'Approve or reject the request above to keep going.',
+  PENDING_ACTION_MISMATCH: 'That request was already handled — this chat is up to date now.',
+  CONVERSATION_CONFLICT: 'This conversation changed somewhere else. It has been refreshed.',
+};
+
 function toFormError(error: unknown): string | null {
   if (!error) return null;
   if (error instanceof HttpError) {
-    if (error.status === 409) return 'Approve or reject the pending action first.';
+    if (error.status === 409) return CONFLICT_MESSAGES[error.code] ?? error.message;
     if (error.status === 429) return "You're sending messages too quickly. Give it a moment.";
     if (error.status === 502) return 'The assistant is unavailable right now. Try again shortly.';
     return error.message;

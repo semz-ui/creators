@@ -94,4 +94,82 @@ describe('ConversationRail', () => {
     fireEvent.click(screen.getByRole('button', { name: /new chat/i }));
     expect(onNewChat).toHaveBeenCalledTimes(1);
   });
+
+  describe('deleting a chat', () => {
+    /** Serves the list, shrinking it once the delete lands. */
+    function routeHistory() {
+      let items = [conversation('c1', 'neon city clip'), conversation('c2', 'sunset promo')];
+      const deleted: string[] = [];
+
+      server.use(
+        http.get(LIST, () =>
+          HttpResponse.json(ok({ items, page: 1, limit: 30, total: items.length })),
+        ),
+        http.delete(`${LIST}/:id`, ({ params }) => {
+          deleted.push(params.id as string);
+          items = items.filter((item) => item.id !== params.id);
+          return new HttpResponse(null, { status: 204 });
+        }),
+      );
+
+      return deleted;
+    }
+
+    it('deletes a chat only after the confirm step', async () => {
+      const deleted = routeHistory();
+
+      renderWithProviders(<ConversationRail onNewChat={vi.fn()} />);
+      await screen.findByRole('link', { name: 'sunset promo' });
+
+      fireEvent.click(screen.getByRole('button', { name: /options for sunset promo/i }));
+      fireEvent.click(screen.getByRole('menuitem', { name: /delete chat/i }));
+
+      // The first click only asks — nothing has been sent yet.
+      expect(deleted).toEqual([]);
+
+      fireEvent.click(screen.getByRole('menuitem', { name: /yes, delete it/i }));
+
+      await waitFor(() => expect(deleted).toEqual(['c2']));
+      await waitFor(() =>
+        expect(screen.queryByRole('link', { name: 'sunset promo' })).not.toBeInTheDocument(),
+      );
+      expect(screen.getByRole('link', { name: 'neon city clip' })).toBeInTheDocument();
+    });
+
+    it('backs out of the menu without deleting', async () => {
+      const deleted = routeHistory();
+
+      renderWithProviders(<ConversationRail onNewChat={vi.fn()} />);
+      await screen.findByRole('link', { name: 'sunset promo' });
+
+      fireEvent.click(screen.getByRole('button', { name: /options for sunset promo/i }));
+      fireEvent.click(screen.getByRole('menuitem', { name: /delete chat/i }));
+      fireEvent.click(screen.getByRole('menuitem', { name: /cancel/i }));
+
+      expect(deleted).toEqual([]);
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'sunset promo' })).toBeInTheDocument();
+    });
+
+    it('says so when the delete fails and keeps the chat', async () => {
+      server.use(
+        http.get(LIST, () =>
+          HttpResponse.json(
+            ok({ items: [conversation('c1', 'neon city clip')], page: 1, limit: 30, total: 1 }),
+          ),
+        ),
+        http.delete(`${LIST}/:id`, () => HttpResponse.json({ error: {} }, { status: 500 })),
+      );
+
+      renderWithProviders(<ConversationRail onNewChat={vi.fn()} />);
+      await screen.findByRole('link', { name: 'neon city clip' });
+
+      fireEvent.click(screen.getByRole('button', { name: /options for neon city clip/i }));
+      fireEvent.click(screen.getByRole('menuitem', { name: /delete chat/i }));
+      fireEvent.click(screen.getByRole('menuitem', { name: /yes, delete it/i }));
+
+      await waitFor(() => expect(screen.getByText(/couldn.t be deleted/i)).toBeVisible());
+      expect(screen.getByRole('link', { name: 'neon city clip' })).toBeInTheDocument();
+    });
+  });
 });

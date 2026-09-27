@@ -29,6 +29,12 @@ export interface ConversationSnapshot {
   messages: AgentMessage[];
   pendingAction: PendingAction | null;
   /**
+   * Soft-delete flag. A deleted conversation is not erased — the transcript
+   * records real side effects (a charged generation, a published post), so it
+   * stays readable in the database and only disappears from the API.
+   */
+  isDeleted: boolean;
+  /**
    * Optimistic-concurrency counter: the revision this instance was loaded at.
    * A write only lands if the stored document is still at this revision, so
    * two concurrent turns can't silently clobber each other's messages.
@@ -50,6 +56,7 @@ export class Conversation {
   private _title: string;
   private _messages: AgentMessage[];
   private _pendingAction: PendingAction | null;
+  private _isDeleted: boolean;
   private _version: number;
   private _updatedAt: Date;
 
@@ -60,6 +67,7 @@ export class Conversation {
     this._title = snapshot.title;
     this._messages = snapshot.messages;
     this._pendingAction = snapshot.pendingAction;
+    this._isDeleted = snapshot.isDeleted;
     this._version = snapshot.version;
     this._updatedAt = snapshot.updatedAt;
   }
@@ -73,6 +81,9 @@ export class Conversation {
   }
   get pendingAction(): PendingAction | null {
     return this._pendingAction;
+  }
+  get isDeleted(): boolean {
+    return this._isDeleted;
   }
   get version(): number {
     return this._version;
@@ -89,6 +100,7 @@ export class Conversation {
       title: truncateTitle(params.title ?? 'New conversation'),
       messages: [],
       pendingAction: null,
+      isDeleted: false,
       version: 0,
       createdAt: now,
       updatedAt: now,
@@ -149,6 +161,20 @@ export class Conversation {
   }
 
   /**
+   * Hides the conversation from the API without erasing it.
+   *
+   * Deliberately unguarded by `requireIdle`: abandoning a conversation that is
+   * paused on a confirmation is a legitimate way to decline it, and refusing
+   * to delete would leave the user stuck with a chat they can neither use nor
+   * remove. The unanswered `tool_use` never reaches the model again.
+   */
+  softDelete(): void {
+    this._isDeleted = true;
+    this._pendingAction = null;
+    this.touch();
+  }
+
+  /**
    * Called by the repository once a write has landed, so a second save from
    * the same instance targets the revision it just created.
    */
@@ -163,6 +189,7 @@ export class Conversation {
       title: this._title,
       messages: this._messages,
       pendingAction: this._pendingAction,
+      isDeleted: this._isDeleted,
       version: this._version,
       createdAt: this.createdAt,
       updatedAt: this._updatedAt,

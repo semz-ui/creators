@@ -8,6 +8,13 @@ import type {
 } from '../domain/ports/conversation-repository';
 import { ConversationModel, type ConversationDocument } from './conversation.model';
 
+/**
+ * Deleted conversations are filtered out at the only two places that load one,
+ * so no use case can act on one by accident. `$ne: true` rather than `false`
+ * so documents written before the field existed still read as live.
+ */
+const NOT_DELETED = { isDeleted: { $ne: true } } as const;
+
 /** MongoDB implementation of {@link IConversationRepository}. */
 export class MongoConversationRepository implements IConversationRepository {
   /**
@@ -30,6 +37,7 @@ export class MongoConversationRepository implements IConversationRepository {
             title: s.title,
             messages: s.messages,
             pendingAction: s.pendingAction,
+            isDeleted: s.isDeleted,
             version: s.version + 1,
             updatedAt: s.updatedAt,
           },
@@ -55,7 +63,9 @@ export class MongoConversationRepository implements IConversationRepository {
   }
 
   async findById(id: string): Promise<Conversation | null> {
-    const doc = await ConversationModel.findById(id).lean<ConversationDocument>().exec();
+    const doc = await ConversationModel.findOne({ _id: id, ...NOT_DELETED })
+      .lean<ConversationDocument>()
+      .exec();
     return doc ? this.toEntity(doc) : null;
   }
 
@@ -63,14 +73,15 @@ export class MongoConversationRepository implements IConversationRepository {
     ownerId: string,
     options: { limit: number; skip: number },
   ): Promise<ConversationPage> {
+    const filter = { ownerId, ...NOT_DELETED };
     const [docs, total] = await Promise.all([
-      ConversationModel.find({ ownerId })
+      ConversationModel.find(filter)
         .sort({ updatedAt: -1 })
         .skip(options.skip)
         .limit(options.limit)
         .lean<ConversationDocument[]>()
         .exec(),
-      ConversationModel.countDocuments({ ownerId }).exec(),
+      ConversationModel.countDocuments(filter).exec(),
     ]);
 
     return { items: docs.map((doc) => this.toEntity(doc)), total };
@@ -83,6 +94,7 @@ export class MongoConversationRepository implements IConversationRepository {
       title: doc.title,
       messages: doc.messages ?? [],
       pendingAction: doc.pendingAction ?? null,
+      isDeleted: doc.isDeleted ?? false,
       version: doc.version ?? 0,
       createdAt: doc.createdAt,
       updatedAt: doc.updatedAt,

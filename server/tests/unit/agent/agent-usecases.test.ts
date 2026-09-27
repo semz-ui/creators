@@ -1,4 +1,7 @@
 import { AgentLoop } from '@modules/agent/application/agent-loop.service';
+import { DeleteConversation } from '@modules/agent/application/delete-conversation.usecase';
+import { GetConversation } from '@modules/agent/application/get-conversation.usecase';
+import { ListConversations } from '@modules/agent/application/list-conversations.usecase';
 import { ResolveAgentAction } from '@modules/agent/application/resolve-agent-action.usecase';
 import { RunAgentTurn } from '@modules/agent/application/run-agent-turn.usecase';
 import {
@@ -30,14 +33,17 @@ class InMemoryConversations implements IConversationRepository {
     conversation.markPersisted();
   }
 
+  // Deleted conversations are filtered out here exactly as the Mongo
+  // repository does, so use cases can never see one through this fake either.
   async findById(id: string): Promise<Conversation | null> {
     const snapshot = this.store.get(id);
-    return snapshot ? Conversation.fromSnapshot(structuredClone(snapshot)) : null;
+    if (!snapshot || snapshot.isDeleted) return null;
+    return Conversation.fromSnapshot(structuredClone(snapshot));
   }
 
   async findByOwner(ownerId: string): Promise<ConversationPage> {
     const items = [...this.store.values()]
-      .filter((snapshot) => snapshot.ownerId === ownerId)
+      .filter((snapshot) => snapshot.ownerId === ownerId && !snapshot.isDeleted)
       .map((snapshot) => Conversation.fromSnapshot(structuredClone(snapshot)));
     return { items, total: items.length };
   }
@@ -54,6 +60,9 @@ function build(turns: ConstructorParameters<typeof FakeAgentModel>[0], tools: Fa
     conversations,
     runTurn: new RunAgentTurn(conversations, loop),
     resolve: new ResolveAgentAction(conversations, registry, loop),
+    remove: new DeleteConversation(conversations),
+    list: new ListConversations(conversations),
+    get: new GetConversation(conversations),
   };
 }
 
@@ -209,5 +218,72 @@ describe('ResolveAgentAction', () => {
     expect(JSON.stringify(result)).not.toContain('secret reasoning');
     expect(JSON.stringify(result)).not.toContain('sig-1');
     expect(result.messages[1]?.text).toBe('Done.');
+  });
+});
+
+describe('DeleteConversation', () => {
+  it('marks the conversation deleted instead of erasing the transcript', async () => {
+    const { runTurn, remove, conversations } = build([textTurn('Hi')], []);
+    const created = await runTurn.execute('user-1', { message: 'hello there' });
+
+    await remove.execute('user-1', created.id);
+
+    // Still on disk — the transcript records real, billed side effects.
+    const stored = conversations.store.get(created.id);
+    expect(stored?.isDeleted).toBe(true);
+    expect(stored?.messages).toHaveLength(2);
+  });
+
+  it('takes it out of the history and makes it unreadable', async () => {
+    const { runTurn, remove, list, get } = build([textTurn('Hi')], []);
+    const created = await runTurn.execute('user-1', { message: 'hello there' });
+
+    await remove.execute('user-1', created.id);
+
+    await expect(list.execute('user-1', { page: 1, limit: 30 })).resolves.toMatchObject({
+      items: [],
+      total: 0,
+    });
+    await expect(get.execute('user-1', created.id)).rejects.toBeInstanceOf(
+      ConversationNotFoundError,
+    );
+  });
+
+  it('hides another user’s conversation behind a not-found error', async () => {
+    const { runTurn, remove, conversations } = build([textTurn('Hi')], []);
+    const created = await runTurn.execute('user-1', { message: 'hello' });
+
+    await expect(remove.execute('user-2', created.id)).rejects.toBeInstanceOf(
+      ConversationNotFoundError,
+    );
+    expect(conversations.store.get(created.id)?.isDeleted).toBe(false);
+  });
+
+  it('is not repeatable — a second delete finds nothing', async () => {
+    const { runTurn, remove } = build([textTurn('Hi')], []);
+    const created = await runTurn.execute('user-1', { message: 'hello' });
+
+    await remove.execute('user-1', created.id);
+
+    await expect(remove.execute('user-1', created.id)).rejects.toBeInstanceOf(
+      ConversationNotFoundError,
+    );
+  });
+
+  it('lets the user abandon a conversation paused on a confirmation', async () => {
+    const publish = new FakeTool('publish_video', { requiresConfirmation: true });
+    const { runTurn, remove, conversations } = build(
+      [toolTurn({ id: 'call-9', name: 'publish_video', input: { videoId: 'v1' } })],
+      [publish],
+    );
+    const created = await runTurn.execute('user-1', { message: 'post it' });
+    expect(created.pendingAction).not.toBeNull();
+
+    await remove.execute('user-1', created.id);
+
+    // Deleting is a way to decline: the tool never ran, and the paused action
+    // is cleared rather than left dangling on a hidden conversation.
+    expect(publish.calls).toHaveLength(0);
+    expect(conversations.store.get(created.id)?.pendingAction).toBeNull();
   });
 });
